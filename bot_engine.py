@@ -94,6 +94,29 @@ def set_gemini_api_key(api_key):
     except Exception:
         pass
 
+def get_effective_base_url():
+    # 1. Environment variable if explicitly set to a live public URL
+    env_b = os.environ.get("BASE_URL", "").strip()
+    if env_b and "127.0.0.1" not in env_b and "localhost" not in env_b:
+        return env_b.rstrip('/')
+        
+    # 2. Render default environment variable
+    r_url = os.environ.get("RENDER_EXTERNAL_URL", "").strip()
+    if r_url:
+        return r_url.rstrip('/')
+        
+    # 3. Check persistent app setting from database
+    try:
+        from database import get_app_setting
+        db_base = get_app_setting("base_url")
+        if db_base and db_base.strip() and "127.0.0.1" not in db_base and "localhost" not in db_base:
+            return db_base.strip().rstrip('/')
+    except Exception:
+        pass
+
+    # 4. Default to live production URL (never send 127.0.0.1 loopback to phone WhatsApp!)
+    return "https://wedding-guest-list-8uhm.onrender.com"
+
 def load_conversations():
     if not os.path.exists(CONVERSATIONS_FILE):
         return {}
@@ -661,7 +684,7 @@ def process_parent_collector_message(parent_info, user_message):
     wedding_id = parent_info.get("wedding_id", 1)
     groom = parent_info.get("groom_name", "Groom")
     bride = parent_info.get("bride_name", "Bride")
-    base = os.environ.get("BASE_URL", "http://127.0.0.1:5000")
+    base = get_effective_base_url()
 
     for rel in parsed_relatives:
         rel_name = rel.get("name", "").strip()
@@ -704,8 +727,9 @@ def process_parent_collector_message(parent_info, user_message):
                     invite_text = (
                         f"💍 જય શ્રી કૃષ્ણ {rel_name}! 🙏\n\n"
                         f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગે આપનું અને આપના પરિવારનું હાર્દિક સ્વાગત છે.\n\n"
-                        f"આપના પરિવારમાંથી કેટલા સભ્યો પધારવાના છો તેની વિગત આપવા માટે નીચે આપેલી લિંક પર ક્લિક કરી માત્ર ૧ મિનિટમાં જણાવશો:\n"
-                        f"👉 {chat_url}\n\n"
+                        f"લગ્નમાં આપના પરિવારમાંથી કોણ કોણ પધારવાના છો તેની વિગત આપવા માટે નીચે આપેલી લિંક પર ક્લિક કરશો:\n\n"
+                        f"{chat_url}\n\n"
+                        f"(નોંધ: જો લિંક વાદળી/ક્લિક ન થાય, તો આ નંબર સેવ કરો અથવા આ મેસેજ પર 'હા' લખીને મોકલો, જેથી લિંક ખૂલી જશે.)\n\n"
                         f"આપના સ્નેહીજનો તરફથી 🙏"
                     )
                     send_baileys_message(guest_phone, invite_text)

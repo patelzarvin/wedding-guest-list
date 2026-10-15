@@ -65,18 +65,47 @@ def format_whatsapp_phone(raw_id):
         return f"+{digits[:-10]} {digits[-10:-5]} {digits[-5:]}".strip("+ ")
     return digits
 
+DEFAULT_LIVE_URL = "https://wedding-guest-list-8uhm.onrender.com"
+
 def get_base_url():
-    env_base = os.environ.get("BASE_URL")
-    if env_base:
+    # 1. Environment variable if explicitly set to a live public URL
+    env_base = os.environ.get("BASE_URL", "").strip()
+    if env_base and "127.0.0.1" not in env_base and "localhost" not in env_base:
         return env_base.rstrip('/')
+        
+    # 2. Render external URL environment variable
+    render_url = os.environ.get("RENDER_EXTERNAL_URL", "").strip()
+    if render_url:
+        return render_url.rstrip('/')
+
+    # 3. Dynamic request host if present and not localhost
     try:
-        if request:
-            proto = request.headers.get("X-Forwarded-Proto", request.scheme)
-            host = request.headers.get("X-Forwarded-Host", request.host)
-            return f"{proto}://{host}".rstrip('/')
+        if request and request.host:
+            h = request.host.lower()
+            if "127.0.0.1" not in h and "localhost" not in h:
+                proto = request.headers.get("X-Forwarded-Proto", request.scheme)
+                host = request.headers.get("X-Forwarded-Host", request.host)
+                url = f"{proto}://{host}".rstrip('/')
+                try:
+                    from database import set_app_setting
+                    set_app_setting("base_url", url)
+                except Exception:
+                    pass
+                return url
     except Exception:
         pass
-    return "http://127.0.0.1:5000"
+
+    # 4. Check saved base_url from database
+    try:
+        from database import get_app_setting
+        saved = get_app_setting("base_url")
+        if saved and "127.0.0.1" not in saved and "localhost" not in saved:
+            return saved.rstrip('/')
+    except Exception:
+        pass
+
+    # 5. Default to live production URL (never send 127.0.0.1 to a user's phone!)
+    return DEFAULT_LIVE_URL
 
 def call_baileys(endpoint, method="GET", data=None):
     url = f"{BAILEYS_SERVICE_URL}{endpoint}"
@@ -218,9 +247,10 @@ def setup_wizard():
                     
                     collector_msg = (
                         f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {p_name} {role_gu}! 🙏\n\n"
-                        f"{groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે અમારો AI આસિસ્ટન્ટ તૈયાર છે.\n\n"
-                        f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n"
-                        f"👉 {collector_url}\n\n"
+                        f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા અમારો AI સહાયક તૈયાર છે.\n\n"
+                        f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n\n"
+                        f"{collector_url}\n\n"
+                        f"(જો લિંક વાદળી/ક્લિક ન થાય, તો આ નંબર સેવ કરો અથવા આ મેસેજ પર 'હા' લખીને મોકલો, જેથી લિંક ખૂલી જશે.)\n\n"
                         f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે! 🌸"
                     )
                     try:
@@ -379,9 +409,10 @@ def api_send_parent_link(token):
     
     collector_msg = (
         f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent['name']} {role_gu}! 🙏\n\n"
-        f"{groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે અમારો AI આસિસ્ટન્ટ તૈયાર છે.\n\n"
-        f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n"
-        f"👉 {collector_url}\n\n"
+        f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા અમારો AI સહાયક તૈયાર છે.\n\n"
+        f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n\n"
+        f"{collector_url}\n\n"
+        f"(નોંધ: જો લિંક વાદળી/ક્લિક ન થાય, તો આ નંબર સેવ કરો અથવા આ મેસેજ પર 'હા' લખીને મોકલો, જેથી લિંક ખૂલી જશે.)\n\n"
         f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે! 🌸"
     )
     
@@ -431,9 +462,10 @@ def api_dispatch_all_parents():
             collector_url = f"{base_url}/collector/{p_token}"
             collector_msg = (
                 f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {p_name} {role_gu}! 🙏\n\n"
-                f"{groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે અમારો AI આસિસ્ટન્ટ તૈયાર છે.\n\n"
-                f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n"
-                f"👉 {collector_url}\n\n"
+                f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા અમારો AI સહાયક તૈયાર છે.\n\n"
+                f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n\n"
+                f"{collector_url}\n\n"
+                f"(નોંધ: જો લિંક વાદળી/ક્લિક ન થાય, તો આ નંબર સેવ કરો અથવા આ મેસેજ પર 'હા' લખીને મોકલો, જેથી લિંક ખૂલી જશે.)\n\n"
                 f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે! 🌸"
             )
             res, code = send_baileys_message(p_phone, collector_msg)
@@ -562,17 +594,29 @@ def baileys_webhook():
             "reply": result.get("bot_reply", "ધન્યવાદ!")
         })
         
-    # 3. Fallback greeting
-    fallback_msg = (
-        f"જય શ્રી કૃષ્ણ! 🙏\n"
-        f"આ લગ્ન પ્રસંગનો ડિજિટલ સહાયક છે.\n"
-        f"આપનું શુભ નામ અને પરિવારની વિગત જણાવશો જેથી અમે યાદીમાં નોંધી શકીએ."
-    )
+    # 3. Unknown sender: DO NOT auto-reply to personal WhatsApp chats!
+    # Only reply if the message explicitly contains wedding/rsvp keywords
+    low_msg = message.lower()
+    wedding_trigger_keywords = ["rsvp", "લગ્ન", "wedding", "invitation", "nimantran", "કંકોત્રી", "kankotri"]
+    if any(k in low_msg for k in wedding_trigger_keywords):
+        fallback_msg = (
+            f"💍 જય શ્રી કૃષ્ણ! 🙏\n\n"
+            f"આ લગ્ન પ્રસંગનો ડિજિટલ સહાયક છે.\n"
+            f"આપનું શુભ નામ અને પરિવારની વિગત જણાવશો જેથી અમે યાદીમાં નોંધી શકીએ."
+        )
+        return jsonify({
+            "success": True,
+            "auto_send": True,
+            "type": "wedding_inquiry",
+            "reply": fallback_msg
+        })
+
+    # For all other personal chats, stay silent and do not auto-reply
     return jsonify({
         "success": True,
-        "auto_send": True,
-        "type": "unknown",
-        "reply": fallback_msg
+        "auto_send": False,
+        "type": "personal_message_ignored",
+        "message": "Sender is neither a parent nor an invited guest. Skipped auto-reply to protect personal chat privacy."
     })
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from database import get_db, get_wedding_by_id, get_contacts_by_wedding, get_wedding_stats_db
 
-def export_guest_list_excel(output_path=None, base_url="http://127.0.0.1:5000", wedding_id=None, target_side=None):
+def export_guest_list_excel(output_path=None, base_url="https://wedding-guest-list-8uhm.onrender.com", wedding_id=None, target_side=None):
     if not output_path:
         output_path = os.path.join(os.path.dirname(__file__), "wedding_guest_list.xlsx")
         
