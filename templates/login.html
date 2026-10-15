@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aisle &amp; Vows - Wedding Suite Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #0c1017;
+            color: #FFFFFF;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Bokeh Background Accents matching Theme 2 */
+        .bokeh-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .bokeh {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(85px);
+            opacity: 0.5;
+        }
+        .b1 { width: 360px; height: 360px; background: radial-gradient(circle, #E5C158 0%, rgba(212,175,55,0.15) 60%, transparent 80%); top: 50px; right: 12%; }
+        .b2 { width: 460px; height: 460px; background: radial-gradient(circle, #D4AF37 0%, rgba(229,193,88,0.1) 60%, transparent 80%); bottom: 50px; left: 10%; }
+        .b3 { width: 260px; height: 260px; background: radial-gradient(circle, #FFDF78 0%, rgba(255,215,0,0.12) 60%, transparent 80%); top: 40%; left: 30%; }
+
+        /* Central Glass Card matching Screen 2 */
+        .auth-card {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(18, 24, 38, 0.75);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1.5px solid rgba(229, 193, 88, 0.4);
+            border-radius: 28px;
+            padding: 40px 36px 36px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(229, 193, 88, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .auth-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .auth-logo span { color: #E5C158; font-style: italic; }
+        .auth-subtitle {
+            font-size: 13px;
+            color: #94A3B8;
+        }
+
+        /* Tabs matching Screen 2 */
+        .tabs-header {
+            display: flex;
+            border-bottom: 1.5px solid rgba(229, 193, 88, 0.2);
+            margin-bottom: 26px;
+            position: relative;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #94A3B8;
+            cursor: pointer;
+            transition: color 0.25s;
+            position: relative;
+            text-align: center;
+        }
+        .tab-btn.active {
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1.5px;
+            left: 20%;
+            right: 20%;
+            height: 3px;
+            background: #E5C158;
+            border-radius: 3px;
+            box-shadow: 0 0 10px #E5C158;
+        }
+
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #CBD5E1;
+            margin-bottom: 7px;
+        }
+        .input-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(229, 193, 88, 0.25);
+            border-radius: 12px;
+            padding: 13px 16px;
+            font-size: 14px;
+            color: #FFFFFF;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-box:focus {
+            border-color: #E5C158;
+            box-shadow: 0 0 15px rgba(229, 193, 88, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .input-box::placeholder { color: #64748B; }
+
+        .remember-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #94A3B8;
+            margin-bottom: 24px;
+        }
+        .remember-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .remember-row input[type="checkbox"] {
+            accent-color: #E5C158;
+            width: 16px; height: 16px;
+        }
+        .remember-row a {
+            color: #E5C158;
+            text-decoration: none;
+        }
+        .remember-row a:hover { text-decoration: underline; }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
+            color: #0E1218;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 25px rgba(229, 193, 88, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(229, 193, 88, 0.55);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #EF4444;
+            color: #FCA5A5;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .alert-success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid #22C55E;
+            color: #86EFAC;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .auth-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #64748B;
+            border-top: 1px solid rgba(229, 193, 88, 0.15);
+            padding-top: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .secure-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #E5C158;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="bokeh-container">
+        <div class="bokeh b1"></div>
+        <div class="bokeh b2"></div>
+        <div class="bokeh b3"></div>
+    </div>
+
+    <div class="auth-card">
+        <div class="auth-header">
+            <a href="/" class="auth-logo">Aisle &amp; Vows <span>Weddings</span></a>
+            <div class="auth-subtitle">Intelligent Wedding Guest Management Software</div>
+        </div>
+
+        {% if error %}
+            <div class="alert-error">{{ error }}</div>
+        {% endif %}
+        {% if success %}
+            <div class="alert-success">{{ success }}</div>
+        {% endif %}
+
+        <!-- Tabs Header -->
+        <div class="tabs-header">
+            <button type="button" class="tab-btn {% if active_tab != 'register' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
+            <button type="button" class="tab-btn {% if active_tab == 'register' %}active{% endif %}" onclick="switchTab('register')">Create Account</button>
+        </div>
+
+        <!-- Sign In Form -->
+        <div id="signin-section" class="form-section {% if active_tab != 'register' %}active{% endif %}">
+            <form action="/login" method="POST">
+                <input type="hidden" name="action" value="login">
+                <div class="form-group">
+                    <label>Username / Email</label>
+                    <input type="text" name="username" class="input-box" placeholder="Enter your username or email" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="input-box" placeholder="Enter your password" required>
+                </div>
+                <div class="remember-row">
+                    <label><input type="checkbox" name="remember" checked> Remember My Family</label>
+                    <a href="javascript:void(0)" onclick="alert('Please contact your administrator or register a new family account.')">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn-submit">Sign In to Dashboard &rarr;</button>
+            </form>
+        </div>
+
+        <!-- Create Account Form -->
+        <div id="register-section" class="form-section {% if active_tab == 'register' %}active{% endif %}">
+            <form action="/register" method="POST">
+                <input type="hidden" name="action" value="register">
+                <div class="form-group">
+                    <label>Choose Username</label>
+                    <input type="text" name="username" class="input-box" placeholder="e.g. patel_family" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="input-box" placeholder="e.g. host@wedding.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Create Password</label>
+                    <input type="password" name="password" class="input-box" placeholder="Minimum 6 characters" required>
+                </div>
+                <button type="submit" class="btn-submit">Create Wedding Suite &rarr;</button>
+            </form>
+        </div>
+
+        <div class="auth-footer">
+            <span class="secure-badge">&#128274; 256-Bit SSL Encrypted</span>
+            <span>&bull;</span>
+            <span>Protected Guest Data</span>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            if (tab === 'signin') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('signin-section').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('register-section').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

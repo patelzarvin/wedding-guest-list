@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: wedvite-guest-concierge
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: BASE_URL
+        sync: false

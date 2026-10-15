@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>લગ્ન નિમંત્રણ - કુટુંબની વિગત | Wedding Guest Registration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Hind+Vadodara:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #800000;       /* Royal Maroon */
+            --primary-dark: #580000;
+            --gold: #D4AF37;          /* Regal Gold */
+            --gold-light: #F7EFD2;
+            --gold-border: #E6C875;
+            --bg-cream: #FDFBF7;
+            --card-bg: #FFFFFF;
+            --text-dark: #2B1810;
+            --text-muted: #6B5B52;
+            --border: #EADBCE;
+            --accent-green: #2E7D32;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Hind Vadodara', sans-serif;
+            background: linear-gradient(135deg, #FFF9F0 0%, #FBF3E8 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 20px 12px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 580px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 2px solid var(--gold-border);
+            box-shadow: 0 15px 35px rgba(128, 0, 0, 0.08), 0 5px 15px rgba(212, 175, 55, 0.12);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Top Festive Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #FFF;
+            text-align: center;
+            padding: 28px 20px 22px;
+            position: relative;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .header::after {
+            content: "❖ ❖ ❖";
+            display: block;
+            color: var(--gold);
+            font-size: 14px;
+            letter-spacing: 6px;
+            margin-top: 8px;
+        }
+
+        .shubh-labh {
+            font-size: 18px;
+            color: var(--gold);
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+
+        .wedding-title {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .invitation-sub {
+            font-size: 13px;
+            color: var(--gold-light);
+            margin-top: 4px;
+        }
+
+        /* Form Body */
+        .form-content {
+            padding: 24px 20px 32px;
+        }
+
+        /* Identity Badge */
+        .identity-card {
+            background: var(--gold-light);
+            border: 1px solid var(--gold-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .identity-icon {
+            font-size: 32px;
+            background: #FFF;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid var(--gold);
+            flex-shrink: 0;
+        }
+
+        .identity-info h3 {
+            font-size: 17px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .identity-info p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: #FFF;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        /* Question Section */
+        .question-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
+        }
+
+        .question-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .question-title span.gu {
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Toggle Buttons */
+        .toggle-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 11px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: #FAFAFA;
+            color: var(--text-dark);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            border-color: var(--primary);
+            background: #FFF5F5;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(128, 0, 0, 0.1);
+        }
+
+        /* Input Fields */
+        .input-group {
+            margin-top: 14px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 11px 14px;
+            font-size: 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        .input-control:focus {
+            border-color: var(--primary);
+            background: #FFFAFA;
+        }
+
+        .helper-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Dynamic Repeater Items (Children / Family) */
+        .repeater-list {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .repeater-item {
+            background: #FDFBF8;
+            border: 1px dashed var(--gold);
+            border-radius: 10px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .repeater-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #C62828;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .add-more-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #FFF8E7;
+            color: #8C6B00;
+            border: 1.5px dashed var(--gold);
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .add-more-btn:hover {
+            background: #FFF0C9;
+        }
+
+        /* Summary Preview Card */
+        .summary-card {
+            background: linear-gradient(135deg, #FFFDF8 0%, #FFF8ED 100%);
+            border: 2px solid var(--gold);
+            border-radius: 14px;
+            padding: 18px;
+            margin-top: 24px;
+            text-align: center;
+        }
+
+        .summary-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .headcount-badge {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 6px 0;
+        }
+
+        .summary-breakdown {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #FFF;
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(128, 0, 0, 0.25);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(128, 0, 0, 0.35);
+        }
+
+        /* Success Card */
+        .success-box {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            font-size: 55px;
+            color: var(--accent-green);
+            margin-bottom: 14px;
+        }
+
+        .success-box h2 {
+            font-size: 22px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .success-box p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="shubh-labh">॥ શ્રી ગણેશાય નમઃ ॥</div>
+        <div class="wedding-title">{{ wedding_info.couple_name }} Wedding</div>
+        <div class="invitation-sub">લગ્ન નિમંત્રણ - પરિવારની વિગત પુષ્ટિ</div>
+    </div>
+
+    <!-- Active Form View -->
+    <div class="form-content" id="formWrapper">
+        <!-- Identity Card -->
+        <div class="identity-card">
+            <div class="identity-icon">🙏</div>
+            <div class="identity-info">
+                <h3 id="displayHeadName">{{ contact.name }}</h3>
+                <p>મોબાઈલ: {{ contact.phone }}</p>
+                <span class="badge-tag">
+                    {{ "Father's" if contact.added_by == 'FATHER' else ("Mother's" if contact.added_by == 'MOTHER' else contact.side.title()) }} {{ contact.category.title() }} ({{ category_gu }})
+                </span>
+            </div>
+        </div>
+
+        <form id="relativeForm" onsubmit="handleFormSubmit(event)">
+            <!-- 1. Name & Mobile Confirmation -->
+            <div class="question-card">
+                <div class="question-title">
+                    1. આપનું નામ અને નંબર ચકાસો
+                    <span class="gu">(Verify your name & mobile)</span>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">આપનું પૂરું નામ (Your Full Name)</label>
+                    <input type="text" id="confirmedName" class="input-control" value="{{ contact.name }}" required oninput="updateSummary()">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">મોબાઈલ નંબર (Mobile Number)</label>
+                    <input type="tel" id="confirmedPhone" class="input-control" value="{{ contact.phone }}" required>
+                </div>
+            </div>
+
+            <!-- 2. Married or Unmarried -->
+            <div class="question-card">
+                <div class="question-title">
+                    2. શું તમે પરણેલા છો?
+                    <span class="gu">(Are you married?)</span>
+                </div>
+                <div class="toggle-group">
+                    <button type="button" class="toggle-btn active" id="btnMarriedYes" onclick="setMarried(true)">હા (Yes)</button>
+                    <button type="button" class="toggle-btn" id="btnMarriedNo" onclick="setMarried(false)">ના (No / Single)</button>
+                </div>
+
+                <div id="partnerSection" class="input-group">
+                    <label class="input-label">જીવનસાથી / પત્ની / પતિનું નામ (Spouse Name)</label>
+                    <input type="text" id="partnerName" class="input-control" placeholder="દા.ત. રેખાબેન પટેલ" oninput="updateSummary()">
+                    <div class="helper-text">તેમનો મોબાઈલ નંબર (મરજિયાત / Optional)</div>
+                    <input type="tel" id="partnerPhone" class="input-control" style="margin-top: 6px;" placeholder="મોબાઈલ નંબર">
+                </div>
+            </div>
+
+            <!-- 3. Children Section -->
+            <div class="question-card" id="childrenCard">
+                <div class="question-title">
+                    3. શું તમને બાળકો છે?
+                    <span class="gu">(Do you have children?)</span>
+                </div>
+                <div class="toggle-group">
+                    <button type="button" class="toggle-btn" id="btnKidsYes" onclick="setKids(true)">હા (Yes)</button>
+                    <button type="button" class="toggle-btn active" id="btnKidsNo" onclick="setKids(false)">ના (No)</button>
+                </div>
+
+                <div id="childrenSection" style="display: none; margin-top: 14px;">
+                    <label class="input-label">બાળકોની વિગત (Children Details)</label>
+                    <div class="helper-text" style="margin-bottom: 8px;">* બાળક પાસે ફોન ના હોય તો નંબર લખવાની જરૂર નથી.</div>
+                    
+                    <div id="childrenList" class="repeater-list">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <button type="button" class="add-more-btn" onclick="addChildRow()">
+                        ➕ બીજું બાળક ઉમેરો (+ Add Child)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Other Family Members living together (Parents / Grandparents) -->
+            <div class="question-card">
+                <div class="question-title">
+                    4. આપની સાથે રહેતા અન્ય વડીલો / સભ્યો?
+                    <span class="gu">(Other family members living with you?)</span>
+                </div>
+                <div class="toggle-group">
+                    <button type="button" class="toggle-btn" id="btnOtherYes" onclick="setOthers(true)">હા (Yes)</button>
+                    <button type="button" class="toggle-btn active" id="btnOtherNo" onclick="setOthers(false)">ના (No)</button>
+                </div>
+
+                <div id="otherSection" style="display: none; margin-top: 14px;">
+                    <div id="otherList" class="repeater-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                    <button type="button" class="add-more-btn" onclick="addOtherRow()">
+                        ➕ વડીલ / સભ્ય ઉમેરો (+ Add Member)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. Live Count & Confirmation -->
+            <div class="summary-card">
+                <div class="summary-title">કુલ પધારનારા મહેમાનો (Total Guests Coming)</div>
+                <div class="headcount-badge" id="totalCountBadge">1 વ્યક્તિ</div>
+                <div class="summary-breakdown" id="summaryBreakdownText">
+                    આપ (Self)
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                વિગતો સબમિટ કરો (Confirm & Submit)
+            </button>
+        </form>
+    </div>
+
+    <!-- Success View -->
+    <div class="form-content success-box" id="successBox">
+        <div class="success-icon">💐</div>
+        <h2>ખૂબ ખૂબ આભાર!</h2>
+        <p style="font-weight: 600; color: var(--primary); margin-bottom: 6px;">Thank you for confirming your family details.</p>
+        <p>આપના પરિવારની વિગતો સફળતાપૂર્વક નોંધી લેવામાં આવી છે. અમારા લગ્ન પ્રસંગમાં આપના પરિવારની ઉપસ્થિતિ અમારા માટે સૌભાગ્યરૂપ રહેશે.</p>
+        <div style="margin-top: 20px; padding: 14px; background: var(--gold-light); border-radius: 10px; font-weight: 600;">
+            આપના પરિવારમાંથી <span id="confirmedFinalCount" style="color: var(--primary); font-size: 18px;"></span> સભ્યોની નોંધણી થયેલ છે.
+        </div>
+    </div>
+</div>
+
+<script>
+    let isMarried = true;
+    let hasKids = false;
+    let hasOthers = false;
+    let token = "{{ contact.token }}";
+
+    function setMarried(val) {
+        isMarried = val;
+        document.getElementById('btnMarriedYes').classList.toggle('active', val);
+        document.getElementById('btnMarriedNo').classList.toggle('active', !val);
+        document.getElementById('partnerSection').style.display = val ? 'block' : 'none';
+        
+        // If not married, automatically disable kids
+        if (!val) {
+            setKids(false);
+            document.getElementById('childrenCard').style.display = 'none';
+        } else {
+            document.getElementById('childrenCard').style.display = 'block';
+        }
+        updateSummary();
+    }
+
+    function setKids(val) {
+        hasKids = val;
+        document.getElementById('btnKidsYes').classList.toggle('active', val);
+        document.getElementById('btnKidsNo').classList.toggle('active', !val);
+        document.getElementById('childrenSection').style.display = val ? 'block' : 'none';
+        
+        if (val) {
+            const list = document.getElementById('childrenList');
+            if (list.children.length === 0) {
+                addChildRow();
+            }
+        }
+        updateSummary();
+    }
+
+    function setOthers(val) {
+        hasOthers = val;
+        document.getElementById('btnOtherYes').classList.toggle('active', val);
+        document.getElementById('btnOtherNo').classList.toggle('active', !val);
+        document.getElementById('otherSection').style.display = val ? 'block' : 'none';
+        
+        if (val) {
+            const list = document.getElementById('otherList');
+            if (list.children.length === 0) {
+                addOtherRow();
+            }
+        }
+        updateSummary();
+    }
+
+    function addChildRow() {
+        const list = document.getElementById('childrenList');
+        const index = list.children.length + 1;
+        const div = document.createElement('div');
+        div.className = 'repeater-item';
+        div.innerHTML = `
+            <button type="button" class="remove-btn" onclick="this.parentElement.remove(); updateSummary();">&times;</button>
+            <div class="repeater-row">
+                <input type="text" class="input-control child-name" placeholder="બાળકનું નામ (Child ${index} Name)" oninput="updateSummary()" required>
+                <select class="input-control child-age" style="max-width: 130px;" onchange="updateSummary()">
+                    <option value="Child">Child (બાળક)</option>
+                    <option value="Adult">Adult (પુખ્ત)</option>
+                </select>
+            </div>
+            <input type="tel" class="input-control child-phone" placeholder="મોબાઈલ નંબર (મરજિયાત / Optional - ના હોય તો ખાલી રાખો)">
+        `;
+        list.appendChild(div);
+        updateSummary();
+    }
+
+    function addOtherRow() {
+        const list = document.getElementById('otherList');
+        const div = document.createElement('div');
+        div.className = 'repeater-item';
+        div.innerHTML = `
+            <button type="button" class="remove-btn" onclick="this.parentElement.remove(); updateSummary();">&times;</button>
+            <div class="repeater-row">
+                <input type="text" class="input-control other-name" placeholder="વડીલનું નામ (Member Name)" oninput="updateSummary()" required>
+                <input type="text" class="input-control other-rel" style="max-width: 140px;" placeholder="સંબંધ (દા.ત. પિતાજી/માતાજી)" oninput="updateSummary()">
+            </div>
+            <input type="tel" class="input-control other-phone" placeholder="મોબાઈલ નંબર (મરજિયાત / Optional)">
+        `;
+        list.appendChild(div);
+        updateSummary();
+    }
+
+    function updateSummary() {
+        let count = 1; // Head
+        let parts = ["આપ (Self)"];
+
+        const headName = document.getElementById('confirmedName').value.trim() || "{{ contact.name }}";
+        document.getElementById('displayHeadName').innerText = headName;
+
+        if (isMarried) {
+            const partner = document.getElementById('partnerName').value.trim();
+            count += 1;
+            parts.push(partner ? `જીવનસાથી (${partner})` : "જીવનસાથી");
+        }
+
+        if (hasKids) {
+            const childInputs = document.querySelectorAll('.child-name');
+            childInputs.forEach((inp, idx) => {
+                const name = inp.value.trim() || `બાળક ${idx+1}`;
+                count += 1;
+                parts.push(name);
+            });
+        }
+
+        if (hasOthers) {
+            const otherInputs = document.querySelectorAll('.other-name');
+            otherInputs.forEach((inp, idx) => {
+                const name = inp.value.trim() || `વડીલ/સભ્ય ${idx+1}`;
+                count += 1;
+                parts.push(name);
+            });
+        }
+
+        document.getElementById('totalCountBadge').innerText = `${count} વ્યક્તિ (${count} Guests)`;
+        document.getElementById('summaryBreakdownText').innerText = parts.join(" + ");
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = "સાચવી રહ્યું છે... (Saving...)";
+
+        const confirmedName = document.getElementById('confirmedName').value.trim();
+        const confirmedPhone = document.getElementById('confirmedPhone').value.trim();
+        const partnerName = isMarried ? document.getElementById('partnerName').value.trim() : "";
+        const partnerPhone = isMarried ? document.getElementById('partnerPhone').value.trim() : "";
+
+        // Collect children
+        const children = [];
+        if (hasKids) {
+            const items = document.querySelectorAll('#childrenList .repeater-item');
+            items.forEach(item => {
+                const name = item.querySelector('.child-name').value.trim();
+                const ageGroup = item.querySelector('.child-age').value;
+                const phone = item.querySelector('.child-phone').value.trim();
+                if (name) {
+                    children.push({ name, age_group: ageGroup, phone });
+                }
+            });
+        }
+
+        // Collect other members
+        const otherMembers = [];
+        if (hasOthers) {
+            const items = document.querySelectorAll('#otherList .repeater-item');
+            items.forEach(item => {
+                const name = item.querySelector('.other-name').value.trim();
+                const relation = item.querySelector('.other-rel').value.trim();
+                const phone = item.querySelector('.other-phone').value.trim();
+                if (name) {
+                    otherMembers.push({ name, relation, phone });
+                }
+            });
+        }
+
+        const payload = {
+            confirmed_name: confirmedName,
+            confirmed_phone: confirmedPhone,
+            is_married: isMarried,
+            partner_name: partnerName,
+            partner_phone: partnerPhone,
+            children: children,
+            other_members: otherMembers
+        };
+
+        try {
+            const res = await fetch(`/api/submit/${token}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('formWrapper').style.display = 'none';
+                document.getElementById('successBox').style.display = 'block';
+                document.getElementById('confirmedFinalCount').innerText = `${data.household.total_coming} વ્યક્તિ`;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                alert("Error saving details: " + (data.message || "Unknown error"));
+                btn.disabled = false;
+                btn.innerText = "વિગતો સબમિટ કરો (Confirm & Submit)";
+            }
+        } catch (err) {
+            alert("Error connecting to server.");
+            btn.disabled = false;
+            btn.innerText = "વિગતો સબમિટ કરો (Confirm & Submit)";
+        }
+    }
+
+    // Initial run
+    updateSummary();
+</script>
+
+</body>
+</html>

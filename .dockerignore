@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+whatsapp_service/node_modules/
+whatsapp_service/auth_info/
+scratch/
+.agents/
+.claude/
+*.xlsx
+*.db
+.git
+.gitignore
+settings.json

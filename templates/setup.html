@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aisle &amp; Vows - Wedding Setup Wizard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #0c1017;
+            color: #FFFFFF;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Bokeh Background Accents matching Theme 2 */
+        .bokeh-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .bokeh {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(85px);
+            opacity: 0.5;
+        }
+        .b1 { width: 380px; height: 380px; background: radial-gradient(circle, #E5C158 0%, rgba(212,175,55,0.15) 60%, transparent 80%); top: 50px; right: 10%; }
+        .b2 { width: 480px; height: 480px; background: radial-gradient(circle, #D4AF37 0%, rgba(229,193,88,0.1) 60%, transparent 80%); bottom: 50px; left: 8%; }
+        .b3 { width: 280px; height: 280px; background: radial-gradient(circle, #FFDF78 0%, rgba(255,215,0,0.12) 60%, transparent 80%); top: 40%; left: 30%; }
+
+        /* Central Setup Wizard Card matching Screen 2 */
+        .wizard-card {
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(18, 24, 38, 0.75);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1.5px solid rgba(229, 193, 88, 0.4);
+            border-radius: 28px;
+            padding: 40px 48px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(229, 193, 88, 0.2);
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .wizard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(229, 193, 88, 0.2);
+            padding-bottom: 22px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .wizard-title h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+        .wizard-title p {
+            font-size: 14px;
+            color: #94A3B8;
+            margin-top: 4px;
+        }
+        .step-pill {
+            background: rgba(229, 193, 88, 0.15);
+            border: 1px solid rgba(229, 193, 88, 0.5);
+            color: #F6D87A;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 22px;
+            border-radius: 30px;
+            box-shadow: 0 0 15px rgba(229, 193, 88, 0.2);
+        }
+
+        /* Two columns matching Screen 2 inputs */
+        .columns-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 36px;
+        }
+        .column-box {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(229, 193, 88, 0.15);
+            border-radius: 20px;
+            padding: 24px 26px;
+        }
+        .col-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #F6D87A;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(229, 193, 88, 0.15);
+            padding-bottom: 10px;
+            margin-bottom: 4px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #CBD5E1;
+        }
+        .input-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(229, 193, 88, 0.25);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #FFFFFF;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-box:focus {
+            border-color: #E5C158;
+            box-shadow: 0 0 15px rgba(229, 193, 88, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .input-box::placeholder { color: #64748B; }
+
+        .extra-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(229, 193, 88, 0.15);
+            border-radius: 20px;
+            padding: 20px 26px;
+        }
+
+        .footer-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(229, 193, 88, 0.2);
+            padding-top: 22px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .autopilot-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94A3B8;
+            font-size: 13px;
+        }
+        .autopilot-tag span {
+            color: #E5C158;
+            font-weight: 600;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
+            color: #0E1218;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 14px 40px;
+            border-radius: 14px;
+            border: none;
+            box-shadow: 0 6px 25px rgba(229, 193, 88, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(229, 193, 88, 0.55);
+        }
+    </style>
+</head>
+<body>
+    <div class="bokeh-container">
+        <div class="bokeh b1"></div>
+        <div class="bokeh b2"></div>
+        <div class="bokeh b3"></div>
+    </div>
+
+    <form action="/setup" method="POST" class="wizard-card">
+        <div class="wizard-header">
+            <div class="wizard-title">
+                <h1>&#128141; Aisle &amp; Vows &mdash; Wedding Setup Wizard</h1>
+                <p>Enter couple and family contacts once to initialize the 100% Autopilot AI WhatsApp Concierge.</p>
+            </div>
+            <div class="step-pill">Step 1 of 3: Couple &amp; Family Details</div>
+        </div>
+
+        <div class="columns-row">
+            <!-- Groom Column -->
+            <div class="column-box">
+                <div class="col-title">&#128100; Groom Side (&#2713;&#2736; &#2730;&#2709;&#2749;)</div>
+                <div class="form-group">
+                    <label>Groom's Full Name *</label>
+                    <input type="text" name="groom_name" class="input-box" value="{{ wedding.groom_name if wedding else 'Jyot Patel' }}" placeholder="e.g. Jyot Patel" required>
+                </div>
+                <div class="form-group">
+                    <label>Groom's WhatsApp Phone *</label>
+                    <input type="tel" name="groom_phone" class="input-box" value="{{ wedding.groom_phone if wedding else '9876543210' }}" placeholder="10-digit mobile number" required>
+                </div>
+                <div class="form-group">
+                    <label>Father's Name &amp; Phone (પિતાશ્રી) *</label>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+                        <input type="text" name="groom_father_name" class="input-box" value="{{ wedding.groom_father_name if wedding else 'Shankarlal Patel' }}" placeholder="Father Name" required>
+                        <input type="tel" name="groom_father_phone" class="input-box" value="{{ wedding.groom_father_phone if wedding else '7984285496' }}" placeholder="Father Phone" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mother's Name &amp; Phone (માતાશ્રી) *</label>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+                        <input type="text" name="groom_mother_name" class="input-box" value="{{ wedding.groom_mother_name if wedding else 'Pinky Ben Patel' }}" placeholder="Mother Name" required>
+                        <input type="tel" name="groom_mother_phone" class="input-box" value="{{ wedding.groom_mother_phone if wedding else '9265834826' }}" placeholder="Mother Phone" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bride Column -->
+            <div class="column-box">
+                <div class="col-title">&#128112; Bride Side (&#2709;&#2728;&#2749;&#2742;&#2750; &#2730;&#2709;&#2749;)</div>
+                <div class="form-group">
+                    <label>Bride's Full Name *</label>
+                    <input type="text" name="bride_name" class="input-box" value="{{ wedding.bride_name if wedding else 'Stuti Shah' }}" placeholder="e.g. Stuti Shah" required>
+                </div>
+                <div class="form-group">
+                    <label>Bride's WhatsApp Phone *</label>
+                    <input type="tel" name="bride_phone" class="input-box" value="{{ wedding.bride_phone if wedding else '9879012345' }}" placeholder="10-digit mobile number" required>
+                </div>
+                <div class="form-group">
+                    <label>Father's Name &amp; Phone (પિતાશ્રી)</label>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+                        <input type="text" name="bride_father_name" class="input-box" value="{{ wedding.bride_father_name if wedding else 'Hasmukhbhai Shah' }}" placeholder="Father Name">
+                        <input type="tel" name="bride_father_phone" class="input-box" value="{{ wedding.bride_father_phone if wedding else '9825012345' }}" placeholder="Father Phone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mother's Name &amp; Phone (માતાશ્રી)</label>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+                        <input type="text" name="bride_mother_name" class="input-box" value="{{ wedding.bride_mother_name if wedding else 'Meenaben Shah' }}" placeholder="Mother Name">
+                        <input type="tel" name="bride_mother_phone" class="input-box" value="{{ wedding.bride_mother_phone if wedding else '9824012345' }}" placeholder="Mother Phone">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="extra-row">
+            <div class="form-group">
+                <label>Wedding Date (લગ્ન તારીખ)</label>
+                <input type="text" name="wedding_date" class="input-box" value="{{ wedding.wedding_date if wedding else 'December 15, 2026' }}" placeholder="e.g. 15 December 2026">
+            </div>
+            <div class="form-group">
+                <label>Wedding City / Venue (શહેર / સ્થળ)</label>
+                <input type="text" name="wedding_city" class="input-box" value="{{ wedding.wedding_city if wedding else 'Ahmedabad, Gujarat' }}" placeholder="e.g. Ahmedabad">
+            </div>
+        </div>
+
+        <div class="footer-action">
+            <div class="autopilot-tag">
+                &#9889; <span>100% Autopilot:</span> Bot will auto-dispatch WhatsApp collector links to parents immediately.
+            </div>
+            <button type="submit" class="btn-submit">Save &amp; Enter Wedding Suite &rarr;</button>
+        </div>
+    </form>
+</body>
+</html>

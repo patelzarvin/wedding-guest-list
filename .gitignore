@@ -1,0 +1,42 @@
+# Python & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# WhatsApp Baileys Credentials & Dependencies (CRITICAL: NEVER COMMIT AUTH SECRETS)
+node_modules/
+**/node_modules/
+auth_info/
+**/auth_info/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local Database & Exports
+*.db
+*.sqlite
+*.sqlite3
+*.xlsx
+*.csv
+
+# Scratch, Testing & Local IDE
+scratch/
+.agents/
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment & Local Secrets
+settings.json
+.env
+.env.local
+.env.*.local

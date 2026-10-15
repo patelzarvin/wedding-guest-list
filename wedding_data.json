@@ -1,0 +1,24 @@
+{
+  "wedding_info": {
+    "groom_name": "",
+    "bride_name": "",
+    "active_side": "GROOM",
+    "groom_family": {
+      "father_name": "",
+      "father_phone": "",
+      "mother_name": "",
+      "mother_phone": "",
+      "father_token": "gf_fat_init",
+      "mother_token": "gf_mot_init"
+    },
+    "bride_family": {
+      "father_name": "",
+      "father_phone": "",
+      "mother_name": "",
+      "mother_phone": "",
+      "father_token": "bf_fat_init",
+      "mother_token": "bf_mot_init"
+    }
+  },
+  "contacts": []
+}
