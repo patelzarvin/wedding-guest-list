@@ -403,7 +403,14 @@ def process_chat_message(token, user_message):
     api_key = get_gemini_api_key()
     bot_result = None
 
-    if api_key:
+    # Check for direct one-shot headcount confirmation first (e.g. '4 લોકો', '3 જણા')
+    headcount_match = re.search(r'(\d+)\s*(?:people|members|person|જના|જણા|લોકો|સભ્યો|વ્યક્તિ|jna|loko|sabyo)', user_message, re.IGNORECASE)
+    if headcount_match:
+        count = int(headcount_match.group(1))
+        state = session.get("state", {})
+        state["total_headcount"] = max(count, 1)
+        bot_result = finalize_chat_summary(contact, session, state)
+    elif api_key:
         try:
             bot_result = call_gemini_llm(api_key, contact, session["messages"], user_message, session["state"])
             session["state"] = bot_result.get("updated_state", session["state"])
@@ -426,6 +433,8 @@ def process_chat_message(token, user_message):
         pass
 
     # Check if completed
+    if "updated_state" in bot_result:
+        session["state"] = bot_result["updated_state"]
     final_state = session["state"]
     if final_state.get("is_complete"):
         # Auto-commit to guest list
@@ -697,8 +706,10 @@ def call_gemini_for_parent_collector(parent_info, user_message, conversation_his
         )
         return [], reply, True
 
+    groom = parent_info.get("groom_name", "").strip() or "Groom"
+    bride = parent_info.get("bride_name", "").strip() or "Bride"
     system_prompt = f"""
-You are an intelligent, warm Gujarati Wedding Guest Relatives Collector Assistant for Jyot & Stuti's wedding.
+You are an intelligent, warm Gujarati Wedding Guest Relatives Collector Assistant for {groom} & {bride}'s wedding.
 You are directly speaking on WhatsApp with the wedding host's {parent_info['role']} ({parent_info['name']}) on the {parent_info['side']} side.
 Their goal is to list their relatives using the predefined format: [સંબંધ] [નામ] [મોબાઈલ નંબર].
 

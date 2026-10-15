@@ -193,8 +193,8 @@ def setup_wizard():
         # 100% AUTOPILOT: Automatically dispatch parent collector links via Baileys WhatsApp
         parents = get_parent_sessions(wedding_id)
         base_url = get_base_url()
-        groom = form_data.get("groom_name", "જ્યોત")
-        bride = form_data.get("bride_name", "સ્તુતિ")
+        groom = form_data.get("groom_name", "").strip() or "વરરાજા"
+        bride = form_data.get("bride_name", "").strip() or "કન્યા"
         
         for p in parents:
             p_phone = p.get("phone", "").strip()
@@ -275,8 +275,8 @@ def parent_collector_view(token):
     if not history:
         role_gu = "પિતાશ્રી (પપ્પા)" if parent["role"] == "FATHER" else "માતાશ્રી (મમ્મી)"
         side_gu = "પિતા પક્ષ (Father's Side)" if parent["role"] == "FATHER" else "માતા પક્ષ (Mother's Side)"
-        groom = parent.get("groom_name", "જ્યોત")
-        bride = parent.get("bride_name", "સ્તુતિ")
+        groom = parent.get("groom_name", "").strip() or "વરરાજા"
+        bride = parent.get("bride_name", "").strip() or "કન્યા"
         
         initial_greeting = (
             f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent['name']} {role_gu}! 🙏\n\n"
@@ -318,8 +318,8 @@ def guest_chat_view(token):
         
     history = get_chat_history_db(token)
     if not history:
-        groom = contact.get("groom_name", "જ્યોત")
-        bride = contact.get("bride_name", "સ્તુતિ")
+        groom = contact.get("groom_name", "").strip() or "વરરાજા"
+        bride = contact.get("bride_name", "").strip() or "કન્યા"
         side_label = "વર પક્ષ" if contact.get("side") == "GROOM" else "કન્યા પક્ષ"
         
         initial_greeting = (
@@ -361,8 +361,8 @@ def api_send_parent_link(token):
     side_gu = "પિતા પક્ષ" if parent["role"] == "FATHER" else "માતા પક્ષ"
     base_url = get_base_url()
     collector_url = f"{base_url}/collector/{token}"
-    groom = parent.get("groom_name", "જ્યોત")
-    bride = parent.get("bride_name", "સ્તુતિ")
+    groom = parent.get("groom_name", "").strip() or "વરરાજા"
+    bride = parent.get("bride_name", "").strip() or "કન્યા"
     
     collector_msg = (
         f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent['name']} {role_gu}! 🙏\n\n"

@@ -214,54 +214,54 @@
         <div class="columns-row">
             <!-- Groom Column -->
             <div class="column-box">
-                <div class="col-title">&#128100; Groom Side (&#2713;&#2736; &#2730;&#2709;&#2749;)</div>
+                <div class="col-title">&#128100; Groom Side (વર પક્ષ)</div>
                 <div class="form-group">
                     <label>Groom's Full Name *</label>
-                    <input type="text" name="groom_name" class="input-box" value="{{ wedding.groom_name if wedding else 'Jyot Patel' }}" placeholder="e.g. Jyot Patel" required>
+                    <input type="text" name="groom_name" class="input-box" value="{{ wedding.groom_name if wedding else '' }}" placeholder="e.g. Groom Full Name" required>
                 </div>
                 <div class="form-group">
                     <label>Groom's WhatsApp Phone *</label>
-                    <input type="tel" name="groom_phone" class="input-box" value="{{ wedding.groom_phone if wedding else '9876543210' }}" placeholder="10-digit mobile number" required>
+                    <input type="tel" name="groom_phone" class="input-box" value="{{ wedding.groom_phone if wedding else '' }}" placeholder="10-digit mobile number" required>
                 </div>
                 <div class="form-group">
                     <label>Father's Name &amp; Phone (પિતાશ્રી) *</label>
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="groom_father_name" class="input-box" value="{{ wedding.groom_father_name if wedding else 'Shankarlal Patel' }}" placeholder="Father Name" required>
-                        <input type="tel" name="groom_father_phone" class="input-box" value="{{ wedding.groom_father_phone if wedding else '7984285496' }}" placeholder="Father Phone" required>
+                        <input type="text" name="groom_father_name" class="input-box" value="{{ wedding.groom_father_name if wedding else '' }}" placeholder="Father Name" required>
+                        <input type="tel" name="groom_father_phone" class="input-box" value="{{ wedding.groom_father_phone if wedding else '' }}" placeholder="Father Phone" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Mother's Name &amp; Phone (માતાશ્રી) *</label>
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="groom_mother_name" class="input-box" value="{{ wedding.groom_mother_name if wedding else 'Pinky Ben Patel' }}" placeholder="Mother Name" required>
-                        <input type="tel" name="groom_mother_phone" class="input-box" value="{{ wedding.groom_mother_phone if wedding else '9265834826' }}" placeholder="Mother Phone" required>
+                        <input type="text" name="groom_mother_name" class="input-box" value="{{ wedding.groom_mother_name if wedding else '' }}" placeholder="Mother Name" required>
+                        <input type="tel" name="groom_mother_phone" class="input-box" value="{{ wedding.groom_mother_phone if wedding else '' }}" placeholder="Mother Phone" required>
                     </div>
                 </div>
             </div>
 
             <!-- Bride Column -->
             <div class="column-box">
-                <div class="col-title">&#128112; Bride Side (&#2709;&#2728;&#2749;&#2742;&#2750; &#2730;&#2709;&#2749;)</div>
+                <div class="col-title">&#128112; Bride Side (કન્યા પક્ષ)</div>
                 <div class="form-group">
                     <label>Bride's Full Name *</label>
-                    <input type="text" name="bride_name" class="input-box" value="{{ wedding.bride_name if wedding else 'Stuti Shah' }}" placeholder="e.g. Stuti Shah" required>
+                    <input type="text" name="bride_name" class="input-box" value="{{ wedding.bride_name if wedding else '' }}" placeholder="e.g. Bride Full Name" required>
                 </div>
                 <div class="form-group">
                     <label>Bride's WhatsApp Phone *</label>
-                    <input type="tel" name="bride_phone" class="input-box" value="{{ wedding.bride_phone if wedding else '9879012345' }}" placeholder="10-digit mobile number" required>
+                    <input type="tel" name="bride_phone" class="input-box" value="{{ wedding.bride_phone if wedding else '' }}" placeholder="10-digit mobile number" required>
                 </div>
                 <div class="form-group">
                     <label>Father's Name &amp; Phone (પિતાશ્રી)</label>
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="bride_father_name" class="input-box" value="{{ wedding.bride_father_name if wedding else 'Hasmukhbhai Shah' }}" placeholder="Father Name">
-                        <input type="tel" name="bride_father_phone" class="input-box" value="{{ wedding.bride_father_phone if wedding else '9825012345' }}" placeholder="Father Phone">
+                        <input type="text" name="bride_father_name" class="input-box" value="{{ wedding.bride_father_name if wedding else '' }}" placeholder="Father Name">
+                        <input type="tel" name="bride_father_phone" class="input-box" value="{{ wedding.bride_father_phone if wedding else '' }}" placeholder="Father Phone">
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Mother's Name &amp; Phone (માતાશ્રી)</label>
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="bride_mother_name" class="input-box" value="{{ wedding.bride_mother_name if wedding else 'Meenaben Shah' }}" placeholder="Mother Name">
-                        <input type="tel" name="bride_mother_phone" class="input-box" value="{{ wedding.bride_mother_phone if wedding else '9824012345' }}" placeholder="Mother Phone">
+                        <input type="text" name="bride_mother_name" class="input-box" value="{{ wedding.bride_mother_name if wedding else '' }}" placeholder="Mother Name">
+                        <input type="tel" name="bride_mother_phone" class="input-box" value="{{ wedding.bride_mother_phone if wedding else '' }}" placeholder="Mother Phone">
                     </div>
                 </div>
             </div>
@@ -270,11 +270,11 @@
         <div class="extra-row">
             <div class="form-group">
                 <label>Wedding Date (લગ્ન તારીખ)</label>
-                <input type="text" name="wedding_date" class="input-box" value="{{ wedding.wedding_date if wedding else 'December 15, 2026' }}" placeholder="e.g. 15 December 2026">
+                <input type="text" name="wedding_date" class="input-box" value="{{ wedding.wedding_date if wedding else '' }}" placeholder="e.g. 15 December 2026">
             </div>
             <div class="form-group">
                 <label>Wedding City / Venue (શહેર / સ્થળ)</label>
-                <input type="text" name="wedding_city" class="input-box" value="{{ wedding.wedding_city if wedding else 'Ahmedabad, Gujarat' }}" placeholder="e.g. Ahmedabad">
+                <input type="text" name="wedding_city" class="input-box" value="{{ wedding.wedding_city if wedding else '' }}" placeholder="e.g. Ahmedabad">
             </div>
         </div>
 
