@@ -114,6 +114,15 @@ def init_db():
     );
     """)
     
+    # 7. App Settings Table (Persistent config like Gemini API key)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     c.execute("CREATE INDEX IF NOT EXISTS idx_chat_token ON chat_logs(token);")
     c.execute("CREATE INDEX IF NOT EXISTS idx_contact_token ON contacts(token);")
     c.execute("CREATE INDEX IF NOT EXISTS idx_parent_token ON parent_sessions(token);")
@@ -422,3 +431,30 @@ def clean_all_data():
         except Exception:
             pass
     init_db()
+
+def get_app_setting(key, default=""):
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT value FROM app_settings WHERE key = ?", (key,))
+        row = c.fetchone()
+        conn.close()
+        return row["value"] if row and row["value"] else default
+    except Exception:
+        return default
+
+def set_app_setting(key, value):
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO app_settings (key, value, updated_at) 
+            VALUES (?, ?, CURRENT_TIMESTAMP) 
+            ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=CURRENT_TIMESTAMP
+        """, (key, value))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print("Error saving app setting:", e)
+        return False

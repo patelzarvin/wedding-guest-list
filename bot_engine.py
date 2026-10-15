@@ -38,18 +38,41 @@ SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
 CONVERSATIONS_FILE = os.path.join(os.path.dirname(__file__), "chat_conversations.json")
 
 def get_gemini_api_key():
-    if os.environ.get("GEMINI_API_KEY"):
-        return os.environ.get("GEMINI_API_KEY")
+    # 1. Check environment variable (Render / Cloud environment)
+    env_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if env_key:
+        return env_key
+        
+    # 2. Check persistent database settings table
+    try:
+        from database import get_app_setting
+        db_key = get_app_setting("gemini_api_key")
+        if db_key and db_key.strip():
+            return db_key.strip()
+    except Exception:
+        pass
+        
+    # 3. Check local settings.json file
     if os.path.exists(SETTINGS_FILE):
         try:
             with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
                 settings = json.load(f)
-                return settings.get("gemini_api_key", "").strip()
+                k = settings.get("gemini_api_key", "").strip()
+                if k:
+                    return k
         except Exception:
             pass
+            
     return ""
 
 def set_gemini_api_key(api_key):
+    clean_k = api_key.strip() if api_key else ""
+    try:
+        from database import set_app_setting
+        set_app_setting("gemini_api_key", clean_k)
+    except Exception:
+        pass
+        
     settings = {}
     if os.path.exists(SETTINGS_FILE):
         try:
@@ -57,9 +80,12 @@ def set_gemini_api_key(api_key):
                 settings = json.load(f)
         except Exception:
             pass
-    settings["gemini_api_key"] = api_key.strip()
-    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
-        json.dump(settings, f, indent=2)
+    settings["gemini_api_key"] = clean_k
+    try:
+        with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=2)
+    except Exception:
+        pass
 
 def load_conversations():
     if not os.path.exists(CONVERSATIONS_FILE):
@@ -699,25 +725,29 @@ def is_completion_phrase(text):
 
 def call_gemini_for_parent_collector(parent_info, user_message, conversation_history):
     api_key = get_gemini_api_key()
-    candidate_models = ["gemini-2.5-flash"]
+    candidate_models = ["gemini-2.5-flash", "gemini-1.5-flash"]
+
+    role_label = "પિતાશ્રી (પપ્પા)" if parent_info.get("role") == "FATHER" else "માતાશ્રી (મમ્મી)"
+    side_label = "પિતા પક્ષ" if parent_info.get("role") == "FATHER" else "માતા પક્ષ"
+    parent_name = parent_info.get("name", "Parent")
+    groom = parent_info.get("groom_name", "").strip() or "વરરાજા"
+    bride = parent_info.get("bride_name", "").strip() or "કન્યા"
 
     # Pre-check completion
     if is_completion_phrase(user_message):
-        role_label = "પિતાશ્રી" if parent_info.get("role") == "FATHER" else "માતાશ્રી"
         reply = (
-            f"🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_info.get('name', 'પિતાશ્રી')} {role_label}! 🙏\n"
-            f"આપના તમામ પરિવારજનો અને સંબંધીઓની યાદી સંપૂર્ણ થઈ ગઈ છે.\n"
-            f"લગ્નના શુભ પ્રસંગે આપ સૌના આશીર્વાદ સદાય વર-વધૂ પર રહે! 💐✨\n"
+            f"🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! 🙏\n\n"
+            f"આપના તમામ પરિવારજનો અને સંબંધીઓની યાદી સંપૂર્ણ થઈ ગઈ છે. લગ્નના શુભ પ્રસંગે આપ સૌના આશીર્વાદ સદાય {groom} અને {bride} પર રહે એવી પ્રાર્થના! 💐✨\n\n"
             f"(જો ભવિષ્યમાં કોઈ અન્ય નામ યાદ આવે તો આપ ગમે ત્યારે અહીં મેસેજ કરી શકો છો.)"
         )
         return [], reply, True
 
-    groom = parent_info.get("groom_name", "").strip() or "Groom"
-    bride = parent_info.get("bride_name", "").strip() or "Bride"
     system_prompt = f"""
-You are an intelligent, warm Gujarati Wedding Guest Relatives Collector Assistant for {groom} & {bride}'s wedding.
-You are directly speaking on WhatsApp with the wedding host's {parent_info['role']} ({parent_info['name']}) on the {parent_info['side']} side.
-Their goal is to list their relatives using the predefined format: [સંબંધ] [નામ] [મોબાઈલ નંબર].
+You are an intelligent, polite, and warm Gujarati Wedding Concierge AI Chatbot for {groom} & {bride}'s royal wedding.
+You are talking in a real-time conversational chat on WhatsApp with {parent_name} ({role_label}) on the {side_label} side.
+
+YOUR PRIMARY GOAL:
+Collect and organize their invited relatives, friends, and family members comfortably in natural conversation. The user may write in Gujarati, English, or Gujlish (casual Gujarati in English letters, e.g. 'maro chokro zarvin 9265834826').
 
 User's Latest Message:
 "{user_message}"
@@ -725,44 +755,42 @@ User's Latest Message:
 Conversation History:
 {json.dumps([{'sender': m['sender'], 'text': m['text']} for m in conversation_history[-8:]], ensure_ascii=False)}
 
-CRITICAL RULES:
-1. Completion Check:
-   - If the user says words meaning finished/done (e.g. "aavi gaya", "badha aavi gaya", "done", "koi baki nathi", "બધા આવી ગયા", "કોઈ નથી"):
-     - Return EMPTY relatives array: "relatives": []
-     - Set "is_finished": true
-     - Reply with a blessing closing message.
-     - NEVER extract words like "aavi gaya", "badha", "sadasya nathi" as names!
+INTELLIGENCE & CHATBOT GUIDELINES:
+1. EXTRACT ANY FAMILY MEMBER OR RELATIVE:
+   - Son / Daughter / Children: 'chokro', 'dikro', 'son', 'putra', 'chokri', 'dikri', 'daughter', 'putri' ➔ Extract name & phone, category: 'brothers' (or 'sisters' for daughter), notes: 'પુત્ર (Son)' or 'પુત્રી (Daughter)'
+   - Immediate & Extended Family: 'wife', 'patni', 'bhai', 'brother', 'ben', 'sister', 'kaka', 'kaki', 'fai', 'foi', 'fua', 'mama', 'mami', 'masi', 'masa', 'bhatrijo', 'bhanej', 'jamai', 'vahu', 'dada', 'dadi', 'nana', 'nani', 'mitra', 'friend', 'dost', 'padosi', 'colleague'
+   - If the user writes casually like "chokro zarvin 9265834826", "maro chokro zarvin 9265834826", "kaushik kaka 9825...", "zarvin 9265834826":
+     Accurately identify the person's real name (e.g. "Zarvin"), their 10-digit phone number if provided ("9265834826"), and their relationship.
 
-2. Relative Extraction:
-   - Extract ONLY REAL HUMAN NAMES (e.g. "Tirth", "Rameshbhai", "Natubhai").
-   - NEVER extract conversational filler words, frustrations, or phrases as names (e.g. "aavi gaya", "naa aavi gaya", "koi sadasya nathi", "dofa").
-   - Find their 10-digit mobile number if provided.
-   - Categories allowed: brothers, sisters, kaka, fai, mama, masi, friends, colleagues, neighbours, parents.
+2. TALK LIKE A REAL, RESPECTFUL GUJARATI WEDDING CHATBOT:
+   - Always address them with high respect: "પૂજ્ય {parent_name} {role_label}! 🙏"
+   - If relatives were added:
+     Acknowledge enthusiastically: "વાહ પૂજ્ય {parent_name}! આપના દીકરા Zarvin (9265834826) નું નામ યાદીમાં નોંધી લીધું છે! 😊"
+     Then ask warmly: "હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય? (બધા આવી જાય ત્યારે ફક્ત 'બધા આવી ગયા' અથવા 'DONE' લખશો.)"
+   - If user asks a question or says greetings ("kem cho", "namaste", "hu bijal ben chu", "aa shu che"):
+     DO NOT display an error template! Answer conversationally: "જય શ્રી કૃષ્ણ પૂજ્ય {parent_name} {role_label}! 🙏 હું {groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના સંબંધીઓની યાદી તૈયાર કરવામાં આપનો સહાયક છું. આપ આપના પરિવારજનો, સંબંધીઓ કે મિત્રોના નામ અને નંબર જણાવશો?"
+   - If user says finished ("done", "badha aavi gaya", "patyu", "koi baki nathi"):
+     Set "is_finished": true, "relatives": []
+     Give a heartfelt Gujarati wedding blessing: "🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! આપના તમામ સંબંધીઓની યાદી સફળ થઈ ગઈ છે! લગ્નમાં આપ સૌનું સ્વાગત છે! 💐"
 
-3. Counter-Questioning:
-   - If relatives were added, acknowledge them with their name and relation, and prompt:
-     "હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય? (બધા ઉમેરાઈ જાય ત્યારે ફક્ત 'DONE' અથવા 'બધા આવી ગયા' લખીને મોકલશો.)"
-   - If no valid relative found in the message, politely remind them of the predefined format:
-     "ક્ષમા કરશો, વિગત સ્પષ્ટ સમજાઈ નથી. કૃપા કરીને નીચે મુજબ ફોર્મેટમાં લખીને મોકલશો:\n[સંબંધ] [નામ] [મોબાઈલ નંબર]\nદા.ત. 'ભાઈ તીર્થ 8103013148'\n\n(અને બધા ઉમેરાઈ ગયા હોય ત્યારે 'DONE' અથવા 'બધા આવી ગયા' લખશો.)"
-
-You MUST reply ONLY with valid JSON:
+3. OUTPUT FORMAT (STRICT JSON ONLY):
 {{
   "relatives": [
     {{
-      "name": "Full name of relative (e.g. Tirth)",
-      "phone": "10-digit phone number if found, else empty string",
+      "name": "Full name (e.g. Zarvin)",
+      "phone": "10-digit number if found, else empty string",
       "category": "brothers|sisters|kaka|fai|mama|masi|friends|colleagues|neighbours|parents",
-      "notes": "Relation"
+      "notes": "Relation in Gujarati/English (e.g. પુત્ર / દીકરો)"
     }}
   ],
   "is_finished": false,
-  "reply": "Warm respectful response"
+  "reply": "Warm, conversational, respectful Gujarati reply"
 }}
 """
 
     payload = {
         "contents": [{"parts": [{"text": system_prompt}]}],
-        "generationConfig": {"temperature": 0.1, "response_mime_type": "application/json"}
+        "generationConfig": {"temperature": 0.2, "response_mime_type": "application/json"}
     }
 
     last_error = None
@@ -785,83 +813,79 @@ def fallback_parent_collector_parser(parent_info, user_text):
     import re
     text = user_text.strip()
     role_label = "પિતાશ્રી" if parent_info.get("role") == "FATHER" else "માતાશ્રી"
+    parent_name = parent_info.get("name", "Parent")
+    low_text = text.lower()
     
     # 1. Check completion
     if is_completion_phrase(text):
         reply = (
-            f"🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_info.get('name', 'પિતાશ્રી')} {role_label}! 🙏\n"
+            f"🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! 🙏\n"
             f"આપના તમામ પરિવારજનો અને સંબંધીઓની યાદી સંપૂર્ણ થઈ ગઈ છે.\n"
             f"લગ્નના શુભ પ્રસંગે આપ સૌના આશીર્વાદ સદાય વર-વધૂ પર રહે! 💐✨\n"
             f"(જો ભવિષ્યમાં કોઈ અન્ય નામ યાદ આવે તો આપ ગમે ત્યારે અહીં મેસેજ કરી શકો છો.)"
         )
         return [], reply, True
 
-    # 2. Check for immediate household declaration (wife, son, daughter)
-    low_text = text.lower()
-    if any(k in low_text for k in ["wife", "patni", "chokro", "dikro", "dikri", "chokri"]):
-        wife_m = re.search(r'wife\s+([a-zA-Z\u0A80-\u0AFF]+)', text, re.IGNORECASE)
-        chokro_m = re.search(r'(?:chokro|dikro)\s+([a-zA-Z\u0A80-\u0AFF]+)', text, re.IGNORECASE)
-        dikri_m = re.search(r'(?:dikri|chokri)\s+([a-zA-Z\u0A80-\u0AFF]+)', text, re.IGNORECASE)
-        details = []
-        if wife_m: details.append(f"પત્ની ({wife_m.group(1).title()})")
-        if chokro_m: details.append(f"પુત્ર ({chokro_m.group(1).title()})")
-        if dikri_m: details.append(f"પુત્રી ({dikri_m.group(1).title()})")
-        
-        detail_str = ", ".join(details) if details else "પરિવારજનો"
+    # 2. Check general greetings
+    if any(g in low_text for g in ["kem cho", "namaste", "hello", "hi", "halo", "jay shree krishna", "tame kon"]):
         reply = (
-            f"જય શ્રી કૃષ્ણ પૂજ્ય {parent_info.get('name', 'પિતાશ્રી')}! 🙏\n"
-            f"આપના પરિવારમાંથી {detail_str} ની વિગત નોંધી લીધી છે.\n\n"
-            f"હવે આપના તરફથી આવનારા અન્ય સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો) ના નામ અને મોબાઈલ નંબર જણાવશો?\n"
-            f"📝 ફોર્મેટ: [સંબંધ] [નામ] [મોબાઈલ નંબર]\n"
-            f"(બધા આવી જાય એટલે ફક્ત 'DONE' અથવા 'બધા આવી ગયા' જણાવશો.)"
+            f"જય શ્રી કૃષ્ણ પૂજ્ય {parent_name} {role_label}! 🙏\n"
+            f"હું આપના લગ્ન પ્રસંગના સંબંધીઓની યાદી તૈયાર કરવામાં સહાયક છું.\n\n"
+            f"આપ આપના સંબંધીઓ, ભાઈઓ, બહેનો, કાકા, મામા, દીકરા-દીકરી કે મિત્રોના નામ અને મોબાઈલ નંબર જણાવશો?"
         )
         return [], reply, False
 
-    # 3. Parse lines or comma separated chunks for predefined format [સંબંધ] [નામ] [મોબાઈલ]
+    # 3. Parse lines or comma/conjunction separated chunks
     chunks = re.split(r'[\n,]|(?:\s+ane\s+)|\band\b', text, flags=re.IGNORECASE)
     relatives = []
     
     for chunk in chunks:
         chunk = chunk.strip()
-        if not chunk or len(chunk) < 3:
+        if not chunk or len(chunk) < 2:
             continue
             
-        # Extract phone
         phone_match = re.search(r'\b[6-9]\d{9}\b', chunk)
         phone = phone_match.group(0) if phone_match else ""
-        
-        # Clean text
         cleaned = re.sub(r'\b[6-9]\d{9}\b', '', chunk).strip()
         low = cleaned.lower()
         
-        # Skip if chunk looks like a completion or blocked phrase
         if is_completion_phrase(low):
             continue
             
         category = "friends"
+        notes = "સંબંધી"
         has_relation_keyword = False
-        if any(k in low for k in ["kaka", "uncle"]):
-            category = "kaka"; has_relation_keyword = True
+
+        if any(k in low for k in ["chokro", "dikro", "son", "putra"]):
+            category = "brothers"; notes = "પુત્ર (Son)"; has_relation_keyword = True
+        elif any(k in low for k in ["chokri", "dikri", "daughter", "putri"]):
+            category = "sisters"; notes = "પુત્રી (Daughter)"; has_relation_keyword = True
+        elif any(k in low for k in ["wife", "patni"]):
+            category = "brothers"; notes = "પત્ની (Wife)"; has_relation_keyword = True
+        elif any(k in low for k in ["kaka", "uncle"]):
+            category = "kaka"; notes = "કાકા"; has_relation_keyword = True
         elif any(k in low for k in ["fai", "foi", "bui"]):
-            category = "fai"; has_relation_keyword = True
+            category = "fai"; notes = "ફોઈ"; has_relation_keyword = True
         elif any(k in low for k in ["mama"]):
-            category = "mama"; has_relation_keyword = True
+            category = "mama"; notes = "મામા"; has_relation_keyword = True
         elif any(k in low for k in ["masi"]):
-            category = "masi"; has_relation_keyword = True
+            category = "masi"; notes = "માસી"; has_relation_keyword = True
         elif any(k in low for k in ["ben", "sister", "behn"]):
-            category = "sisters"; has_relation_keyword = True
+            category = "sisters"; notes = "બહેન"; has_relation_keyword = True
         elif any(k in low for k in ["bhai", "brother"]):
-            category = "brothers"; has_relation_keyword = True
+            category = "brothers"; notes = "ભાઈ"; has_relation_keyword = True
         elif any(k in low for k in ["dada", "dadi", "nana", "nani"]):
-            category = "parents"; has_relation_keyword = True
+            category = "parents"; notes = "વડીલ"; has_relation_keyword = True
+        elif any(k in low for k in ["bhatrijo", "bhanej"]):
+            category = "brothers"; notes = "ભત્રીજો / ભાણેજ"; has_relation_keyword = True
         elif any(k in low for k in ["friend", "mitra", "dost"]):
-            category = "friends"; has_relation_keyword = True
+            category = "friends"; notes = "મિત્ર"; has_relation_keyword = True
             
-        # Clean words from name
-        name = re.sub(r'\b(mara|mari|maro|kaka|fai|foi|mama|masi|bhai|ben|mitra|friend|no|nu|na|naam|name|che|chhe|eno|emno|number|mobile|phone)\b', '', cleaned, flags=re.IGNORECASE).strip()
+        # Clean relational filler words from name
+        name = re.sub(r'\b(mara|mari|maro|chokro|dikro|dikri|chokri|son|daughter|wife|patni|kaka|fai|foi|mama|masi|bhai|ben|mitra|friend|no|nu|na|naam|name|che|chhe|eno|emno|number|mobile|phone)\b', '', cleaned, flags=re.IGNORECASE).strip()
         name = re.sub(r'[^a-zA-Z\u0A80-\u0AFF\s]', '', name).strip()
         
-        # Validation: Must have at least a phone number OR a relation keyword with valid name
+        # Valid if has a name and either a phone or a recognized relation keyword
         if len(name) >= 2 and (phone or has_relation_keyword):
             from guest_manager import BLOCKED_CONTACT_NAMES
             if not any(b in name.lower() for b in BLOCKED_CONTACT_NAMES):
@@ -869,28 +893,22 @@ def fallback_parent_collector_parser(parent_info, user_text):
                     "name": name.title(),
                     "phone": phone,
                     "category": category,
-                    "notes": f"Relative of {parent_info.get('name', 'Parent')}"
+                    "notes": notes
                 })
 
     if relatives:
-        names_str = ", ".join([f"{r['name']} ({r['category'].title()}{(' - ' + r['phone']) if r['phone'] else ''})" for r in relatives])
+        names_str = ", ".join([f"{r['name']} ({r['notes']}{(' - ' + r['phone']) if r['phone'] else ''})" for r in relatives])
         reply = (
-            f"✅ ખૂબ સરસ પૂજ્ય {parent_info.get('name', 'પિતાશ્રી')}! 🙏\n"
-            f"{names_str} ને યાદીમાં ઉમેરી દીધા છે.\n\n"
-            f"હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય?\n"
-            f"📝 ફોર્મેટ: [સંબંધ] [નામ] [મોબાઈલ નંબર]\n\n"
+            f"✅ ખૂબ સરસ પૂજ્ય {parent_name}! 🙏\n"
+            f"{names_str} ને યાદીમાં ઉમેરી દીધા છે. 😊\n\n"
+            f"હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય?\n\n"
             f"(જ્યારે બધા સંબંધીઓના નામ લખાઈ જાય ત્યારે ફક્ત 'DONE' અથવા 'બધા આવી ગયા' લખીને મોકલશો.)"
         )
     else:
         reply = (
-            f"ક્ષમા કરશો, વિગત સ્પષ્ટ સમજાઈ નથી. કૃપા કરીને નીચે મુજબ ફોર્મેટમાં લખીને મોકલશો:\n\n"
-            f"📝 *ફોર્મેટ:*\n"
-            f"[સંબંધ] [નામ] [મોબાઈલ નંબર]\n\n"
-            f"👉 *દાખલા તરીકે:*\n"
-            f"• ભાઈ તીર્થ 8103013148\n"
-            f"• કાકા રમેશભાઈ 9825012345\n"
-            f"• મામા મહેશભાઈ 9824012345\n\n"
-            f"(અને જ્યારે બધા સંબંધીઓ ઉમેરાઈ જાય ત્યારે ફક્ત 'DONE' અથવા 'બધા આવી ગયા' લખશો.)"
+            f"ક્ષમા કરશો પૂજ્ય {parent_name}! વિગત સ્પષ્ટ સમજાઈ નથી. કૃપા કરીને નીચે મુજબ જણાવશો:\n\n"
+            f"👉 દા.ત. 'દીકરો ઝરવીન 9265834826' અથવા 'ભાઈ તીર્થ 8103013148'\n\n"
+            f"(અને બધા ઉમેરાઈ ગયા હોય ત્યારે 'DONE' અથવા 'બધા આવી ગયા' લખશો.)"
         )
         
     return relatives, reply, False

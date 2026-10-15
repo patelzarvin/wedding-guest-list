@@ -270,7 +270,8 @@ def dashboard():
         parents=parents,
         contacts=contacts,
         whatsapp_status=whatsapp_status,
-        whatsapp_phone=whatsapp_phone
+        whatsapp_phone=whatsapp_phone,
+        gemini_configured=bool(get_gemini_api_key())
     )
 
 # -------------------------------------------------------------
@@ -468,6 +469,24 @@ def api_whatsapp_status():
 def api_whatsapp_disconnect():
     b_res, code = call_baileys("/disconnect", method="POST")
     return jsonify(b_res), code
+
+@app.route("/api/ai-status")
+@login_required
+def api_ai_status():
+    key = get_gemini_api_key()
+    return jsonify({
+        "configured": bool(key),
+        "masked_key": f"{key[:5]}...{key[-4:]}" if len(key) > 9 else ("Active" if key else "")
+    })
+
+@app.route("/api/save-gemini-key", methods=["POST"])
+@login_required
+def api_save_gemini_key():
+    data = request.get_json() or {}
+    key = data.get("key", "").strip()
+    set_gemini_api_key(key)
+    has_k = bool(get_gemini_api_key())
+    return jsonify({"success": True, "has_key": has_k})
 
 @app.route("/api/export")
 @login_required

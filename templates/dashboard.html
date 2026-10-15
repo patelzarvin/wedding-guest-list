@@ -461,6 +461,10 @@
             </div>
 
             <div class="top-actions">
+                <button type="button" onclick="openAiModal()" class="btn-outline" style="border-color: rgba(229,193,88,0.4); color: #F6D87A; display: inline-flex; align-items: center; gap: 6px;">
+                    <span id="aiStatusDot" class="status-dot" style="background:{% if gemini_configured %}#22C55E; box-shadow:0 0 6px #22C55E;{% else %}#F59E0B; box-shadow:0 0 6px #F59E0B;{% endif %}"></span>
+                    🤖 <span id="aiBtnText">Gemini AI {% if gemini_configured %}(Active){% else %}(Setup Key){% endif %}</span>
+                </button>
                 <button type="button" onclick="openWhatsAppModal()" class="btn-outline" style="border-color: rgba(34,197,94,0.4); color: #4ADE80; display: inline-flex; align-items: center; gap: 6px;">
                     <span class="status-dot" style="background:#22C55E; box-shadow:0 0 6px #22C55E;"></span> 📲 WhatsApp Gateway
                 </button>
@@ -667,6 +671,51 @@
         </div>
     </div>
 
+    <!-- AI Settings Modal -->
+    <div id="aiModal" class="modal-overlay" onclick="handleAiModalOverlayClick(event)">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeAiModal()">&times;</button>
+            <div style="font-size: 20px; font-weight: 700; color: #FFFFFF; font-family: 'Playfair Display', serif; margin-bottom: 6px;">
+                🤖 Google Gemini AI Engine
+            </div>
+            <div style="font-size: 13px; color: #94A3B8; margin-bottom: 20px;">
+                Powers natural conversational Gujarati chatbots for both Parents &amp; Guests.
+            </div>
+
+            <div id="aiStatusCard" style="background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(229, 193, 88, 0.3); border-radius: 16px; padding: 18px; margin-bottom: 20px; text-align: left;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span id="aiCardDot" style="font-size: 18px;">{% if gemini_configured %}🟢{% else %}🟡{% endif %}</span>
+                    <strong id="aiCardTitle" style="color: #FFFFFF; font-size: 14px;">
+                        {% if gemini_configured %}Google Gemini 2.5 Flash is Active{% else %}Gemini Key Not Configured Yet{% endif %}
+                    </strong>
+                </div>
+                <p id="aiCardDesc" style="font-size: 12px; color: #CBD5E1; line-height: 1.5;">
+                    {% if gemini_configured %}
+                    Natural Gujarati conversation is enabled! The bot understands Gujarati family terms ('maro chokro zarvin', 'kaka', 'mama') and chats warmly.
+                    {% else %}
+                    Enter your Google Gemini API key below to enable natural conversational responses and automated relation extraction.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="font-size: 12px; font-weight: 700; color: #E5C158; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+                    Google Gemini API Key
+                </label>
+                <input type="text" id="geminiKeyInput" placeholder="Paste your Gemini API key here..." 
+                       style="width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(229,193,88,0.3); border-radius: 12px; color: #FFFFFF; font-family: monospace; font-size: 13px; outline: none; box-sizing: border-box;" />
+                <div style="font-size: 11px; color: #94A3B8; margin-top: 6px;">
+                    🔑 Get a free API key instantly at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #F6D87A; text-decoration: underline;">Google AI Studio</a>.
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="closeAiModal()" class="btn-outline">Cancel</button>
+                <button type="button" onclick="saveGeminiKey()" class="btn-gold" id="saveAiKeyBtn">💾 Save AI Key</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let wasPreviouslyOffline = {% if whatsapp_status != 'connected' %}true{% else %}false{% endif %};
         let isModalOpen = false;
@@ -831,6 +880,68 @@
                     checkWhatsAppStatus(true);
                 })
                 .catch(err => alert('Disconnect error: ' + err));
+        }
+
+        // AI Settings Modal functions
+        function openAiModal() {
+            document.getElementById('aiModal').classList.add('active');
+            fetch('/api/ai-status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.configured && data.masked_key) {
+                        document.getElementById('geminiKeyInput').placeholder = 'Currently configured: ' + data.masked_key;
+                    }
+                }).catch(e => {});
+        }
+
+        function closeAiModal() {
+            document.getElementById('aiModal').classList.remove('active');
+        }
+
+        function handleAiModalOverlayClick(e) {
+            if (e.target.id === 'aiModal') {
+                closeAiModal();
+            }
+        }
+
+        function saveGeminiKey() {
+            const key = document.getElementById('geminiKeyInput').value.trim();
+            if (!key) {
+                alert('Please enter or paste your Gemini API key.');
+                return;
+            }
+            const saveBtn = document.getElementById('saveAiKeyBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '⏳ Saving...';
+
+            fetch('/api/save-gemini-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key })
+            })
+            .then(r => r.json())
+            .then(data => {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '💾 Save AI Key';
+                if (data.success) {
+                    alert('🎉 Success! Google Gemini AI key saved successfully.\n\nNatural conversational Gujarati chatbots are now 100% active!');
+                    document.getElementById('aiStatusDot').style.background = '#22C55E';
+                    document.getElementById('aiStatusDot').style.boxShadow = '0 0 6px #22C55E';
+                    document.getElementById('aiBtnText').textContent = 'Gemini AI (Active)';
+                    document.getElementById('aiCardDot').textContent = '🟢';
+                    document.getElementById('aiCardTitle').textContent = 'Google Gemini 2.5 Flash is Active';
+                    document.getElementById('aiCardDesc').textContent = "Natural Gujarati conversation is enabled! The bot understands Gujarati family terms ('maro chokro zarvin', 'kaka', 'mama') and chats warmly.";
+                    document.getElementById('geminiKeyInput').value = '';
+                    closeAiModal();
+                } else {
+                    alert('Failed to save key.');
+                }
+            })
+            .catch(err => {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '💾 Save AI Key';
+                alert('Error: ' + err.message);
+            });
         }
 
         // On initial page load: auto-open modal if user just came from setup wizard
