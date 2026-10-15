@@ -670,14 +670,64 @@ def process_parent_collector_message(parent_info, user_message):
     bot_reply = ""
     is_finished = False
 
-    if api_key:
-        try:
-            parsed_relatives, bot_reply, is_finished = call_gemini_for_parent_collector(parent_info, user_message, session["messages"])
-        except Exception as e:
-            print("Gemini parent collector fallback:", e)
-            parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
-    else:
+    clean_msg = user_message.strip()
+    low_msg = clean_msg.lower()
+    
+    # Token Protection Guardrails:
+    invalid_streak = session.get("invalid_streak", 0)
+    total_ai_calls = session.get("total_ai_calls", 0)
+
+    # 1. Zero-Token Filter: Greetings
+    is_greeting = any(g in low_msg for g in ["kem cho", "namaste", "hello", "hi", "halo", "jay shree krishna", "tame kon", "su karo cho", "kem chho"])
+    # 2. Zero-Token Filter: Completion phrases
+    is_done = is_completion_phrase(clean_msg)
+    # 3. Zero-Token Filter: Quick Category Button clicks
+    is_cat_pill = any(c in clean_msg for c in ["મામાશ્રી", "પિયર પક્ષ", "મારી બહેનો", "મારાં સંતાનો", "કાકી", "મામી", "સખીઓ", "મારા ભાઈઓ", "કુટુંબ", "ફોઈ", "ફુવા", "સહકર્મચારી", "ખાસ મિત્રો"])
+
+    role_lbl = "પિતાશ્રી" if parent_info.get("role") == "FATHER" else "માતાશ્રી"
+    parent_display = parent_info.get("name", "Parent")
+
+    if is_done or is_greeting or is_cat_pill:
+        # Answer instantly with rule-based engine (0 Gemini tokens burned!)
         parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
+        session["invalid_streak"] = 0
+    elif len(clean_msg) < 3 or not re.search(r'[a-zA-Z\u0A80-\u0AFF0-9]', clean_msg):
+        # Gibberish / symbols / blank input: Do NOT call AI (0 tokens burned!)
+        bot_reply = f"ક્ષમા કરશો પૂજ્ય {parent_display} {role_lbl}! કૃપા કરીને સંબંધીનું નામ અને મોબાઈલ નંબર લખશો.\n👉 દા.ત.: 'મામા રમેશભાઈ 9825012345' 😊"
+        session["invalid_streak"] = invalid_streak + 1
+    elif invalid_streak >= 3:
+        # Circuit Breaker: 3 consecutive unrecognized messages
+        # Stop calling Gemini to protect user tokens, provide static guidance
+        bot_reply = (
+            f"પૂજ્ય {parent_display} {role_lbl}! 🙏\n"
+            f"સંબંધીઓની વિગતો સરળતાથી નોંધવા માટે નીચે આપેલા બટનોમાંથી પસંદ કરો અથવા આ મુજબ લખો:\n\n"
+            f"👉 [સંબંધ] [નામ] [મોબાઈલ નંબર]\n"
+            f"દા.ત.: 'ભાઈ તીર્થ 9825012345'\n\n"
+            f"(જ્યારે બધા નામ લખાઈ જાય ત્યારે નીચે આપેલ '✅ બધા આવી ગયા છે' બટન દબાવો.)"
+        )
+    elif total_ai_calls >= 40:
+        # Safety turn cap per session to prevent infinite loop abuse
+        parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
+    else:
+        # Meaningful message -> Invoke Gemini Flash for smart NLP parsing
+        if api_key:
+            try:
+                session["total_ai_calls"] = total_ai_calls + 1
+                parsed_relatives, bot_reply, is_finished = call_gemini_for_parent_collector(parent_info, user_message, session["messages"])
+                if parsed_relatives:
+                    session["invalid_streak"] = 0
+                else:
+                    session["invalid_streak"] = invalid_streak + 1
+            except Exception as e:
+                print("Gemini parent collector fallback:", e)
+                parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
+        else:
+            parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
+
+    # Save session state updates
+    session_key = f"collector_{token}"
+    convs[session_key] = session
+    save_conversations(convs)
 
     # Add each extracted relative to contacts in SQLite database
     added_now = []
