@@ -190,36 +190,48 @@ def setup_wizard():
         
         wedding_id = save_or_update_wedding(user_id, form_data)
         
-        # 100% AUTOPILOT: Automatically dispatch parent collector links via Baileys WhatsApp
+        # Check if WhatsApp is already connected
+        whatsapp_is_connected = False
+        try:
+            b_res, _ = call_baileys("/status")
+            whatsapp_is_connected = (b_res.get("status") == "connected")
+        except Exception:
+            pass
+
         parents = get_parent_sessions(wedding_id)
         base_url = get_base_url()
         groom = form_data.get("groom_name", "").strip() or "વરરાજા"
         bride = form_data.get("bride_name", "").strip() or "કન્યા"
-        
-        for p in parents:
-            p_phone = p.get("phone", "").strip()
-            p_token = p.get("token", "")
-            p_name = p.get("name", "").strip()
-            p_role = p.get("role", "FATHER")
-            
-            if p_phone and p_token and p_name:
-                role_gu = "પિતાશ્રી (પપ્પા)" if p_role == "FATHER" else "માતાશ્રી (મમ્મી)"
-                side_gu = "પિતા પક્ષ" if p_role == "FATHER" else "માતા પક્ષ"
-                collector_url = f"{base_url}/collector/{p_token}"
+
+        if whatsapp_is_connected:
+            # 100% AUTOPILOT: Automatically dispatch parent collector links via Baileys WhatsApp
+            for p in parents:
+                p_phone = p.get("phone", "").strip()
+                p_token = p.get("token", "")
+                p_name = p.get("name", "").strip()
+                p_role = p.get("role", "FATHER")
                 
-                collector_msg = (
-                    f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {p_name} {role_gu}! 🙏\n\n"
-                    f"{groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે અમારો AI આસિસ્ટન્ટ તૈયાર છે.\n\n"
-                    f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n"
-                    f"👉 {collector_url}\n\n"
-                    f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે! 🌸"
-                )
-                try:
-                    send_baileys_message(p_phone, collector_msg)
-                except Exception as e:
-                    print("Autopilot parent dispatch notice:", e)
+                if p_phone and p_token and p_name:
+                    role_gu = "પિતાશ્રી (પપ્પા)" if p_role == "FATHER" else "માતાશ્રી (મમ્મી)"
+                    side_gu = "પિતા પક્ષ" if p_role == "FATHER" else "માતા પક્ષ"
+                    collector_url = f"{base_url}/collector/{p_token}"
                     
-        return redirect(url_for("dashboard"))
+                    collector_msg = (
+                        f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {p_name} {role_gu}! 🙏\n\n"
+                        f"{groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે અમારો AI આસિસ્ટન્ટ તૈયાર છે.\n\n"
+                        f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n"
+                        f"👉 {collector_url}\n\n"
+                        f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે! 🌸"
+                    )
+                    try:
+                        send_baileys_message(p_phone, collector_msg)
+                    except Exception as e:
+                        print("Autopilot parent dispatch notice:", e)
+                        
+            return redirect(url_for("dashboard"))
+        else:
+            # Redirect with need_whatsapp=1 so Dashboard immediately pops up the QR code to link
+            return redirect(url_for("dashboard", need_whatsapp=1))
         
     wedding = get_wedding_by_user(user_id)
     return render_template("setup.html", wedding=wedding)
@@ -373,7 +385,67 @@ def api_send_parent_link(token):
     )
     
     res, code = send_baileys_message(parent["phone"], collector_msg)
-    return jsonify({"success": code in [200, 201], "response": res}), 200
+    if code in [200, 201] and res.get("success"):
+        return jsonify({
+            "success": True,
+            "message": f"Link sent to {parent['name']} ({parent['phone']}) on WhatsApp!",
+            "response": res
+        }), 200
+    else:
+        err_msg = res.get("error", "WhatsApp service unavailable or not linked.")
+        not_conn = res.get("not_connected", code == 503)
+        return jsonify({
+            "success": False,
+            "error": err_msg,
+            "not_connected": not_conn,
+            "response": res
+        }), 200
+
+@app.route("/api/dispatch-all-parents", methods=["POST"])
+@login_required
+def api_dispatch_all_parents():
+    user_id = session.get("user_id")
+    wedding = get_wedding_by_user(user_id)
+    if not wedding:
+        return jsonify({"success": False, "error": "No wedding found."}), 404
+        
+    wid = wedding["id"]
+    parents = get_parent_sessions(wid)
+    base_url = get_base_url()
+    groom = wedding.get("groom_name", "").strip() or "વરરાજા"
+    bride = wedding.get("bride_name", "").strip() or "કન્યા"
+    
+    dispatched = []
+    errors = []
+    
+    for p in parents:
+        p_phone = p.get("phone", "").strip()
+        p_token = p.get("token", "")
+        p_name = p.get("name", "").strip()
+        p_role = p.get("role", "FATHER")
+        
+        if p_phone and p_token and p_name:
+            role_gu = "પિતાશ્રી (પપ્પા)" if p_role == "FATHER" else "માતાશ્રી (મમ્મી)"
+            side_gu = "પિતા પક્ષ" if p_role == "FATHER" else "માતા પક્ષ"
+            collector_url = f"{base_url}/collector/{p_token}"
+            collector_msg = (
+                f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {p_name} {role_gu}! 🙏\n\n"
+                f"{groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે અમારો AI આસિસ્ટન્ટ તૈયાર છે.\n\n"
+                f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n"
+                f"👉 {collector_url}\n\n"
+                f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે! 🌸"
+            )
+            res, code = send_baileys_message(p_phone, collector_msg)
+            if code in [200, 201] and res.get("success"):
+                dispatched.append(p_name)
+            else:
+                errors.append(f"{p_name}: {res.get('error', 'Failed')}")
+                
+    return jsonify({
+        "success": len(dispatched) > 0,
+        "dispatched": dispatched,
+        "errors": errors
+    })
 
 @app.route("/api/whatsapp-status")
 @login_required

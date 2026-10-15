@@ -17,16 +17,22 @@ def send_baileys_message(to, message):
     if not to or not message:
         return {"status": "error", "error": "Missing to or message"}, 400
     clean_p = "".join(filter(str.isdigit, str(to)))[-10:]
-    if not clean_p:
-        return {"status": "error", "error": "Invalid phone"}, 400
+    if not clean_p or len(clean_p) < 10:
+        return {"status": "error", "error": f"Invalid phone number: {to}"}, 400
     url = f"{BAILEYS_SERVICE_URL}/send"
     data = json.dumps({"to": clean_p, "message": message}).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=5) as res:
+        with urllib.request.urlopen(req, timeout=10) as res:
             return json.loads(res.read().decode("utf-8")), res.status
+    except urllib.error.HTTPError as e:
+        try:
+            body = json.loads(e.read().decode("utf-8"))
+        except Exception:
+            body = {"error": str(e), "not_connected": e.code == 503}
+        return body, e.code
     except Exception as e:
-        return {"status": "offline", "error": str(e)}, 503
+        return {"status": "offline", "error": str(e), "not_connected": True}, 503
 
 SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
 CONVERSATIONS_FILE = os.path.join(os.path.dirname(__file__), "chat_conversations.json")

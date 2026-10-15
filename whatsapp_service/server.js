@@ -192,7 +192,7 @@ app.get('/status', (req, res) => {
 app.post('/send', async (req, res) => {
     const { to, message } = req.body;
     if (!to || !message) {
-        return res.status(400).json({ error: 'Missing "to" or "message"' });
+        return res.status(400).json({ success: false, error: 'Missing "to" or "message"' });
     }
 
     if (connectionStatus !== 'connected' || !sock || !sock.user) {
@@ -204,10 +204,27 @@ app.post('/send', async (req, res) => {
     }
 
     try {
-        const jid = formatJid(to);
-        const result = await sock.sendMessage(jid, { text: message });
-        console.log(`[📤 Sent WhatsApp] To: ${to} (${jid})`);
-        res.json({ success: true, messageId: result.key.id });
+        let clean = to.toString().replace(/\D/g, '');
+        if (clean.length === 10) {
+            clean = '91' + clean;
+        }
+        let targetJid = `${clean}@s.whatsapp.net`;
+
+        // Check if number is registered on WhatsApp using onWhatsApp
+        try {
+            if (sock && typeof sock.onWhatsApp === 'function') {
+                const results = await sock.onWhatsApp(targetJid);
+                if (results && results.length > 0 && results[0].exists && results[0].jid) {
+                    targetJid = results[0].jid;
+                }
+            }
+        } catch (onWaErr) {
+            console.log('[!] onWhatsApp verification warning:', onWaErr.message);
+        }
+
+        const result = await sock.sendMessage(targetJid, { text: message });
+        console.log(`[📤 Sent WhatsApp] To: ${to} (${targetJid})`);
+        res.json({ success: true, messageId: result.key.id, jid: targetJid });
     } catch (err) {
         console.error('[!] Failed to send WhatsApp message:', err);
         res.status(500).json({ success: false, error: err.message });

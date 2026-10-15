@@ -470,6 +470,21 @@
             </div>
         </div>
 
+        {% if whatsapp_status != 'connected' %}
+        <div id="waConnectBanner" style="background: rgba(229, 193, 88, 0.1); border: 1.5px solid #E5C158; border-radius: 16px; padding: 16px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <span style="font-size: 28px;">📲</span>
+                <div>
+                    <div style="font-weight: 700; color: #FFFFFF; font-size: 16px;">Link WhatsApp to Send Bot Links to Mother &amp; Father</div>
+                    <div style="font-size: 13px; color: #CBD5E1; margin-top: 2px;">Baileys requires a 1-time QR scan. Once linked, Gujarati invitation &amp; collection links reach parents immediately.</div>
+                </div>
+            </div>
+            <button type="button" onclick="openWhatsAppModal()" class="btn-gold" style="padding: 10px 20px; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer;">
+                ⚡ Scan WhatsApp QR Code
+            </button>
+        </div>
+        {% endif %}
+
         <!-- KPI Stat Cards -->
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -494,12 +509,12 @@
         <div class="parents-box">
             <div class="parents-header">
                 <h3>&#128106; Parent Collector Suites (માતા-પિતા કલેક્શન લિંક્સ)</h3>
-                <div style="font-size: 13px; color: #94A3B8;">&#9889; 100% Autopilot Active: Collector links are automatically dispatched to parents via WhatsApp.</div>
+                <div style="font-size: 13px; color: #94A3B8;">&#9889; 100% Autopilot Active: Collector links are dispatched directly to parents' WhatsApp.</div>
             </div>
 
             <div class="parents-grid">
                 {% for p in parents %}
-                <div class="parent-card">
+                <div class="parent-card" id="card-{{ p.token }}">
                     <div class="parent-info">
                         <div>
                             <div class="parent-name">{{ p.name if p.name else 'Parent' }}</div>
@@ -522,8 +537,9 @@
                     </div>
 
                     <div class="parent-actions">
-                        <button type="button" class="btn-sm-gold" onclick="copyParentLink('{{ p.token }}')">&#128203; Copy Link</button>
-                        <a href="/collector/{{ p.token }}" target="_blank" class="btn-sm-outline">&#128279; Preview Web Bot</a>
+                        <button type="button" class="btn-sm-gold send-wa-btn" id="sendBtn-{{ p.token }}" onclick="sendParentLinkWhatsApp('{{ p.token }}', this)">📲 Send on WhatsApp</button>
+                        <button type="button" class="btn-sm-outline" onclick="copyParentLink('{{ p.token }}')">&#128203; Copy</button>
+                        <a href="/collector/{{ p.token }}" target="_blank" class="btn-sm-outline">&#128279; Bot</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -652,6 +668,10 @@
     </div>
 
     <script>
+        let wasPreviouslyOffline = {% if whatsapp_status != 'connected' %}true{% else %}false{% endif %};
+        let isModalOpen = false;
+        let pollTimer = null;
+
         function copyParentLink(token) {
             const url = window.location.origin + '/collector/' + token;
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -665,8 +685,46 @@
             }
         }
 
-        let isModalOpen = false;
-        let pollTimer = null;
+        function sendParentLinkWhatsApp(token, btn) {
+            if (!token) return;
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Sending...';
+
+            fetch('/api/send-parent-link/' + token, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+
+                if (data.success) {
+                    alert('✅ ' + (data.message || 'Bot link sent to WhatsApp!'));
+                    const card = document.getElementById('card-' + token) || btn.closest('.parent-card');
+                    if (card) {
+                        const pill = card.querySelector('.delivery-pill');
+                        if (pill) {
+                            pill.className = 'delivery-pill active';
+                            pill.innerHTML = '<span>🟢</span> Dispatched via WhatsApp';
+                        }
+                    }
+                } else {
+                    if (data.not_connected) {
+                        alert('⚠️ WhatsApp is not linked yet!\n\nPlease scan the QR code to link your WhatsApp so the bot can send messages.');
+                        openWhatsAppModal();
+                    } else {
+                        alert('❌ Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
+                    }
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                alert('❌ Network or server error: ' + err.message);
+            });
+        }
 
         function openWhatsAppModal() {
             isModalOpen = true;
@@ -705,14 +763,33 @@
                     document.getElementById('modalLoadingView').style.display = 'none';
                     const headerPill = document.getElementById('headerStatusPill');
                     const headerText = document.getElementById('headerStatusText');
+                    const banner = document.getElementById('waConnectBanner');
 
                     if (data.connected) {
                         headerPill.className = 'status-pill online';
                         headerText.textContent = 'WhatsApp Active (' + (data.phone || 'Connected') + ')';
+                        if (banner) banner.style.display = 'none';
 
                         document.getElementById('modalConnectedView').style.display = 'block';
                         document.getElementById('modalQrView').style.display = 'none';
                         document.getElementById('modalConnectedPhone').textContent = data.phone || 'Connected';
+
+                        // If it just transitioned from offline to connected, auto-dispatch pending parent links!
+                        if (wasPreviouslyOffline) {
+                            wasPreviouslyOffline = false;
+                            fetch('/api/dispatch-all-parents', { method: 'POST' })
+                                .then(r => r.json())
+                                .then(res => {
+                                    if (res.success && res.dispatched && res.dispatched.length > 0) {
+                                        console.log('[+] Auto-dispatched collector links to:', res.dispatched);
+                                        document.querySelectorAll('.delivery-pill').forEach(pill => {
+                                            pill.className = 'delivery-pill active';
+                                            pill.innerHTML = '<span>🟢</span> Auto-Dispatched via WhatsApp';
+                                        });
+                                    }
+                                })
+                                .catch(e => console.log('Auto-dispatch error notice:', e));
+                        }
 
                         // Update delivery pills across the parent cards
                         document.querySelectorAll('.delivery-pill').forEach(pill => {
@@ -720,15 +797,19 @@
                             pill.innerHTML = '<span>🟢</span> Auto-Dispatched via WhatsApp';
                         });
                     } else if (data.qr) {
+                        wasPreviouslyOffline = true;
                         headerPill.className = 'status-pill offline';
                         headerText.textContent = 'WhatsApp QR Ready (Click to Scan)';
+                        if (banner) banner.style.display = 'flex';
 
                         document.getElementById('modalConnectedView').style.display = 'none';
                         document.getElementById('modalQrView').style.display = 'block';
                         document.getElementById('modalQrImage').src = data.qr;
                     } else {
+                        wasPreviouslyOffline = true;
                         headerPill.className = 'status-pill offline';
                         headerText.textContent = 'WhatsApp Offline (Click to Link)';
+                        if (banner) banner.style.display = 'flex';
 
                         document.getElementById('modalConnectedView').style.display = 'none';
                         document.getElementById('modalQrView').style.display = 'block';
@@ -745,11 +826,20 @@
             fetch('/api/whatsapp-disconnect', { method: 'POST' })
                 .then(res => res.json())
                 .then(data => {
+                    wasPreviouslyOffline = true;
                     alert('WhatsApp disconnected. Please scan the new QR code.');
                     checkWhatsAppStatus(true);
                 })
                 .catch(err => alert('Disconnect error: ' + err));
         }
+
+        // On initial page load: auto-open modal if user just came from setup wizard
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('need_whatsapp') === '1') {
+                openWhatsAppModal();
+            }
+        });
 
         // Background status check every 8 seconds
         setInterval(() => {
