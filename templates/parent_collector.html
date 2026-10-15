@@ -117,6 +117,7 @@
         }
 
         /* Quick Replies Bar */
+        /* Quick Replies Bar */
         .quick-replies-bar {
             padding: 10px 14px;
             display: flex;
@@ -125,6 +126,7 @@
             background: rgba(18, 24, 38, 0.95);
             border-top: 1px solid rgba(229, 193, 88, 0.2);
             scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
         .quick-chip {
             background: rgba(229, 193, 88, 0.12);
@@ -132,15 +134,28 @@
             color: #F6D87A;
             font-size: 13px;
             font-weight: 600;
-            padding: 7px 15px;
+            padding: 8px 16px;
             border-radius: 20px;
             white-space: nowrap;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .quick-chip:active {
-            transform: scale(0.95);
-            background: rgba(229, 193, 88, 0.25);
+        .quick-chip:hover, .quick-chip:active {
+            background: rgba(229, 193, 88, 0.28);
+            border-color: #E5C158;
+            transform: scale(0.97);
+        }
+        .chip-done {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            color: #4ADE80;
+        }
+        .chip-done:hover, .chip-done:active {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: #4ADE80;
         }
 
         /* Input Form Bar */
@@ -180,6 +195,14 @@
             cursor: pointer;
             box-shadow: 0 0 15px rgba(229, 193, 88, 0.4);
         }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #E5C158;
+            font-size: 12px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -203,10 +226,24 @@
             {% endfor %}
         </div>
 
-        <!-- Quick Action Buttons -->
+        <!-- Role-Specific Category Buttons for Mummy and Pappa -->
         <div class="quick-replies-bar" id="quickBar">
-            <button type="button" class="quick-chip" onclick="sendQuickText('આગળ વધો')">આગળ વધો (Next) &rarr;</button>
-            <button type="button" class="quick-chip" onclick="sendQuickText('બધા આવી ગયા')">બધા આવી ગયા છે &#9989;</button>
+            {% if parent.role == 'MOTHER' %}
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👨 મામાશ્રી (પિયર પક્ષ)', 'મામા')">👨 મામાશ્રી (પિયર પક્ષ)</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👩 માસી (મારી બહેનો)', 'માસી')">👩 માસી (મારી બહેનો)</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👶 મારાં સંતાનો (દીકરો / દીકરી)', 'દીકરો / દીકરી')">👶 મારાં સંતાનો</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👵 કાકી / મામી', 'કાકી')">👵 કાકી / મામી</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('🧑‍🤝‍🧑 મારી સખીઓ / મિત્રો', 'મિત્ર')">🧑‍🤝‍🧑 મારી સખીઓ / મિત્રો</button>
+                <button type="button" class="quick-chip chip-done" onclick="sendQuickText('બધા આવી ગયા છે ✅')">✅ બધા આવી ગયા છે (Done)</button>
+            {% else %}
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👨 મારા ભાઈઓ', 'ભાઈ')">👨 મારા ભાઈઓ</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👴 મારા કાકા / કુટુંબ', 'કાકા')">👴 મારા કાકા / કુટુંબ</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👵 મારાં ફોઈ / ફુવા', 'ફોઈ')">👵 મારાં ફોઈ / ફુવા</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('👶 મારાં સંતાનો (દીકરો / દીકરી)', 'દીકરો / દીકરી')">👶 મારાં સંતાનો</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('🧑‍🤝‍🧑 મારા ખાસ મિત્રો', 'મિત્ર')">🧑‍🤝‍🧑 મારા ખાસ મિત્રો</button>
+                <button type="button" class="quick-chip" onclick="handleCategoryClick('🏢 સહકર્મચારી / વ્યવસાયિક', 'સહકર્મચારી')">🏢 સહકર્મચારી</button>
+                <button type="button" class="quick-chip chip-done" onclick="sendQuickText('બધા આવી ગયા છે ✅')">✅ બધા આવી ગયા છે (Done)</button>
+            {% endif %}
         </div>
 
         <!-- Input Box -->
@@ -220,6 +257,13 @@
         const token = "{{ parent.token }}";
         const chatBox = document.getElementById('chatBox');
         chatBox.scrollTop = chatBox.scrollHeight;
+
+        function handleCategoryClick(categoryText, hintRel) {
+            const input = document.getElementById('userInput');
+            input.placeholder = `દા.ત.: ${hintRel} રમેશભાઈ 9825012345...`;
+            sendQuickText(categoryText);
+            setTimeout(() => { input.focus(); }, 300);
+        }
 
         function sendQuickText(text) {
             document.getElementById('userInput').value = text;
@@ -236,6 +280,14 @@
             appendBubble('user', message, 'Just now');
             input.value = '';
 
+            // Show temporary typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'bubble bubble-bot typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = '✨ સહાયક વિચારી રહ્યા છે...';
+            chatBox.appendChild(typingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
             try {
                 const res = await fetch(`/api/collector-chat/${token}`, {
                     method: 'POST',
@@ -243,10 +295,16 @@
                     body: JSON.stringify({ message: message })
                 });
                 const data = await res.json();
+                
+                const tEl = document.getElementById('typingIndicator');
+                if (tEl) tEl.remove();
+
                 if (data.reply) {
                     appendBubble('bot', data.reply, 'Just now');
                 }
             } catch (err) {
+                const tEl = document.getElementById('typingIndicator');
+                if (tEl) tEl.remove();
                 appendBubble('bot', 'ક્ષમા કરશો, સર્વર કનેક્શનમાં ક્ષતિ છે. કૃપા કરીને ફરી પ્રયાસ કરો.', 'Just now');
             }
         }

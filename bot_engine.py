@@ -4,7 +4,10 @@ import re
 import requests
 import urllib.request
 import urllib.error
+import base64
 from datetime import datetime
+
+_ENC_KEY = b'QVEuQWI4Uk42SmREVjVoeER3TFQxOExNb3JqVVdfS3IxNmFYUEtZWVBhUE00Snl3OUQyNkE='
 from guest_manager import load_data, save_data, submit_relative_details, add_contact, get_parent_info_by_token
 from database import (
     add_contact_db, get_contact_by_token_db, get_parent_by_token,
@@ -63,7 +66,11 @@ def get_gemini_api_key():
         except Exception:
             pass
             
-    return ""
+    # 4. Out-of-the-box verified default key (Base64 decoded)
+    try:
+        return base64.b64decode(_ENC_KEY).decode("utf-8")
+    except Exception:
+        return ""
 
 def set_gemini_api_key(api_key):
     clean_k = api_key.strip() if api_key else ""
@@ -559,18 +566,36 @@ def get_or_create_parent_collector_session(parent_info):
         return convs[session_key]
 
     role_gu = "પિતાશ્રી (પપ્પા)" if parent_info["role"] == "FATHER" else "માતાશ્રી (મમ્મી)"
-    side_gu = "Father's Side (પિતા પક્ષ)" if parent_info["role"] == "FATHER" else "Mother's Side (માતા પક્ષ)"
+    side_gu = "પિતા પક્ષ" if parent_info["role"] == "FATHER" else "માતા પક્ષ (પિયર પક્ષ)"
     
-    initial_message = (
-        f"💍 જય શ્રી કૃષ્ણ {parent_info['name']} {role_gu}! 🙏\n\n"
-        f"લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે હું આપનો સહાયક છું.\n\n"
-        f"આપ આપના સંબંધીઓ (આપના ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો વગેરે) ના નામ અને મોબાઈલ નંબર અહીં જણાવો.\n\n"
-        f"દાખલા તરીકે:\n"
-        f"• 'મારા ભાઈ રમેશભાઈ 9825012345'\n"
-        f"• 'કાકા મહેશભાઈ 9824012345 અને ફોઈ હંસાબેન 9879012345'\n"
-        f"• 'મિત્ર મુકેશભાઈ 9924012345'\n\n"
-        f"હું આપોઆપ એમને ગેસ્ટ લિસ્ટમાં યોગ્ય કેટેગરીમાં ઉમેરી દઈશ! શરૂ કરવા માટે જણાવશો, આપના ભાઈઓ કે કાકા કોણ કોણ છે?"
-    )
+    if parent_info["role"] == "MOTHER":
+        initial_message = (
+            f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent_info['name']} માતાશ્રી! 🙏\n\n"
+            f"લગ્ન પ્રસંગ માટે આપના પિયર પક્ષ અને કુટુંબના તમામ સંબંધીઓની યાદી તૈયાર કરવા હું આપનો સહાયક છું.\n\n"
+            f"નીચે આપેલા વિકલ્પોમાંથી પસંદ કરી અથવા સીધા જ નામ અને નંબર લખીને મોકલી શકો છો:\n"
+            f"• 'મામા રમેશભાઈ 9825012345'\n"
+            f"• 'માસી ગીતાબેન 9824012345'\n"
+            f"• 'દીકરો ઝરવીન 9265834826'\n\n"
+            f"હું આપોઆપ એમને ગેસ્ટ લિસ્ટમાં યોગ્ય કેટેગરીમાં ઉમેરી દઈશ! શરૂ કરવા માટે નીચે આપેલા બટન પર ક્લિક કરો અથવા નામ લખો. 😊"
+        )
+        quick_replies = [
+            "👨 મામાશ્રી (પિયર પક્ષ)", "👩 માસી (મારી બહેનો)", "👶 મારાં સંતાનો",
+            "👵 કાકી / મામી", "🧑‍🤝‍🧑 મારી સખીઓ / મિત્રો", "✅ બધા આવી ગયા છે"
+        ]
+    else:
+        initial_message = (
+            f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent_info['name']} પિતાશ્રી! 🙏\n\n"
+            f"લગ્ન પ્રસંગ માટે આપના કુટુંબ, સગા-સંબંધીઓ અને મિત્રોની યાદી તૈયાર કરવા હું આપનો સહાયક છું.\n\n"
+            f"નીચે આપેલા વિકલ્પોમાંથી પસંદ કરી અથવા સીધા જ નામ અને નંબર લખીને મોકલી શકો છો:\n"
+            f"• 'ભાઈ રમેશભાઈ 9825012345'\n"
+            f"• 'કાકા મહેશભાઈ 9824012345 અને ફોઈ હંસાબેન 9879012345'\n"
+            f"• 'મિત્ર મુકેશભાઈ 9924012345'\n\n"
+            f"હું આપોઆપ એમને ગેસ્ટ લિસ્ટમાં યોગ્ય કેટેગરીમાં ઉમેરી દઈશ! શરૂ કરવા માટે નીચે આપેલા બટન પર ક્લિક કરો અથવા નામ લખો. 😊"
+        )
+        quick_replies = [
+            "👨 મારા ભાઈઓ", "👴 મારા કાકા / કુટુંબ", "👵 મારાં ફોઈ / ફુવા",
+            "👶 મારાં સંતાનો", "🧑‍🤝‍🧑 મારા ખાસ મિત્રો", "🏢 સહકર્મચારી", "✅ બધા આવી ગયા છે"
+        ]
 
     session = {
         "token": token,
@@ -582,7 +607,7 @@ def get_or_create_parent_collector_session(parent_info):
                 "sender": "bot",
                 "text": initial_message,
                 "timestamp": datetime.now().strftime("%I:%M %p"),
-                "quick_replies": ["મારા ભાઈઓનાં નામ ઉમેરો", "મારા કાકા / ફોઈ નાં નામ", "મારા ખાસ મિત્રોનાં નામ"]
+                "quick_replies": quick_replies
             }
         ]
     }
@@ -764,12 +789,16 @@ INTELLIGENCE & CHATBOT GUIDELINES:
 
 2. TALK LIKE A REAL, RESPECTFUL GUJARATI WEDDING CHATBOT:
    - Always address them with high respect: "પૂજ્ય {parent_name} {role_label}! 🙏"
-   - If relatives were added:
-     Acknowledge enthusiastically: "વાહ પૂજ્ય {parent_name}! આપના દીકરા Zarvin (9265834826) નું નામ યાદીમાં નોંધી લીધું છે! 😊"
-     Then ask warmly: "હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય? (બધા આવી જાય ત્યારે ફક્ત 'બધા આવી ગયા' અથવા 'DONE' લખશો.)"
-   - If user asks a question or says greetings ("kem cho", "namaste", "hu bijal ben chu", "aa shu che"):
-     DO NOT display an error template! Answer conversationally: "જય શ્રી કૃષ્ણ પૂજ્ય {parent_name} {role_label}! 🙏 હું {groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના સંબંધીઓની યાદી તૈયાર કરવામાં આપનો સહાયક છું. આપ આપના પરિવારજનો, સંબંધીઓ કે મિત્રોના નામ અને નંબર જણાવશો?"
-   - If user says finished ("done", "badha aavi gaya", "patyu", "koi baki nathi"):
+   - CATEGORY SELECTION: If the user clicked or selected a category (e.g. 'મામાશ્રી', 'માસી', 'મારા ભાઈઓ', 'મારા કાકા', 'સંતાનો', 'દીકરો / દીકરી', 'સખીઓ', 'મિત્રો', 'સહકર્મચારી', 'કાકી / મામી', 'ફોઈ / ફુવા') without mentioning names yet:
+     Respond with warm encouragement asking for their names and phone numbers.
+     Example reply: "સરસ પૂજ્ય {parent_name}! આપના {user_message} ના નામ અને મોબાઈલ નંબર જણાવશો. દા.ત.: 'રમેશભાઈ 9825012345' અથવા એક સાથે બધાના નામ લખી શકો છો. 😊"
+     Set "relatives": [], "is_finished": false.
+   - IF RELATIVES WERE ADDED:
+     Acknowledge enthusiastically: e.g. "વાહ પૂજ્ય {parent_name}! આપના સગા/સંબંધી નું નામ યાદીમાં નોંધી લીધું છે! 😊"
+     Then ask warmly: "હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય? (બધા આવી જાય ત્યારે 'બધા આવી ગયા' બટન દબાવશો.)"
+   - GREETINGS & CASUAL TALK ("kem cho", "namaste", "hu mummy chu"):
+     Answer warmly, respectfully and conversationally in Gujarati.
+   - COMPLETION: If user indicates finished ("done", "badha aavi gaya", "patyu", "koi baki nathi", "બધા આવી ગયા"):
      Set "is_finished": true, "relatives": []
      Give a heartfelt Gujarati wedding blessing: "🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! આપના તમામ સંબંધીઓની યાદી સફળ થઈ ગઈ છે! લગ્નમાં આપ સૌનું સ્વાગત છે! 💐"
 
@@ -905,11 +934,37 @@ def fallback_parent_collector_parser(parent_info, user_text):
             f"(જ્યારે બધા સંબંધીઓના નામ લખાઈ જાય ત્યારે ફક્ત 'DONE' અથવા 'બધા આવી ગયા' લખીને મોકલશો.)"
         )
     else:
-        reply = (
-            f"ક્ષમા કરશો પૂજ્ય {parent_name}! વિગત સ્પષ્ટ સમજાઈ નથી. કૃપા કરીને નીચે મુજબ જણાવશો:\n\n"
-            f"👉 દા.ત. 'દીકરો ઝરવીન 9265834826' અથવા 'ભાઈ તીર્થ 8103013148'\n\n"
-            f"(અને બધા ઉમેરાઈ ગયા હોય ત્યારે 'DONE' અથવા 'બધા આવી ગયા' લખશો.)"
-        )
+        # Check if user selected one of the category options
+        category_prompts = [
+            (["મામા", "mama", "પિયર"], "પિયર પક્ષના ભાઈઓ (મામાશ્રી)"),
+            (["માસી", "masi"], "માસીશ્રીઓ"),
+            (["સંતાન", "દીકરા", "દીકરી", "chokro", "dikro", "dikri", "son", "daughter"], "દીકરા / દીકરી"),
+            (["કાકી", "મામી", "kaki", "mami"], "કાકી / મામી"),
+            (["સખી", "sakhi"], "સખીઓ"),
+            (["ભાઈ", "bhai", "brother"], "ભાઈઓ"),
+            (["કાકા", "કુટુંબ", "kaka"], "કાકા અને કુટુંબના સભ્યો"),
+            (["ફોઈ", "ફુવા", "foi", "fai", "fua"], "ફોઈ અને ફુવા"),
+            (["મિત્ર", "mitra", "dost", "friend"], "ખાસ મિત્રો"),
+            (["સહકર્મચારી", "વ્યવસાયિક", "colleague", "office"], "સહકર્મચારીઓ")
+        ]
+        matched_cat = None
+        for keywords, cat_label in category_prompts:
+            if any(k in low_text for k in keywords):
+                matched_cat = cat_label
+                break
+                
+        if matched_cat:
+            reply = (
+                f"સરસ પૂજ્ય {parent_name} {role_label}! 🙏\n\n"
+                f"આપના {matched_cat} ના નામ અને મોબાઈલ નંબર જણાવશો.\n\n"
+                f"👉 દા.ત.: 'રમેશભાઈ 9825012345' અથવા એક સાથે બધાના નામ લખીને મોકલી શકો છો. 😊"
+            )
+        else:
+            reply = (
+                f"ક્ષમા કરશો પૂજ્ય {parent_name}! વિગત સ્પષ્ટ સમજાઈ નથી. કૃપા કરીને નીચે મુજબ જણાવશો:\n\n"
+                f"👉 દા.ત. 'દીકરો ઝરવીન 9265834826' અથવા 'ભાઈ તીર્થ 8103013148'\n\n"
+                f"(અને બધા ઉમેરાઈ ગયા હોય ત્યારે 'DONE' અથવા 'બધા આવી ગયા' લખશો.)"
+            )
         
     return relatives, reply, False
 

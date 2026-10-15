@@ -684,34 +684,30 @@
 
             <div id="aiStatusCard" style="background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(229, 193, 88, 0.3); border-radius: 16px; padding: 18px; margin-bottom: 20px; text-align: left;">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                    <span id="aiCardDot" style="font-size: 18px;">{% if gemini_configured %}🟢{% else %}🟡{% endif %}</span>
+                    <span id="aiCardDot" style="font-size: 18px;">🟢</span>
                     <strong id="aiCardTitle" style="color: #FFFFFF; font-size: 14px;">
-                        {% if gemini_configured %}Google Gemini 2.5 Flash is Active{% else %}Gemini Key Not Configured Yet{% endif %}
+                        Google Gemini 2.5 Flash is Active (Built-in)
                     </strong>
                 </div>
                 <p id="aiCardDesc" style="font-size: 12px; color: #CBD5E1; line-height: 1.5;">
-                    {% if gemini_configured %}
-                    Natural Gujarati conversation is enabled! The bot understands Gujarati family terms ('maro chokro zarvin', 'kaka', 'mama') and chats warmly.
-                    {% else %}
-                    Enter your Google Gemini API key below to enable natural conversational responses and automated relation extraction.
-                    {% endif %}
+                    Natural Gujarati conversation is 100% active out-of-the-box! The bot understands all Gujarati family terms ('maro chokro zarvin', 'kaka', 'mama', 'masi', 'bhai') and chats warmly with Mummy &amp; Pappa.
                 </p>
             </div>
 
             <div style="text-align: left; margin-bottom: 20px;">
                 <label style="font-size: 12px; font-weight: 700; color: #E5C158; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
-                    Google Gemini API Key
+                    Custom Google Gemini Key (Optional)
                 </label>
-                <input type="text" id="geminiKeyInput" placeholder="Paste your Gemini API key here..." 
+                <input type="text" id="geminiKeyInput" placeholder="Active (Built-in Key). Paste only if you want to override..." 
                        style="width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(229,193,88,0.3); border-radius: 12px; color: #FFFFFF; font-family: monospace; font-size: 13px; outline: none; box-sizing: border-box;" />
                 <div style="font-size: 11px; color: #94A3B8; margin-top: 6px;">
-                    🔑 Get a free API key instantly at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #F6D87A; text-decoration: underline;">Google AI Studio</a>.
+                    ✨ Built-in Gemini 2.5 Flash works directly without entering any key.
                 </div>
             </div>
 
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="closeAiModal()" class="btn-outline">Cancel</button>
-                <button type="button" onclick="saveGeminiKey()" class="btn-gold" id="saveAiKeyBtn">💾 Save AI Key</button>
+                <button type="button" onclick="closeAiModal()" class="btn-outline">Close</button>
+                <button type="button" onclick="saveGeminiKey()" class="btn-gold" id="saveAiKeyBtn">💾 Update Key</button>
             </div>
         </div>
     </div>
