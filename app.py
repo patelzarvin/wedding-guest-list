@@ -37,7 +37,7 @@ def add_security_headers(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
-BAILEYS_SERVICE_URL = "http://127.0.0.1:5001"
+BAILEYS_SERVICE_URL = os.environ.get("BAILEYS_SERVICE_URL", "http://127.0.0.1:5001")
 
 def ensure_baileys_running():
     try:
