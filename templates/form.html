@@ -228,6 +228,46 @@
             background: #FFFAFA;
         }
 
+        /* Phone Input with +91 Prefix Badge */
+        .phone-input-wrap {
+            display: flex;
+            align-items: center;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #FFFFFF;
+            transition: border-color 0.2s;
+        }
+        .phone-input-wrap:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+        }
+        .phone-flag-prefix {
+            background: #F8F9FA;
+            padding: 11px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #495057;
+            border-right: 1.5px solid var(--border);
+            user-select: none;
+            white-space: nowrap;
+        }
+        .phone-input-control {
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 11px 12px !important;
+            flex: 1;
+            font-family: monospace, inherit !important;
+            font-size: 15px !important;
+            outline: none !important;
+        }
+        .phone-counter {
+            padding-right: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6C757D;
+        }
+
         .helper-text {
             font-size: 11px;
             color: var(--text-muted);
@@ -401,8 +441,13 @@
                     <input type="text" id="confirmedName" class="input-control" value="{{ contact.name }}" required oninput="updateSummary()">
                 </div>
                 <div class="input-group">
-                    <label class="input-label">મોબાઈલ નંબર (Mobile Number)</label>
-                    <input type="tel" id="confirmedPhone" class="input-control" value="{{ contact.phone }}" required>
+                    <label class="input-label">મોબાઈલ નંબર (Mobile Number) *</label>
+                    <div class="phone-input-wrap">
+                        <span class="phone-flag-prefix">🇮🇳 +91</span>
+                        <input type="tel" id="confirmedPhone" class="input-control phone-input-control" value="{{ contact.phone }}" maxlength="10" placeholder="10 આંકડાનો નંબર" required oninput="handleGuestPhoneInput(this)">
+                        <span class="phone-counter" id="counter_confirmedPhone"></span>
+                    </div>
+                    <div class="helper-text">આ નંબર પર લગ્નનું આમંત્રણ અને વિગતો મોકલાશે (10 Digits)</div>
                 </div>
             </div>
 
@@ -420,8 +465,12 @@
                 <div id="partnerSection" class="input-group">
                     <label class="input-label">જીવનસાથી / પત્ની / પતિનું નામ (Spouse Name)</label>
                     <input type="text" id="partnerName" class="input-control" placeholder="દા.ત. રેખાબેન પટેલ" oninput="updateSummary()">
-                    <div class="helper-text">તેમનો મોબાઈલ નંબર (મરજિયાત / Optional)</div>
-                    <input type="tel" id="partnerPhone" class="input-control" style="margin-top: 6px;" placeholder="મોબાઈલ નંબર">
+                    <div class="helper-text" style="margin-top: 8px;">તેમનો મોબાઈલ નંબર (મરજિયાત / Optional)</div>
+                    <div class="phone-input-wrap" style="margin-top: 6px;">
+                        <span class="phone-flag-prefix">🇮🇳 +91</span>
+                        <input type="tel" id="partnerPhone" class="input-control phone-input-control" maxlength="10" placeholder="10 આંકડાનો નંબર" oninput="handleGuestPhoneInput(this)">
+                        <span class="phone-counter" id="counter_partnerPhone"></span>
+                    </div>
                 </div>
             </div>
 
@@ -623,14 +672,32 @@
 
     async function handleFormSubmit(e) {
         e.preventDefault();
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.innerText = "સાચવી રહ્યું છે... (Saving...)";
 
         const confirmedName = document.getElementById('confirmedName').value.trim();
         const confirmedPhone = document.getElementById('confirmedPhone').value.trim();
         const partnerName = isMarried ? document.getElementById('partnerName').value.trim() : "";
         const partnerPhone = isMarried ? document.getElementById('partnerPhone').value.trim() : "";
+
+        // Strict 10-digit phone number check
+        if (!/^[6-9]\d{9}$/.test(confirmedPhone)) {
+            alert("⚠️ કૃપા કરીને આપનો 10 આંકડાનો સાચો મોબાઈલ નંબર દાખલ કરો. (Phone number must be exactly 10 digits starting with 6, 7, 8, or 9)");
+            const phEl = document.getElementById('confirmedPhone');
+            phEl.focus();
+            phEl.parentElement.style.borderColor = "#DC3545";
+            return false;
+        }
+
+        if (isMarried && partnerPhone && !/^[6-9]\d{9}$/.test(partnerPhone)) {
+            alert("⚠️ જીવનસાથીનો મોબાઈલ નંબર 10 આંકડાનો હોવો જોઈએ અથવા ખાલી રાખો. (Spouse phone must be 10 digits or left empty)");
+            const pPhEl = document.getElementById('partnerPhone');
+            pPhEl.focus();
+            pPhEl.parentElement.style.borderColor = "#DC3545";
+            return false;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = "સાચવી રહ્યું છે... (Saving...)";
 
         // Collect children
         const children = [];
@@ -694,8 +761,30 @@
         }
     }
 
+    function handleGuestPhoneInput(input) {
+        input.value = input.value.replace(/\D/g, '').slice(0, 10);
+        const counterEl = document.getElementById('counter_' + input.id);
+        const wrap = input.closest('.phone-input-wrap');
+        if (counterEl) {
+            if (input.value.length === 10) {
+                counterEl.textContent = '✓';
+                counterEl.style.color = '#28A745';
+                if (wrap) wrap.style.borderColor = '#28A745';
+            } else if (input.value.length > 0) {
+                counterEl.textContent = `${input.value.length}/10`;
+                counterEl.style.color = '#6C757D';
+                if (wrap) wrap.style.borderColor = '';
+            } else {
+                counterEl.textContent = '';
+                if (wrap) wrap.style.borderColor = '';
+            }
+        }
+    }
+
     // Initial run
     updateSummary();
+    const initPh = document.getElementById('confirmedPhone');
+    if (initPh && initPh.value) handleGuestPhoneInput(initPh);
 </script>
 
 </body>

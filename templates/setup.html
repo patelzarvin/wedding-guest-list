@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="gu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aisle &amp; Vows - Wedding Setup Wizard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: #0c1017;
             color: #FFFFFF;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Hind Vadodara', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -40,11 +40,11 @@
         .b2 { width: 480px; height: 480px; background: radial-gradient(circle, #D4AF37 0%, rgba(229,193,88,0.1) 60%, transparent 80%); bottom: 50px; left: 8%; }
         .b3 { width: 280px; height: 280px; background: radial-gradient(circle, #FFDF78 0%, rgba(255,215,0,0.12) 60%, transparent 80%); top: 40%; left: 30%; }
 
-        /* Central Setup Wizard Card matching Screen 2 */
+        /* Central Setup Wizard Card */
         .wizard-card {
             width: 100%;
             max-width: 1100px;
-            background: rgba(18, 24, 38, 0.75);
+            background: rgba(18, 24, 38, 0.78);
             backdrop-filter: blur(35px);
             -webkit-backdrop-filter: blur(35px);
             border: 1.5px solid rgba(229, 193, 88, 0.4);
@@ -89,6 +89,27 @@
             box-shadow: 0 0 15px rgba(229, 193, 88, 0.2);
         }
 
+        /* Error Banner */
+        .form-error-banner {
+            display: none;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1.5px solid #EF4444;
+            color: #FCA5A5;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            animation: shake 0.3s ease;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
         /* Two columns matching Screen 2 inputs */
         .columns-row {
             display: grid;
@@ -98,7 +119,7 @@
         .column-box {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 18px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(229, 193, 88, 0.15);
             border-radius: 20px;
@@ -131,14 +152,14 @@
         .input-box {
             width: 100%;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(229, 193, 88, 0.25);
+            border: 1.5px solid rgba(229, 193, 88, 0.25);
             border-radius: 12px;
             padding: 12px 16px;
             font-size: 14px;
             color: #FFFFFF;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: inherit;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
         }
         .input-box:focus {
             border-color: #E5C158;
@@ -147,14 +168,104 @@
         }
         .input-box::placeholder { color: #64748B; }
 
+        /* Professional Phone Input Group with +91 Prefix */
+        .phone-group {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(229, 193, 88, 0.28);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        .phone-group:focus-within {
+            border-color: #E5C158;
+            box-shadow: 0 0 16px rgba(229, 193, 88, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .phone-prefix {
+            background: rgba(229, 193, 88, 0.14);
+            border-right: 1.5px solid rgba(229, 193, 88, 0.3);
+            color: #F6D87A;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 12px 14px;
+            user-select: none;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .phone-input {
+            flex: 1;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #FFFFFF !important;
+            padding: 12px 14px !important;
+            font-size: 15px !important;
+            font-family: monospace, inherit !important;
+            letter-spacing: 0.5px;
+            outline: none !important;
+        }
+        .phone-badge {
+            padding-right: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            user-select: none;
+        }
+        .phone-group.is-valid {
+            border-color: #22C55E !important;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.25) !important;
+        }
+        .phone-group.is-valid .phone-badge {
+            color: #4ADE80;
+        }
+        .phone-group.is-invalid {
+            border-color: #EF4444 !important;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.35) !important;
+        }
+        .phone-group.is-invalid .phone-badge {
+            color: #F87171;
+        }
+
+        .field-hint {
+            font-size: 11px;
+            color: #94A3B8;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .field-hint.error {
+            color: #F87171;
+            font-weight: 600;
+        }
+
+        /* Modern Calendar Date Input */
+        .date-picker-input {
+            cursor: pointer;
+            color-scheme: dark;
+        }
+        .date-picker-input::-webkit-calendar-picker-indicator {
+            filter: invert(0.85) sepia(100%) saturate(400%) hue-rotate(5deg);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            transition: transform 0.2s;
+        }
+        .date-picker-input::-webkit-calendar-picker-indicator:hover {
+            transform: scale(1.15);
+        }
+
         .extra-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 24px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(229, 193, 88, 0.15);
             border-radius: 20px;
-            padding: 20px 26px;
+            padding: 22px 26px;
         }
 
         .footer-action {
@@ -182,16 +293,24 @@
             color: #0E1218;
             font-size: 16px;
             font-weight: 700;
-            padding: 14px 40px;
+            padding: 14px 42px;
             border-radius: 14px;
             border: none;
             box-shadow: 0 6px 25px rgba(229, 193, 88, 0.4);
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         .btn-submit:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(229, 193, 88, 0.55);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
     </style>
 </head>
@@ -202,7 +321,7 @@
         <div class="bokeh b3"></div>
     </div>
 
-    <form action="/setup" method="POST" class="wizard-card">
+    <form action="/setup" method="POST" class="wizard-card" id="setupForm" onsubmit="return validateSetupForm(event)" novalidate>
         <div class="wizard-header">
             <div class="wizard-title">
                 <h1>&#128141; Aisle &amp; Vows &mdash; Wedding Setup Wizard</h1>
@@ -211,70 +330,115 @@
             <div class="step-pill">Step 1 of 3: Couple &amp; Family Details</div>
         </div>
 
+        <!-- Dynamic Validation Error Alert Banner -->
+        <div id="errorBanner" class="form-error-banner"></div>
+
         <div class="columns-row">
             <!-- Groom Column -->
             <div class="column-box">
                 <div class="col-title">&#128100; Groom Side (વર પક્ષ)</div>
+                
                 <div class="form-group">
-                    <label>Groom's Full Name *</label>
-                    <input type="text" name="groom_name" class="input-box" value="{{ wedding.groom_name if wedding else '' }}" placeholder="e.g. Groom Full Name" required>
+                    <label>Groom's Full Name (વરરાજાનું પૂરું નામ) *</label>
+                    <input type="text" name="groom_name" id="groom_name" class="input-box" value="{{ wedding.groom_name if wedding else '' }}" placeholder="દા.ત. Zarvin Patel" required>
+                    <span class="field-hint">ઓછામાં ઓછા ૨ અક્ષર</span>
                 </div>
+                
                 <div class="form-group">
-                    <label>Groom's WhatsApp Phone *</label>
-                    <input type="tel" name="groom_phone" class="input-box" value="{{ wedding.groom_phone if wedding else '' }}" placeholder="10-digit mobile number" required>
+                    <label>Groom's WhatsApp Phone (વરરાજાનો નંબર) *</label>
+                    <div class="phone-group" id="grp_groom_phone">
+                        <span class="phone-prefix">🇮🇳 +91</span>
+                        <input type="tel" name="groom_phone" id="groom_phone" class="phone-input" value="{{ wedding.groom_phone if wedding else '' }}" placeholder="98250 12345" maxlength="10" inputmode="numeric" required oninput="handlePhoneInput(this)" onblur="checkPhoneValid(this, true)">
+                        <span class="phone-badge" id="badge_groom_phone"></span>
+                    </div>
+                    <span class="field-hint" id="hint_groom_phone">ભારતીય ૧૦ આંકડાનો મોબાઈલ નંબર</span>
                 </div>
+                
                 <div class="form-group">
                     <label>Father's Name &amp; Phone (પિતાશ્રી) *</label>
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="groom_father_name" class="input-box" value="{{ wedding.groom_father_name if wedding else '' }}" placeholder="Father Name" required>
-                        <input type="tel" name="groom_father_phone" class="input-box" value="{{ wedding.groom_father_phone if wedding else '' }}" placeholder="Father Phone" required>
+                        <input type="text" name="groom_father_name" id="groom_father_name" class="input-box" value="{{ wedding.groom_father_name if wedding else '' }}" placeholder="પિતાશ્રીનું નામ" required>
+                        <div class="phone-group" id="grp_groom_father_phone">
+                            <span class="phone-prefix" style="padding: 12px 8px; font-size: 12px;">+91</span>
+                            <input type="tel" name="groom_father_phone" id="groom_father_phone" class="phone-input" value="{{ wedding.groom_father_phone if wedding else '' }}" placeholder="નંબર (10 digits)" maxlength="10" inputmode="numeric" required oninput="handlePhoneInput(this)" onblur="checkPhoneValid(this, true)">
+                            <span class="phone-badge" id="badge_groom_father_phone"></span>
+                        </div>
                     </div>
+                    <span class="field-hint" id="hint_groom_father_phone">પિતાશ્રીનો ૧૦ આંકડાનો WhatsApp નંબર</span>
                 </div>
+                
                 <div class="form-group">
                     <label>Mother's Name &amp; Phone (માતાશ્રી) *</label>
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="groom_mother_name" class="input-box" value="{{ wedding.groom_mother_name if wedding else '' }}" placeholder="Mother Name" required>
-                        <input type="tel" name="groom_mother_phone" class="input-box" value="{{ wedding.groom_mother_phone if wedding else '' }}" placeholder="Mother Phone" required>
+                        <input type="text" name="groom_mother_name" id="groom_mother_name" class="input-box" value="{{ wedding.groom_mother_name if wedding else '' }}" placeholder="માતાશ્રીનું નામ" required>
+                        <div class="phone-group" id="grp_groom_mother_phone">
+                            <span class="phone-prefix" style="padding: 12px 8px; font-size: 12px;">+91</span>
+                            <input type="tel" name="groom_mother_phone" id="groom_mother_phone" class="phone-input" value="{{ wedding.groom_mother_phone if wedding else '' }}" placeholder="નંબર (10 digits)" maxlength="10" inputmode="numeric" required oninput="handlePhoneInput(this)" onblur="checkPhoneValid(this, true)">
+                            <span class="phone-badge" id="badge_groom_mother_phone"></span>
+                        </div>
                     </div>
+                    <span class="field-hint" id="hint_groom_mother_phone">માતાશ્રીનો ૧૦ આંકડાનો WhatsApp નંબર</span>
                 </div>
             </div>
 
             <!-- Bride Column -->
             <div class="column-box">
                 <div class="col-title">&#128112; Bride Side (કન્યા પક્ષ)</div>
+                
                 <div class="form-group">
-                    <label>Bride's Full Name *</label>
-                    <input type="text" name="bride_name" class="input-box" value="{{ wedding.bride_name if wedding else '' }}" placeholder="e.g. Bride Full Name" required>
+                    <label>Bride's Full Name (કન્યાનું પૂરું નામ) *</label>
+                    <input type="text" name="bride_name" id="bride_name" class="input-box" value="{{ wedding.bride_name if wedding else '' }}" placeholder="દા.ત. Krupali Patel" required>
+                    <span class="field-hint">ઓછામાં ઓછા ૨ અક્ષર</span>
                 </div>
+                
                 <div class="form-group">
-                    <label>Bride's WhatsApp Phone *</label>
-                    <input type="tel" name="bride_phone" class="input-box" value="{{ wedding.bride_phone if wedding else '' }}" placeholder="10-digit mobile number" required>
-                </div>
-                <div class="form-group">
-                    <label>Father's Name &amp; Phone (પિતાશ્રી)</label>
-                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="bride_father_name" class="input-box" value="{{ wedding.bride_father_name if wedding else '' }}" placeholder="Father Name">
-                        <input type="tel" name="bride_father_phone" class="input-box" value="{{ wedding.bride_father_phone if wedding else '' }}" placeholder="Father Phone">
+                    <label>Bride's WhatsApp Phone (કન્યાનો નંબર) *</label>
+                    <div class="phone-group" id="grp_bride_phone">
+                        <span class="phone-prefix">🇮🇳 +91</span>
+                        <input type="tel" name="bride_phone" id="bride_phone" class="phone-input" value="{{ wedding.bride_phone if wedding else '' }}" placeholder="98240 12345" maxlength="10" inputmode="numeric" required oninput="handlePhoneInput(this)" onblur="checkPhoneValid(this, true)">
+                        <span class="phone-badge" id="badge_bride_phone"></span>
                     </div>
+                    <span class="field-hint" id="hint_bride_phone">ભારતીય ૧૦ આંકડાનો મોબાઈલ નંબર</span>
                 </div>
+                
                 <div class="form-group">
-                    <label>Mother's Name &amp; Phone (માતાશ્રી)</label>
+                    <label>Father's Name &amp; Phone (પિતાશ્રી) (Optional)</label>
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
-                        <input type="text" name="bride_mother_name" class="input-box" value="{{ wedding.bride_mother_name if wedding else '' }}" placeholder="Mother Name">
-                        <input type="tel" name="bride_mother_phone" class="input-box" value="{{ wedding.bride_mother_phone if wedding else '' }}" placeholder="Mother Phone">
+                        <input type="text" name="bride_father_name" id="bride_father_name" class="input-box" value="{{ wedding.bride_father_name if wedding else '' }}" placeholder="પિતાશ્રીનું નામ">
+                        <div class="phone-group" id="grp_bride_father_phone">
+                            <span class="phone-prefix" style="padding: 12px 8px; font-size: 12px;">+91</span>
+                            <input type="tel" name="bride_father_phone" id="bride_father_phone" class="phone-input" value="{{ wedding.bride_father_phone if wedding else '' }}" placeholder="નંબર (10 digits)" maxlength="10" inputmode="numeric" oninput="handlePhoneInput(this)" onblur="checkPhoneValid(this, false)">
+                            <span class="phone-badge" id="badge_bride_father_phone"></span>
+                        </div>
                     </div>
+                    <span class="field-hint" id="hint_bride_father_phone">વૈકલ્પિક (દાખલ કરો તો પૂરા ૧૦ આંકડા)</span>
+                </div>
+                
+                <div class="form-group">
+                    <label>Mother's Name &amp; Phone (માતાશ્રી) (Optional)</label>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+                        <input type="text" name="bride_mother_name" id="bride_mother_name" class="input-box" value="{{ wedding.bride_mother_name if wedding else '' }}" placeholder="માતાશ્રીનું નામ">
+                        <div class="phone-group" id="grp_bride_mother_phone">
+                            <span class="phone-prefix" style="padding: 12px 8px; font-size: 12px;">+91</span>
+                            <input type="tel" name="bride_mother_phone" id="bride_mother_phone" class="phone-input" value="{{ wedding.bride_mother_phone if wedding else '' }}" placeholder="નંબર (10 digits)" maxlength="10" inputmode="numeric" oninput="handlePhoneInput(this)" onblur="checkPhoneValid(this, false)">
+                            <span class="phone-badge" id="badge_bride_mother_phone"></span>
+                        </div>
+                    </div>
+                    <span class="field-hint" id="hint_bride_mother_phone">વૈકલ્પિક (દાખલ કરો તો પૂરા ૧૦ આંકડા)</span>
                 </div>
             </div>
         </div>
 
         <div class="extra-row">
             <div class="form-group">
-                <label>Wedding Date (લગ્ન તારીખ)</label>
-                <input type="text" name="wedding_date" class="input-box" value="{{ wedding.wedding_date if wedding else '' }}" placeholder="e.g. 15 December 2026">
+                <label>Wedding Date (લગ્નની શુભ તારીખ) *</label>
+                <input type="date" name="wedding_date" id="weddingDateInput" class="input-box date-picker-input" value="{{ wedding.wedding_date if wedding else '' }}" required>
+                <span class="field-hint">&#128197; કેલેન્ડરમાંથી તારીખ પસંદ કરો (Calendar Date Picker)</span>
             </div>
             <div class="form-group">
-                <label>Wedding City / Venue (શહેર / સ્થળ)</label>
-                <input type="text" name="wedding_city" class="input-box" value="{{ wedding.wedding_city if wedding else '' }}" placeholder="e.g. Ahmedabad">
+                <label>Wedding City / Venue (શહેર અથવા સ્થળ) *</label>
+                <input type="text" name="wedding_city" id="wedding_city" class="input-box" value="{{ wedding.wedding_city if wedding else '' }}" placeholder="દા.ત. Ahmedabad, Gujarat" required>
+                <span class="field-hint">&#127963; લગ્ન સમારોહનું શહેર</span>
             </div>
         </div>
 
@@ -282,8 +446,186 @@
             <div class="autopilot-tag">
                 &#9889; <span>100% Autopilot:</span> Bot will auto-dispatch WhatsApp collector links to parents immediately.
             </div>
-            <button type="submit" class="btn-submit">Save &amp; Enter Wedding Suite &rarr;</button>
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span>Save &amp; Enter Wedding Suite</span> &rarr;
+            </button>
         </div>
     </form>
+
+    <script>
+        // Set minimum date to today so past dates cannot be selected
+        const todayIso = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('weddingDateInput');
+        if (dateInput) {
+            dateInput.min = todayIso;
+        }
+
+        // Real-time phone input filtering: only digits, max 10
+        function handlePhoneInput(input) {
+            // Remove non-numeric characters instantly
+            input.value = input.value.replace(/\D/g, '').slice(0, 10);
+            const val = input.value;
+            const fieldId = input.id;
+            const grp = document.getElementById('grp_' + fieldId);
+            const badge = document.getElementById('badge_' + fieldId);
+            const hint = document.getElementById('hint_' + fieldId);
+
+            if (!grp) return;
+
+            if (val.length === 0) {
+                grp.classList.remove('is-valid', 'is-invalid');
+                if (badge) badge.textContent = '';
+                return;
+            }
+
+            // Check if first digit is valid (6, 7, 8, 9)
+            if (!/^[6-9]/.test(val)) {
+                grp.classList.remove('is-valid');
+                grp.classList.add('is-invalid');
+                if (badge) badge.textContent = '⚠️';
+                if (hint) {
+                    hint.textContent = 'નંબર 6, 7, 8 કે 9 થી શરૂ થવો જોઈએ';
+                    hint.classList.add('error');
+                }
+                return;
+            }
+
+            if (val.length === 10) {
+                grp.classList.remove('is-invalid');
+                grp.classList.add('is-valid');
+                if (badge) badge.textContent = '✓';
+                if (hint) {
+                    hint.textContent = '૧૦ આંકડા માન્ય છે (Valid)';
+                    hint.classList.remove('error');
+                }
+            } else {
+                grp.classList.remove('is-valid', 'is-invalid');
+                if (badge) badge.textContent = `${val.length}/10`;
+                if (hint) {
+                    hint.textContent = `${10 - val.length} આંકડા બાકી છે`;
+                    hint.classList.remove('error');
+                }
+            }
+        }
+
+        // On Blur verification
+        function checkPhoneValid(input, isRequired) {
+            const val = input.value.trim();
+            const fieldId = input.id;
+            const grp = document.getElementById('grp_' + fieldId);
+            const badge = document.getElementById('badge_' + fieldId);
+            const hint = document.getElementById('hint_' + fieldId);
+
+            if (!grp) return true;
+
+            if (!isRequired && val.length === 0) {
+                grp.classList.remove('is-valid', 'is-invalid');
+                if (badge) badge.textContent = '';
+                return true;
+            }
+
+            const isValid = /^[6-9]\d{9}$/.test(val);
+            if (!isValid) {
+                grp.classList.remove('is-valid');
+                grp.classList.add('is-invalid');
+                if (badge) badge.textContent = '✕';
+                if (hint) {
+                    hint.textContent = 'કૃપા કરીને માન્ય ૧૦ આંકડાનો નંબર લખો';
+                    hint.classList.add('error');
+                }
+                return false;
+            } else {
+                grp.classList.remove('is-invalid');
+                grp.classList.add('is-valid');
+                if (badge) badge.textContent = '✓';
+                return true;
+            }
+        }
+
+        // STRICT FORM SUBMIT VALIDATOR
+        function validateSetupForm(e) {
+            const errBanner = document.getElementById('errorBanner');
+            errBanner.style.display = 'none';
+            errBanner.textContent = '';
+
+            const requiredPhones = [
+                { id: 'groom_phone', label: "Groom's Phone (વરરાજાનો નંબર)" },
+                { id: 'groom_father_phone', label: "Groom's Father Phone (પિતાશ્રીનો નંબર)" },
+                { id: 'groom_mother_phone', label: "Groom's Mother Phone (માતાશ્રીનો નંબર)" },
+                { id: 'bride_phone', label: "Bride's Phone (કન્યાનો નંબર)" }
+            ];
+
+            const optionalPhones = [
+                { id: 'bride_father_phone', label: "Bride's Father Phone" },
+                { id: 'bride_mother_phone', label: "Bride's Mother Phone" }
+            ];
+
+            // 1. Check required text inputs
+            const reqTexts = [
+                { id: 'groom_name', label: "Groom Full Name" },
+                { id: 'groom_father_name', label: "Groom Father Name" },
+                { id: 'groom_mother_name', label: "Groom Mother Name" },
+                { id: 'bride_name', label: "Bride Full Name" },
+                { id: 'wedding_city', label: "Wedding City / Venue" }
+            ];
+
+            for (const item of reqTexts) {
+                const el = document.getElementById(item.id);
+                if (!el || el.value.trim().length < 2) {
+                    showError(e, el, `⚠️ કૃપા કરીને ${item.label} સાચું દાખલ કરો.`);
+                    return false;
+                }
+            }
+
+            // 2. Check wedding date
+            const dateEl = document.getElementById('weddingDateInput');
+            if (!dateEl || !dateEl.value) {
+                showError(e, dateEl, "⚠️ કૃપા કરીને કેલેન્ડરમાંથી લગ્નની તારીખ પસંદ કરો.");
+                return false;
+            }
+
+            // 3. Check Required Phones (Must be exactly 10 digits starting with 6-9)
+            for (const item of requiredPhones) {
+                const el = document.getElementById(item.id);
+                const val = el ? el.value.trim() : '';
+                if (!/^[6-9]\d{9}$/.test(val)) {
+                    showError(e, el, `⚠️ ${item.label} અમાન્ય છે! કૃપા કરીને 10 આંકડાનો સાચો મોબાઈલ નંબર દાખલ કરો. (Phone must be 10 digits)`);
+                    return false;
+                }
+            }
+
+            // 4. Check Optional Phones (If filled, must be 10 digits)
+            for (const item of optionalPhones) {
+                const el = document.getElementById(item.id);
+                const val = el ? el.value.trim() : '';
+                if (val.length > 0 && !/^[6-9]\d{9}$/.test(val)) {
+                    showError(e, el, `⚠️ ${item.label} અપૂર્ણ છે! કૃપા કરીને પૂરા 10 આંકડા દાખલ કરો અથવા ખાલી રાખો.`);
+                    return false;
+                }
+            }
+
+            // All validated! Show loading state
+            const btn = document.getElementById('submitBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ <span>સેવ થઈ રહ્યું છે... (Saving Wedding Suite...)</span>';
+            }
+            return true;
+        }
+
+        function showError(e, element, message) {
+            if (e) e.preventDefault();
+            const errBanner = document.getElementById('errorBanner');
+            errBanner.textContent = message;
+            errBanner.style.display = 'block';
+            errBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (element) {
+                element.focus();
+                const grp = document.getElementById('grp_' + element.id);
+                if (grp) grp.classList.add('is-invalid');
+                else element.style.borderColor = '#EF4444';
+            }
+        }
+    </script>
 </body>
 </html>

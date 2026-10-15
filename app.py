@@ -169,11 +169,14 @@ def register():
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
         
         if len(username) < 3:
             return render_template("login.html", active_tab="register", error="Username must be at least 3 characters.")
         if len(password) < 6:
             return render_template("login.html", active_tab="register", error="Password must be at least 6 characters.")
+        if confirm_password and password != confirm_password:
+            return render_template("login.html", active_tab="register", error="Passwords do not match. Please verify your password.")
             
         res = register_user(username, email, password)
         if res.get("success"):
@@ -192,6 +195,12 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+def _clean_phone(p):
+    if not p:
+        return ""
+    digits = "".join(filter(str.isdigit, str(p)))
+    return digits[-10:] if len(digits) >= 10 else digits
+
 # -------------------------------------------------------------
 # SETUP WIZARD (AUTOPILOT INITIALIZATION)
 # -------------------------------------------------------------
@@ -202,17 +211,17 @@ def setup_wizard():
     if request.method == "POST":
         form_data = {
             "groom_name": request.form.get("groom_name", "").strip(),
-            "groom_phone": request.form.get("groom_phone", "").strip(),
+            "groom_phone": _clean_phone(request.form.get("groom_phone", "")),
             "groom_father_name": request.form.get("groom_father_name", "").strip(),
-            "groom_father_phone": request.form.get("groom_father_phone", "").strip(),
+            "groom_father_phone": _clean_phone(request.form.get("groom_father_phone", "")),
             "groom_mother_name": request.form.get("groom_mother_name", "").strip(),
-            "groom_mother_phone": request.form.get("groom_mother_phone", "").strip(),
+            "groom_mother_phone": _clean_phone(request.form.get("groom_mother_phone", "")),
             "bride_name": request.form.get("bride_name", "").strip(),
-            "bride_phone": request.form.get("bride_phone", "").strip(),
+            "bride_phone": _clean_phone(request.form.get("bride_phone", "")),
             "bride_father_name": request.form.get("bride_father_name", "").strip(),
-            "bride_father_phone": request.form.get("bride_father_phone", "").strip(),
+            "bride_father_phone": _clean_phone(request.form.get("bride_father_phone", "")),
             "bride_mother_name": request.form.get("bride_mother_name", "").strip(),
-            "bride_mother_phone": request.form.get("bride_mother_phone", "").strip(),
+            "bride_mother_phone": _clean_phone(request.form.get("bride_mother_phone", "")),
             "wedding_date": request.form.get("wedding_date", "").strip(),
             "wedding_city": request.form.get("wedding_city", "").strip()
         }

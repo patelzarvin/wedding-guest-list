@@ -198,6 +198,17 @@
             font-weight: 600;
             text-align: center;
         }
+        .alert-error.client-banner {
+            display: none;
+            animation: shake 0.3s ease;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
         .alert-success {
             background: rgba(34, 197, 94, 0.15);
             border: 1px solid #22C55E;
@@ -208,6 +219,74 @@
             margin-bottom: 20px;
             font-weight: 600;
             text-align: center;
+        }
+
+        /* Password Input Wrapper with Eye Toggle */
+        .password-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-wrap .input-box {
+            padding-right: 44px;
+        }
+        .toggle-pwd-btn {
+            position: absolute;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: #94A3B8;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            user-select: none;
+        }
+        .toggle-pwd-btn:hover {
+            color: #E5C158;
+        }
+
+        /* Password Strength Bar & Hints */
+        .pwd-strength-container {
+            margin-top: 8px;
+            display: none;
+        }
+        .pwd-strength-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        .pwd-strength-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        .pwd-strength-label {
+            font-size: 11px;
+            color: #94A3B8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pwd-hint-text {
+            font-size: 11px;
+            color: #94A3B8;
+            margin-top: 5px;
+            display: block;
+        }
+        .pwd-hint-text.error {
+            color: #F87171;
+            font-weight: 600;
+        }
+        .pwd-hint-text.success {
+            color: #4ADE80;
+            font-weight: 600;
         }
 
         .auth-footer {
@@ -251,6 +330,8 @@
             <div class="alert-success">{{ success }}</div>
         {% endif %}
 
+        <div id="clientErrorBanner" class="alert-error client-banner"></div>
+
         <!-- Tabs Header -->
         <div class="tabs-header">
             <button type="button" class="tab-btn {% if active_tab != 'register' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
@@ -259,41 +340,65 @@
 
         <!-- Sign In Form -->
         <div id="signin-section" class="form-section {% if active_tab != 'register' %}active{% endif %}">
-            <form action="/login" method="POST">
+            <form action="/login" method="POST" onsubmit="return validateSignInForm(event)">
                 <input type="hidden" name="action" value="login">
                 <div class="form-group">
                     <label>Username / Email</label>
-                    <input type="text" name="username" class="input-box" placeholder="Enter your username or email" required autofocus>
+                    <input type="text" name="username" id="signin_username" class="input-box" placeholder="Enter your username or email" required autofocus>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" name="password" class="input-box" placeholder="Enter your password" required>
+                    <div class="password-wrap">
+                        <input type="password" name="password" id="signin_password" class="input-box" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('signin_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+                    </div>
                 </div>
                 <div class="remember-row">
                     <label><input type="checkbox" name="remember" checked> Remember My Family</label>
                     <a href="javascript:void(0)" onclick="alert('Please contact your administrator or register a new family account.')">Forgot Password?</a>
                 </div>
-                <button type="submit" class="btn-submit">Sign In to Dashboard &rarr;</button>
+                <button type="submit" class="btn-submit" id="signinSubmitBtn">Sign In to Dashboard &rarr;</button>
             </form>
         </div>
 
         <!-- Create Account Form -->
         <div id="register-section" class="form-section {% if active_tab == 'register' %}active{% endif %}">
-            <form action="/register" method="POST">
+            <form action="/register" method="POST" id="registerForm" onsubmit="return validateRegisterForm(event)">
                 <input type="hidden" name="action" value="register">
                 <div class="form-group">
-                    <label>Choose Username</label>
-                    <input type="text" name="username" class="input-box" placeholder="e.g. patel_family" required>
+                    <label>Choose Username (ઓછામાં ઓછા 3 અક્ષર)</label>
+                    <input type="text" name="username" id="reg_username" class="input-box" placeholder="e.g. patel_family" required minlength="3">
                 </div>
                 <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="email" class="input-box" placeholder="e.g. host@wedding.com" required>
+                    <label>Email Address (ઇમેઇલ એડ્રેસ)</label>
+                    <input type="email" name="email" id="reg_email" class="input-box" placeholder="e.g. host@wedding.com" required>
                 </div>
                 <div class="form-group">
-                    <label>Create Password</label>
-                    <input type="password" name="password" class="input-box" placeholder="Minimum 6 characters" required>
+                    <label>Create Password (નવો પાસવર્ડ - Min 6 Characters)</label>
+                    <div class="password-wrap">
+                        <input type="password" name="password" id="reg_password" class="input-box" placeholder="Create strong password" required minlength="6" oninput="handlePasswordStrength(this)">
+                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                    <!-- Password Strength Meter -->
+                    <div class="pwd-strength-container" id="strengthContainer">
+                        <div class="pwd-strength-bar">
+                            <div class="pwd-strength-fill" id="strengthFill"></div>
+                        </div>
+                        <div class="pwd-strength-label">
+                            <span id="strengthText">Strength: Weak</span>
+                            <span id="charCount">0/6 chars</span>
+                        </div>
+                    </div>
                 </div>
-                <button type="submit" class="btn-submit">Create Wedding Suite &rarr;</button>
+                <div class="form-group">
+                    <label>Confirm Password (પાસવર્ડ ફરીથી લખો)</label>
+                    <div class="password-wrap">
+                        <input type="password" name="confirm_password" id="reg_confirm_password" class="input-box" placeholder="Re-enter password to confirm" required oninput="handlePasswordMatch()">
+                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_confirm_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                    <span class="pwd-hint-text" id="confirmHint"></span>
+                </div>
+                <button type="submit" class="btn-submit" id="regSubmitBtn">Create Wedding Suite &rarr;</button>
             </form>
         </div>
 
@@ -308,6 +413,7 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            clearClientError();
             if (tab === 'signin') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('signin-section').classList.add('active');
@@ -315,6 +421,157 @@
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('register-section').classList.add('active');
             }
+        }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+                btn.title = 'Hide Password';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+                btn.title = 'Show Password';
+            }
+        }
+
+        function handlePasswordStrength(input) {
+            const val = input.value;
+            const container = document.getElementById('strengthContainer');
+            const fill = document.getElementById('strengthFill');
+            const label = document.getElementById('strengthText');
+            const count = document.getElementById('charCount');
+
+            if (!val) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+            count.textContent = `${val.length} chars (min 6)`;
+
+            let score = 0;
+            if (val.length >= 6) score++;
+            if (val.length >= 8) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[A-Z]/.test(val) || /[^A-Za-z0-9]/.test(val)) score++;
+
+            if (val.length < 6) {
+                fill.style.width = '25%';
+                fill.style.backgroundColor = '#EF4444';
+                label.textContent = '⚠️ બહુ ટૂંકો છે (Too Short - min 6)';
+                label.style.color = '#FCA5A5';
+            } else if (score === 1) {
+                fill.style.width = '40%';
+                fill.style.backgroundColor = '#F59E0B';
+                label.textContent = 'સામાન્ય પાસવર્ડ (Weak)';
+                label.style.color = '#FCD34D';
+            } else if (score === 2 || score === 3) {
+                fill.style.width = '75%';
+                fill.style.backgroundColor = '#E5C158';
+                label.textContent = 'મજબૂત પાસવર્ડ (Good)';
+                label.style.color = '#F6D87A';
+            } else {
+                fill.style.width = '100%';
+                fill.style.backgroundColor = '#22C55E';
+                label.textContent = 'ઉત્તમ પાસવર્ડ (Very Strong)';
+                label.style.color = '#86EFAC';
+            }
+
+            handlePasswordMatch();
+        }
+
+        function handlePasswordMatch() {
+            const pwd = document.getElementById('reg_password').value;
+            const conf = document.getElementById('reg_confirm_password').value;
+            const hint = document.getElementById('confirmHint');
+
+            if (!conf) {
+                hint.textContent = '';
+                hint.className = 'pwd-hint-text';
+                return;
+            }
+
+            if (pwd === conf) {
+                hint.textContent = '✓ પાસવર્ડ સરખા છે (Passwords match)';
+                hint.className = 'pwd-hint-text success';
+            } else {
+                hint.textContent = '✕ પાસવર્ડ મેચ થતા નથી (Passwords do not match)';
+                hint.className = 'pwd-hint-text error';
+            }
+        }
+
+        function showClientError(msg, targetInput) {
+            const banner = document.getElementById('clientErrorBanner');
+            banner.textContent = msg;
+            banner.style.display = 'block';
+            if (targetInput) {
+                targetInput.focus();
+                targetInput.style.borderColor = '#EF4444';
+                setTimeout(() => { targetInput.style.borderColor = ''; }, 3000);
+            }
+        }
+
+        function clearClientError() {
+            const banner = document.getElementById('clientErrorBanner');
+            banner.style.display = 'none';
+            banner.textContent = '';
+        }
+
+        function validateRegisterForm(e) {
+            clearClientError();
+            const username = document.getElementById('reg_username').value.trim();
+            const email = document.getElementById('reg_email').value.trim();
+            const pwdInput = document.getElementById('reg_password');
+            const confInput = document.getElementById('reg_confirm_password');
+            const pwd = pwdInput.value;
+            const conf = confInput.value;
+
+            if (username.length < 3) {
+                e.preventDefault();
+                showClientError('⚠️ યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જોઈએ. (Username must be at least 3 chars)', document.getElementById('reg_username'));
+                return false;
+            }
+
+            if (pwd.length < 6) {
+                e.preventDefault();
+                showClientError('⚠️ પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ! (Password must be at least 6 characters)', pwdInput);
+                return false;
+            }
+
+            if (pwd !== conf) {
+                e.preventDefault();
+                showClientError('⚠️ પાસવર્ડ અને Confirm Password મેચ થતા નથી! કૃપા કરીને ચકાસો.', confInput);
+                return false;
+            }
+
+            const btn = document.getElementById('regSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ એકાઉન્ટ બની રહ્યું છે... (Creating...)';
+            return true;
+        }
+
+        function validateSignInForm(e) {
+            clearClientError();
+            const user = document.getElementById('signin_username').value.trim();
+            const pass = document.getElementById('signin_password').value;
+
+            if (!user) {
+                e.preventDefault();
+                showClientError('⚠️ કૃપા કરીને યુઝરનેમ અથવા ઇમેઇલ દાખલ કરો.', document.getElementById('signin_username'));
+                return false;
+            }
+            if (!pass) {
+                e.preventDefault();
+                showClientError('⚠️ કૃપા કરીને પાસવર્ડ દાખલ કરો.', document.getElementById('signin_password'));
+                return false;
+            }
+
+            const btn = document.getElementById('signinSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ સાઇન ઇન થઈ રહ્યું છે... (Signing in...)';
+            return true;
         }
     </script>
 </body>
