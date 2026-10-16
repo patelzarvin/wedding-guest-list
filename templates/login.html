@@ -452,7 +452,7 @@
                 <div class="form-group">
                     <label>Email Address (ઇમેઇલ એડ્રેસ - વેરિફિકેશન કોડ માટે)</label>
                     <div class="phone-input-wrap">
-                        <input type="email" id="reg_email" class="input-box" placeholder="e.g. zarvin.114@gmail.com" required>
+                        <input type="email" id="reg_email" class="input-box" placeholder="e.g. zarvin.114@gmail.com" required onkeydown="if(event.key==='Enter'){event.preventDefault();sendRegisterEmailOTP();}">
                         <button type="button" class="btn-otp-action" id="btnRegSendEmailOtp" onclick="sendRegisterEmailOTP()">Send Code</button>
                     </div>
                     <span class="otp-status-text" id="regEmailStatusText">૬-અંકનો સુરક્ષા કોડ સીધો તમારા ઇમેઇલ ઇનબોક્સમાં મોકલવામાં આવશે.</span>
@@ -462,7 +462,7 @@
                 <div class="form-group" id="regEmailOtpBox" style="display: none;">
                     <label>Enter 6-Digit Email Verification Code (ઇમેઇલ પર આવેલ કોડ)</label>
                     <div class="phone-input-wrap">
-                        <input type="text" id="reg_otp" class="input-box" placeholder="Enter 6-digit code from email" maxlength="6" pattern="[0-9]{6}">
+                        <input type="text" id="reg_otp" class="input-box" placeholder="Enter 6-digit code from email" maxlength="6" pattern="[0-9]{6}" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyRegisterEmailOTP();}">
                         <button type="button" class="btn-otp-action" id="btnRegVerifyEmailOtp" onclick="verifyRegisterEmailOTP()">Verify Code</button>
                     </div>
                     <div class="otp-verified-badge" id="regEmailVerifiedBadge">
@@ -521,24 +521,24 @@
             <div style="margin-bottom: 20px;">
                 <h3 style="font-size: 16px; color: var(--gold-champagne); margin-bottom: 6px;">Reset Password via Verification</h3>
                 <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-                    તમારા રજીસ્ટર ઇમેઇલ અથવા મોબાઇલ નંબર દ્વારા સુરક્ષા કોડ મેળવી નવો પાસવર્ડ સેટ કરો.
+                    તમારા રજીસ્ટર ઇમેઇલ અથવા મોબાઇલ નંબર દ્વારા સુરક્ષા કોડ મેળવી નવો પાસવર્ડ સેટ કરો. (સુરક્ષા ખાતર કોડ રજીસ્ટર્ડ ઇમેઇલ પર મોકલવામાં આવશે.)
                 </p>
             </div>
 
             <div class="form-group">
-                <label>Registered Email or Mobile (રજીસ્ટર ઇમેઇલ અથવા મોબાઇલ નંબર)</label>
+                <label>Registered Email or Mobile (રજીસ્ટર ઇમેઇલ અથવા 10-અંકનો મોબાઇલ)</label>
                 <div class="phone-input-wrap">
-                    <input type="text" id="reset_identifier" class="input-box" placeholder="e.g. zarvin.114@gmail.com or 9876543210" required>
+                    <input type="text" id="reset_identifier" class="input-box" placeholder="e.g. zarvin.114@gmail.com or 9876543210" required onkeydown="if(event.key==='Enter'){event.preventDefault();sendResetEmailOTP();}">
                     <button type="button" class="btn-otp-action" id="btnResetSendEmailOtp" onclick="sendResetEmailOTP()">Send Code</button>
                 </div>
-                <span class="otp-status-text" id="resetEmailStatusText">૬-અંકનો સુરક્ષા કોડ તમારા રજીસ્ટર્ડ Gmail ઇનબોક્સમાં મોકલવામાં આવશે.</span>
+                <span class="otp-status-text" id="resetEmailStatusText">૬-અંકનો સુરક્ષા કોડ એકાઉન્ટ સાથે જોડાયેલ રજીસ્ટર્ડ ઇમેઇલ પર મોકલવામાં આવશે.</span>
             </div>
 
             <!-- OTP Input Field with Verify Code button -->
             <div class="form-group" id="resetOtpBox" style="display: none;">
                 <label>Enter 6-Digit Verification Code (ઇમેઇલ પર આવેલ કોડ)</label>
                 <div class="phone-input-wrap">
-                    <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}">
+                    <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyResetEmailOTP();}">
                     <button type="button" class="btn-otp-action" id="btnResetVerifyOtp" onclick="verifyResetEmailOTP()">Verify Code</button>
                 </div>
                 <div class="otp-verified-badge" id="resetVerifiedBadge" style="display: none;">
@@ -579,12 +579,12 @@
         <div class="auth-footer">
             <span class="secure-badge">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                256-Bit SSL Encrypted
+                TLS / HTTPS Encrypted
             </span>
             <span>&bull;</span>
             <span>Email Verified Security</span>
             <span>&bull;</span>
-            <span>Isolated Host Suite</span>
+            <span>Tenant Data Isolation</span>
         </div>
     </div>
 
@@ -705,6 +705,7 @@
             const banner = document.getElementById('clientErrorBanner');
             banner.textContent = msg;
             banner.style.display = 'block';
+            banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
             if (targetInput) {
                 targetInput.focus();
                 targetInput.style.borderColor = '#EF4444';
@@ -730,11 +731,14 @@
 
             if (!email || !email.includes('@')) {
                 showClientError('કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.', emailInput);
+                statusText.style.color = '#EF4444';
+                statusText.textContent = 'કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.';
                 return;
             }
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
+            statusText.style.color = '#F59E0B';
             statusText.textContent = 'ઇમેઇલ પર સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
 
             try {
@@ -746,16 +750,19 @@
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError(data.error || 'ઇમેઇલ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.');
+                    showClientError(data.error || 'ઇમેઇલ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.', emailInput);
                     btn.disabled = false;
                     btn.textContent = 'Send Code';
-                    statusText.textContent = 'કૃપા કરીને ઇમેઇલ ચકાસો.';
+                    statusText.style.color = '#EF4444';
+                    statusText.textContent = data.error || 'ઇમેઇલ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.';
                     return;
                 }
 
                 // Show OTP Box
                 document.getElementById('regEmailOtpBox').style.display = 'block';
+                statusText.style.color = '#10B981';
                 statusText.textContent = data.message || 'કોડ મોકલી દેવાયો છે.';
+                document.getElementById('reg_otp').focus();
 
                 // Start 60s cooldown timer
                 let countdown = 60;
@@ -855,7 +862,16 @@
 
             if (!isEmailVerified && !document.getElementById('hidden_reg_token').value) {
                 e.preventDefault();
-                showClientError('કૃપા કરીને પહેલા તમારા ઇમેઇલ પર કોડ મોકલી વેરિફાય કરો! સુરક્ષા માટે ઇમેઇલ વેરિફિકેશન ફરજિયાત છે.', document.getElementById('reg_email'));
+                const emailInput = document.getElementById('reg_email');
+                const emailVal = emailInput ? emailInput.value.trim() : '';
+                if (!emailVal || !emailVal.includes('@')) {
+                    showClientError('કૃપા કરીને પહેલા તમારું ઇમેઇલ એડ્રેસ દાખલ કરો અને Send Code પર ક્લિક કરો.', emailInput);
+                } else {
+                    showClientError('સુરક્ષા માટે ઇમેઇલ વેરિફિકેશન જરૂરી છે. તમારા ઇમેઇલ પર આવેલ કોડ દાખલ કરો.', emailInput);
+                    if (document.getElementById('regEmailOtpBox').style.display === 'none') {
+                        sendRegisterEmailOTP();
+                    }
+                }
                 return false;
             }
 
@@ -900,6 +916,7 @@
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
+            statusText.style.color = '#F59E0B';
             statusText.textContent = 'સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
 
             try {
@@ -911,10 +928,11 @@
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError(data.error || 'કોડ મોકલવામાં ભૂલ થઈ.');
+                    showClientError(data.error || 'કોડ મોકલવામાં ભૂલ થઈ.', identInput);
                     btn.disabled = false;
                     btn.textContent = 'Send Code';
-                    statusText.textContent = 'કૃપા કરીને રજીસ્ટર્ડ ઇમેઇલ અથવા મોબાઇલ નંબર દાખલ કરો.';
+                    statusText.style.color = '#EF4444';
+                    statusText.textContent = data.error || 'કૃપા કરીને રજીસ્ટર્ડ ઇમેઇલ અથવા મોબાઇલ નંબર દાખલ કરો.';
                     return;
                 }
 
@@ -922,7 +940,9 @@
 
                 // Step 2: Show OTP Box only (Password inputs remain hidden until OTP is verified)
                 document.getElementById('resetOtpBox').style.display = 'block';
+                statusText.style.color = '#10B981';
                 statusText.textContent = data.message || 'કોડ મોકલી દેવાયો છે.';
+                document.getElementById('reset_otp').focus();
 
                 let countdown = 60;
                 clearInterval(resetTimerInterval);
