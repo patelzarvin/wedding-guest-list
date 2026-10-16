@@ -441,6 +441,7 @@
                 <input type="hidden" name="action" value="register">
                 <input type="hidden" name="email" id="hidden_reg_email">
                 <input type="hidden" name="otp_code" id="hidden_reg_otp">
+                <input type="hidden" name="reg_token" id="hidden_reg_token">
 
                 <div class="form-group">
                     <label>Choose Username (ઓછામાં ઓછા 3 અક્ષર)</label>
@@ -481,9 +482,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Create Password (નવો પાસવર્ડ - Min 6 Characters)</label>
+                    <label>Create Password (નવો પાસવર્ડ - Min 8 Characters)</label>
                     <div class="password-wrap">
-                        <input type="password" name="password" id="reg_password" class="input-box" placeholder="Create strong password" required minlength="6" oninput="handlePasswordStrength(this)">
+                        <input type="password" name="password" id="reg_password" class="input-box" placeholder="Create strong password" required minlength="8" oninput="handlePasswordStrength(this)">
                         <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
@@ -495,7 +496,7 @@
                         </div>
                         <div class="pwd-strength-label">
                             <span id="strengthText">Strength: Weak</span>
-                            <span id="charCount">0/6 chars</span>
+                            <span id="charCount">0/8 chars</span>
                         </div>
                     </div>
                 </div>
@@ -503,7 +504,7 @@
                 <div class="form-group">
                     <label>Confirm Password (પાસવર્ડ ફરીથી લખો)</label>
                     <div class="password-wrap">
-                        <input type="password" name="confirm_password" id="reg_confirm_password" class="input-box" placeholder="Re-enter password to confirm" required oninput="handlePasswordMatch()">
+                        <input type="password" name="confirm_password" id="reg_confirm_password" class="input-box" placeholder="Re-enter password to confirm" required minlength="8" oninput="handlePasswordMatch()">
                         <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_confirm_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
@@ -533,15 +534,23 @@
                 <span class="otp-status-text" id="resetEmailStatusText">૬-અંકનો સુરક્ષા કોડ તમારા રજીસ્ટર્ડ Gmail ઇનબોક્સમાં મોકલવામાં આવશે.</span>
             </div>
 
+            <!-- OTP Input Field with Verify Code button -->
             <div class="form-group" id="resetOtpBox" style="display: none;">
                 <label>Enter 6-Digit Verification Code (ઇમેઇલ પર આવેલ કોડ)</label>
-                <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6">
+                <div class="phone-input-wrap">
+                    <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}">
+                    <button type="button" class="btn-otp-action" id="btnResetVerifyOtp" onclick="verifyResetEmailOTP()">Verify Code</button>
+                </div>
+                <div class="otp-verified-badge" id="resetVerifiedBadge" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span id="resetVerifiedText">કોડ વેરિફાય થયો! હવે નવો પાસવર્ડ સેટ કરો.</span>
+                </div>
             </div>
 
             <div class="form-group" id="resetNewPwdBox" style="display: none;">
-                <label>New Password (નવો પાસવર્ડ - Min 6 Characters)</label>
+                <label>New Password (નવો પાસવર્ડ - Min 8 Characters)</label>
                 <div class="password-wrap">
-                    <input type="password" id="reset_new_password" class="input-box" placeholder="Enter new strong password" minlength="6">
+                    <input type="password" id="reset_new_password" class="input-box" placeholder="Enter new strong password" minlength="8">
                     <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_new_password', this)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
@@ -551,7 +560,7 @@
             <div class="form-group" id="resetConfPwdBox" style="display: none;">
                 <label>Confirm New Password (નવો પાસવર્ડ ફરીથી લખો)</label>
                 <div class="password-wrap">
-                    <input type="password" id="reset_conf_password" class="input-box" placeholder="Re-enter new password" minlength="6">
+                    <input type="password" id="reset_conf_password" class="input-box" placeholder="Re-enter new password" minlength="8">
                     <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_conf_password', this)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
@@ -586,9 +595,11 @@
         let isEmailVerified = false;
         let verifiedEmailAddress = "";
         let verifiedOtpCode = "";
+        let verifiedRegToken = "";
         let regTimerInterval = null;
         let resetTimerInterval = null;
         let verifiedResetEmail = "";
+        let resetAuthToken = "";
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -636,25 +647,26 @@
                 return;
             }
             container.style.display = 'block';
-            count.textContent = `${val.length} chars (min 6)`;
+            count.textContent = `${val.length} chars (min 8)`;
 
             let score = 0;
-            if (val.length >= 6) score++;
             if (val.length >= 8) score++;
+            if (val.length >= 10) score++;
             if (/[0-9]/.test(val)) score++;
+            if (/[a-zA-Z]/.test(val)) score++;
             if (/[A-Z]/.test(val) || /[^A-Za-z0-9]/.test(val)) score++;
 
-            if (val.length < 6) {
+            if (val.length < 8) {
                 fill.style.width = '25%';
                 fill.style.backgroundColor = '#EF4444';
-                label.textContent = 'બહુ ટૂંકો છે (Too Short - min 6)';
+                label.textContent = 'બહુ ટૂંકો છે (Too Short - min 8)';
                 label.style.color = '#FCA5A5';
-            } else if (score === 1) {
-                fill.style.width = '40%';
+            } else if (score < 3) {
+                fill.style.width = '45%';
                 fill.style.backgroundColor = '#F59E0B';
                 label.textContent = 'સામાન્ય પાસવર્ડ (Weak)';
                 label.style.color = '#FCD34D';
-            } else if (score === 2 || score === 3) {
+            } else if (score < 5) {
                 fill.style.width = '75%';
                 fill.style.backgroundColor = '#D4AF37';
                 label.textContent = 'મજબૂત પાસવર્ડ (Good)';
@@ -797,13 +809,17 @@
                     return;
                 }
 
-                // Marked as verified!
+                // Marked as verified & capture server-issued registration token
                 isEmailVerified = true;
                 verifiedEmailAddress = email;
                 verifiedOtpCode = otp;
+                verifiedRegToken = data.reg_token || "";
 
                 document.getElementById('hidden_reg_email').value = email;
                 document.getElementById('hidden_reg_otp').value = otp;
+                if (data.reg_token) {
+                    document.getElementById('hidden_reg_token').value = data.reg_token;
+                }
 
                 // Lock email input
                 document.getElementById('reg_email').readOnly = true;
@@ -837,21 +853,21 @@
                 return false;
             }
 
-            if (!isEmailVerified) {
+            if (!isEmailVerified && !document.getElementById('hidden_reg_token').value) {
                 e.preventDefault();
                 showClientError('કૃપા કરીને પહેલા તમારા ઇમેઇલ પર કોડ મોકલી વેરિફાય કરો! સુરક્ષા માટે ઇમેઇલ વેરિફિકેશન ફરજિયાત છે.', document.getElementById('reg_email'));
                 return false;
             }
 
-            if (phoneVal.length !== 10) {
+            if (phoneVal.length !== 10 || !['6','7','8','9'].includes(phoneVal[0])) {
                 e.preventDefault();
-                showClientError('કૃપા કરીને માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો.', phoneInput);
+                showClientError('કૃપા કરીને માન્ય 10-અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો (6-9 થી શરૂ થતો).', phoneInput);
                 return false;
             }
 
-            if (pwd.length < 6) {
+            if (pwd.length < 8) {
                 e.preventDefault();
-                showClientError('પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ! (Password must be at least 6 characters)', pwdInput);
+                showClientError('પાસવર્ડ ઓછામાં ઓછા 8 અક્ષરનો હોવો જોઈએ! (Password must be at least 8 characters)', pwdInput);
                 return false;
             }
 
@@ -904,12 +920,8 @@
 
                 verifiedResetEmail = data.target_email || identifier;
 
-                // Show inputs for OTP and New Password
+                // Step 2: Show OTP Box only (Password inputs remain hidden until OTP is verified)
                 document.getElementById('resetOtpBox').style.display = 'block';
-                document.getElementById('resetNewPwdBox').style.display = 'block';
-                document.getElementById('resetConfPwdBox').style.display = 'block';
-                document.getElementById('btnResetSubmit').style.display = 'block';
-
                 statusText.textContent = data.message || 'કોડ મોકલી દેવાયો છે.';
 
                 let countdown = 60;
@@ -932,24 +944,83 @@
             }
         }
 
+        async function verifyResetEmailOTP() {
+            clearClientError();
+            const identifier = verifiedResetEmail || document.getElementById('reset_identifier').value.trim();
+            const otpInput = document.getElementById('reset_otp');
+            const otp = otpInput.value.trim();
+            const btn = document.getElementById('btnResetVerifyOtp');
+            const badge = document.getElementById('resetVerifiedBadge');
+            const badgeText = document.getElementById('resetVerifiedText');
+
+            if (otp.length !== 6) {
+                showClientError('કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો કોડ દાખલ કરો.', otpInput);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: identifier, otp_code: otp, purpose: 'RESET' })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showClientError(data.error || 'ખોટો અથવા એક્સપાયર થયેલ કોડ છે.', otpInput);
+                    btn.disabled = false;
+                    btn.textContent = 'Verify Code';
+                    return;
+                }
+
+                // Step 3: Verified! Capture single-use reset authorization token
+                resetAuthToken = data.reset_token || "";
+                
+                // Lock identifier and OTP
+                document.getElementById('reset_identifier').readOnly = true;
+                otpInput.readOnly = true;
+                btn.style.display = 'none';
+                document.getElementById('btnResetSendEmailOtp').style.display = 'none';
+
+                badge.style.display = 'flex';
+                badgeText.textContent = 'સુરક્ષા કોડ વેરિફાય થયો! હવે નવો પાસવર્ડ સેટ કરો.';
+
+                // Reveal password inputs and submit button
+                document.getElementById('resetNewPwdBox').style.display = 'block';
+                document.getElementById('resetConfPwdBox').style.display = 'block';
+                document.getElementById('btnResetSubmit').style.display = 'block';
+                document.getElementById('reset_new_password').focus();
+
+            } catch (err) {
+                showClientError('સર્વર ભૂલ: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Verify Code';
+            }
+        }
+
         async function submitResetPassword() {
             clearClientError();
             const identifier = document.getElementById('reset_identifier').value.trim();
-            const otp = document.getElementById('reset_otp').value.trim();
-            const newPwd = document.getElementById('reset_new_password').value;
-            const confPwd = document.getElementById('reset_conf_password').value;
+            const newPwdInput = document.getElementById('reset_new_password');
+            const confPwdInput = document.getElementById('reset_conf_password');
+            const newPwd = newPwdInput.value;
+            const confPwd = confPwdInput.value;
             const btn = document.getElementById('btnResetSubmit');
 
-            if (otp.length !== 6) {
-                showClientError('કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો કોડ દાખલ કરો.', document.getElementById('reset_otp'));
+            if (!resetAuthToken) {
+                showClientError('સુરક્ષા માટે પહેલા કોડ વેરિફાય કરવો જરૂરી છે.');
                 return;
             }
-            if (newPwd.length < 6) {
-                showClientError('નવો પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ.', document.getElementById('reset_new_password'));
+
+            if (newPwd.length < 8) {
+                showClientError('નવો પાસવર્ડ ઓછામાં ઓછા 8 અક્ષરનો હોવો જોઈએ.', newPwdInput);
                 return;
             }
             if (newPwd !== confPwd) {
-                showClientError('નવો પાસવર્ડ અને Confirm Password મેચ થતા નથી.', document.getElementById('reset_conf_password'));
+                showClientError('નવો પાસવર્ડ અને Confirm Password મેચ થતા નથી.', confPwdInput);
                 return;
             }
 
@@ -961,9 +1032,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        identifier: verifiedResetEmail || identifier,
-                        otp_code: otp,
-                        new_password: newPwd
+                        reset_token: resetAuthToken,
+                        new_password: newPwd,
+                        confirm_password: confPwd
                     })
                 });
                 const data = await res.json();
@@ -975,6 +1046,7 @@
                     return;
                 }
 
+                // Password reset succeeded! Switch cleanly to Sign In
                 switchTab('signin');
                 const signinInput = document.getElementById('signin_username');
                 signinInput.value = identifier;

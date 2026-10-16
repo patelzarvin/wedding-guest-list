@@ -1,7 +1,7 @@
 import os
 import json
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -14,7 +14,11 @@ from database import (
     get_contacts_by_wedding, get_contact_by_token_db, update_rsvp_db,
     get_wedding_stats_db, log_chat_message_db, get_chat_history_db,
     generate_and_save_otp, verify_otp_db, get_user_by_email, get_user_by_phone, reset_user_password,
-    clean_phone_10
+    consume_reset_token, verify_registration_token
+)
+from security import (
+    validate_username, validate_email, validate_indian_phone,
+    validate_password_strength, rate_limiter, clean_phone_10
 )
 from auth import login_required
 from excel_export import export_guest_list_excel
@@ -28,6 +32,9 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "wedding_luxury_secret_key_2026_gj")
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+if os.environ.get("RENDER") or not app.debug:
+    app.config["SESSION_COOKIE_SECURE"] = True
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 
 # Ensure SQLite schema is ready
 init_db()
@@ -168,9 +175,29 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
+        remember = request.form.get("remember")
         
+        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
+        
+        # 1. Rate Limiting Check
+        allowed, retry_after = rate_limiter.check_login_rate_limit(client_ip, username)
+        if not allowed:
+            return render_template(
+                "login.html",
+                active_tab="signin",
+                error=f"ઘણા નિષ્ફળ પ્રયાસો થયા છે. સુરક્ષા માટે કૃપા કરીને {retry_after // 60 + 1} મિનિટ પછી ફરી પ્રયાસ કરો. (Too many failed login attempts)."
+            ), 429
+            
+        # 2. Authoritative Server-Side Authentication
         user = db_auth_user(username, password)
         if user:
+            # Reset failed login counter on success
+            rate_limiter.reset_login_rate_limit(client_ip, username)
+            
+            # Defense against Session Fixation: clear prior session data
+            session.clear()
+            session.permanent = bool(remember)
+            
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             session["user_role"] = "MASTER"
@@ -182,11 +209,13 @@ def login():
                 return redirect(url_for("setup_wizard"))
             return redirect(url_for("dashboard"))
         else:
+            # Record failure in rate limiter
+            rate_limiter.record_login_failure(client_ip, username)
             return render_template(
                 "login.html",
                 active_tab="signin",
-                error="અમાન્ય યુઝરનેમ અથવા પાસવર્ડ. કૃપા કરીને ફરી પ્રયાસ કરો. (Invalid username or password)."
-            )
+                error="અમાન્ય ઓળખકર્તા અથવા પાસવર્ડ. કૃપા કરીને ફરી પ્રયાસ કરો. (Invalid username, email, or password)."
+            ), 401
             
     if session.get("user_id"):
         return redirect(url_for("dashboard"))
@@ -198,39 +227,55 @@ def register():
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip().lower()
         phone = request.form.get("phone", "").strip()
+        reg_token = request.form.get("reg_token", "").strip()
         otp_code = request.form.get("otp_code", "").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
         
-        if len(username) < 3:
-            return render_template("login.html", active_tab="register", error="યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જરૂરી છે. (Username must be at least 3 characters).")
-        if not email or "@" not in email:
-            return render_template("login.html", active_tab="register", error="કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.")
-        clean_p = clean_phone_10(phone)
-        if not clean_p or len(clean_p) < 10:
-            return render_template("login.html", active_tab="register", error="કૃપા કરીને માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો.")
-        if len(password) < 6:
-            return render_template("login.html", active_tab="register", error="પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ. (Password must be at least 6 characters).")
-        if confirm_password and password != confirm_password:
-            return render_template("login.html", active_tab="register", error="પાસવર્ડ મેળ ખાતો નથી. (Passwords do not match).")
-        
-        # Verify Email OTP
-        if not otp_code or len(otp_code) != 6:
-            return render_template("login.html", active_tab="register", error="કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો સુરક્ષા કોડ દાખલ કરો.")
+        # 1. Authoritative Server-Side Validations
+        u_ok, u_err, clean_username = validate_username(username)
+        if not u_ok:
+            return render_template("login.html", active_tab="register", error=u_err), 400
             
-        is_valid, otp_err = verify_otp_db(email, otp_code, purpose="REGISTER")
-        if not is_valid:
-            return render_template("login.html", active_tab="register", error=otp_err)
+        e_ok, e_err, clean_email = validate_email(email)
+        if not e_ok:
+            return render_template("login.html", active_tab="register", error=e_err), 400
             
-        res = register_user(username, email, password, phone=clean_p)
+        p_ok, p_err, clean_p, _ = validate_indian_phone(phone)
+        if not p_ok:
+            return render_template("login.html", active_tab="register", error=p_err), 400
+            
+        pwd_ok, pwd_err = validate_password_strength(password)
+        if not pwd_ok:
+            return render_template("login.html", active_tab="register", error=pwd_err), 400
+            
+        if password != confirm_password:
+            return render_template("login.html", active_tab="register", error="પાસવર્ડ અને Confirm Password મેચ થતા નથી. (Passwords do not match)."), 400
+            
+        # 2. Strict OTP / Token Verification Boundary (Never trust frontend flags!)
+        if reg_token:
+            tok_ok, tok_err = verify_registration_token(clean_email, reg_token)
+            if not tok_ok:
+                return render_template("login.html", active_tab="register", error=tok_err), 400
+        elif otp_code:
+            is_valid, otp_err, _ = verify_otp_db(clean_email, otp_code, purpose="REGISTER")
+            if not is_valid:
+                return render_template("login.html", active_tab="register", error=otp_err), 400
+        else:
+            return render_template("login.html", active_tab="register", error="કૃપા કરીને પહેલા તમારા ઇમેઇલ પર આવેલ 6-અંકનો સુરક્ષા કોડ વેરિફાય કરો. (Email OTP verification required)."), 400
+            
+        # 3. Create User in Database
+        res = register_user(clean_username, clean_email, password, phone=clean_p)
         if res.get("success"):
+            # Session Fixation Protection
+            session.clear()
             session["user_id"] = res["user_id"]
-            session["username"] = username
+            session["username"] = clean_username
             session["user_role"] = "MASTER"
             session["logged_in"] = True
             return redirect(url_for("setup_wizard"))
         else:
-            return render_template("login.html", active_tab="register", error=res.get("error", "નોંધણી નિષ્ફળ રહી."))
+            return render_template("login.html", active_tab="register", error=res.get("error", "નોંધણી નિષ્ફળ રહી.")), 400
             
     return render_template("login.html", active_tab="register", error=None)
 
@@ -247,15 +292,36 @@ def auth_send_otp():
         if not raw_ident:
             return jsonify({"success": False, "error": "કૃપા કરીને ઇમેઇલ અથવા મોબાઇલ નંબર દાખલ કરો."}), 400
             
+        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
+        
+        # Rate Limiting & Cooldown Protection
+        allowed, r_err, retry_after = rate_limiter.check_otp_rate_limit(client_ip, raw_ident)
+        if not allowed:
+            return jsonify({"success": False, "error": r_err, "retry_after": retry_after}), 429
+            
+        # Resolve identifier
         if "@" in raw_ident:
-            target_email = raw_ident.lower()
+            e_ok, e_err, target_email = validate_email(raw_ident)
+            if not e_ok:
+                return jsonify({"success": False, "error": e_err}), 400
         else:
-            clean_p = clean_phone_10(raw_ident)
-            if len(clean_p) < 10:
-                return jsonify({"success": False, "error": "માન્ય ઇમેઇલ અથવા 10-અંકનો મોબાઇલ નંબર દાખલ કરો."}), 400
+            p_ok, p_err, clean_p, _ = validate_indian_phone(raw_ident)
+            if not p_ok:
+                return jsonify({"success": False, "error": p_err}), 400
+                
+            if purpose == "REGISTER":
+                return jsonify({
+                    "success": False,
+                    "error": "નોંધણી માટે ઇમેઇલ વેરિફિકેશન જરૂરી છે. કૃપા કરીને તમારું ઇમેઇલ એડ્રેસ દાખલ કરો."
+                }), 400
+                
             user = get_user_by_phone(clean_p)
             if not user or not user.get("email"):
-                return jsonify({"success": False, "error": "આ મોબાઇલ નંબર સાથે કોઈ રજીસ્ટર એકાઉન્ટ મળ્યું નથી."}), 404
+                # Safe generic response to prevent account enumeration
+                return jsonify({
+                    "success": True,
+                    "message": "જો આ મોબાઇલ નંબર સાથે રજીસ્ટર એકાઉન્ટ હશે, તો 6-અંકનો સુરક્ષા કોડ ઇમેઇલ પર મોકલી દેવાયો છે."
+                })
             target_email = user["email"].lower()
         
         # Check purpose rules
@@ -266,10 +332,11 @@ def auth_send_otp():
                 "error": "આ ઇમેઇલ પહેલેથી રજીસ્ટર થયેલો છે. કૃપા કરીને સાઇન-ઇન કરો અથવા પાસવર્ડ રીસેટ કરો."
             }), 400
         elif purpose == "RESET" and not existing_user:
+            # Safe anti-enumeration response
             return jsonify({
-                "success": False,
-                "error": "આ ઇમેઇલ સાથે કોઈ એકાઉન્ટ રજીસ્ટર નથી. કૃપા કરીને નવું એકાઉન્ટ બનાવો."
-            }), 404
+                "success": True,
+                "message": "જો આ ઇમેઇલ સાથે કોઈ એકાઉન્ટ રજીસ્ટર હશે, તો 6-અંકનો સુરક્ષા કોડ મોકલી દેવાયો છે."
+            })
             
         otp_code, err = generate_and_save_otp(target_email, purpose=purpose)
         if err:
@@ -283,7 +350,10 @@ def auth_send_otp():
                 "error": f"ઇમેઇલ મોકલવામાં ભૂલ થઈ: {mail_msg}"
             }), 500
             
-        # Obfuscate email if looked up by phone
+        # Record successful OTP dispatch in rate limiter
+        rate_limiter.record_otp_request(client_ip, raw_ident)
+        
+        # Obfuscate email for user feedback
         parts = target_email.split("@")
         obf = parts[0][:2] + "***@" + parts[1] if len(parts) == 2 and len(parts[0]) > 2 else target_email
         
@@ -299,53 +369,102 @@ def auth_send_otp():
 def auth_verify_otp():
     try:
         data = request.get_json(silent=True) or request.form
-        email = data.get("email", "").strip().lower()
+        email = (data.get("email") or data.get("identifier") or "").strip().lower()
         otp_code = data.get("otp_code", "").strip()
         purpose = data.get("purpose", "REGISTER").strip().upper()
         
-        if not email or "@" not in email:
-            return jsonify({"success": False, "error": "અમાન્ય ઇમેઇલ"}), 400
+        if not email:
+            return jsonify({"success": False, "error": "ઇમેઇલ એડ્રેસ જરૂરી છે."}), 400
+        if not otp_code or len(otp_code) != 6:
+            return jsonify({"success": False, "error": "કૃપા કરીને 6-અંકનો સુરક્ષા કોડ દાખલ કરો."}), 400
             
-        is_valid, err = verify_otp_db(email, otp_code, purpose=purpose)
+        # If user entered phone on reset, resolve to email
+        if "@" not in email:
+            clean_p = clean_phone_10(email)
+            u = get_user_by_phone(clean_p)
+            if u and u.get("email"):
+                email = u["email"].lower()
+                
+        is_valid, err, tok_data = verify_otp_db(email, otp_code, purpose=purpose)
         if is_valid:
-            return jsonify({"success": True, "message": "ઇમેઇલ સફળતાપૂર્વક વેરિફાય થયો!"})
+            resp = {
+                "success": True,
+                "message": "સુરક્ષા કોડ સફળતાપૂર્વક વેરિફાય થયો!"
+            }
+            if "reset_token" in tok_data:
+                resp["reset_token"] = tok_data["reset_token"]
+            if "reg_token" in tok_data:
+                resp["reg_token"] = tok_data["reg_token"]
+            return jsonify(resp)
+            
         return jsonify({"success": False, "error": err or "અમાન્ય અથવા ખોટો OTP કોડ."}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route("/api/auth/reset-password", methods=["POST"])
 def auth_reset_password():
+    """
+    Two-step Password Reset Authorization:
+    Accepts reset_token (from successful OTP verification) and new_password.
+    Also supports fallback (identifier + otp_code + new_password).
+    """
     try:
         data = request.get_json(silent=True) or request.form
+        reset_token = data.get("reset_token", "").strip()
         raw_ident = (data.get("email") or data.get("identifier") or "").strip()
         otp_code = data.get("otp_code", "").strip()
-        new_password = data.get("new_password", "").strip()
+        new_password = data.get("new_password", "")
+        confirm_password = data.get("confirm_password", "")
         
-        if not raw_ident:
-            return jsonify({"success": False, "error": "અમાન્ય ઇમેઇલ અથવા મોબાઇલ નંબર"}), 400
+        if confirm_password and new_password != confirm_password:
+            return jsonify({"success": False, "error": "નવો પાસવર્ડ અને Confirm Password મેચ થતા નથી."}), 400
             
-        if "@" in raw_ident:
-            target_email = raw_ident.lower()
-        else:
+        # Password strength validation
+        pwd_ok, pwd_err = validate_password_strength(new_password)
+        if not pwd_ok:
+            return jsonify({"success": False, "error": pwd_err}), 400
+            
+        # 1. Primary Authorization Path: via single-use reset_token
+        if reset_token:
+            ok, err = consume_reset_token(reset_token, new_password)
+            if ok:
+                session.clear()
+                return jsonify({
+                    "success": True,
+                    "message": "પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે સાઇન-ઇન કરી શકો છો."
+                })
+            return jsonify({"success": False, "error": err or "પાસવર્ડ રીસેટ કરવામાં નિષ્ફળતા."}), 400
+            
+        # 2. Fallback Path: via direct OTP verification
+        if not raw_ident or not otp_code:
+            return jsonify({"success": False, "error": "અમાન્ય રીસેટ વિનંતી. સુરક્ષા કોડ જરૂરી છે."}), 400
+            
+        target_email = raw_ident.lower() if "@" in raw_ident else None
+        if not target_email:
             clean_p = clean_phone_10(raw_ident)
             user = get_user_by_phone(clean_p)
             if not user or not user.get("email"):
-                return jsonify({"success": False, "error": "આ મોબાઇલ નંબર સાથે કોઈ રજીસ્ટર એકાઉન્ટ મળ્યું નથી."}), 404
+                return jsonify({"success": False, "error": "આ ઓળખકર્તા સાથે કોઈ રજીસ્ટર એકાઉન્ટ મળ્યું નથી."}), 404
             target_email = user["email"].lower()
             
-        if len(new_password) < 6:
-            return jsonify({"success": False, "error": "નવો પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ."}), 400
-            
-        # Verify OTP
-        is_valid, err = verify_otp_db(target_email, otp_code, purpose="RESET")
+        is_valid, err, tok_data = verify_otp_db(target_email, otp_code, purpose="RESET")
         if not is_valid:
             return jsonify({"success": False, "error": err or "અમાન્ય અથવા એક્સપાયર થયેલ OTP કોડ."}), 400
             
-        # Reset Password
-        ok, res_err = reset_user_password(target_email, new_password)
+        # Consume the issued reset token
+        res_tok = tok_data.get("reset_token")
+        if res_tok:
+            ok, err = consume_reset_token(res_tok, new_password)
+        else:
+            ok, err = reset_user_password(target_email, new_password)
+            
         if ok:
-            return jsonify({"success": True, "message": "પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે સાઇન-ઇન કરી શકો છો."})
-        return jsonify({"success": False, "error": res_err or "પાસવર્ડ રીસેટ કરવામાં નિષ્ફળતા."}), 400
+            session.clear()
+            return jsonify({
+                "success": True,
+                "message": "પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે સાઇન-ઇન કરી શકો છો."
+            })
+        return jsonify({"success": False, "error": err or "પાસવર્ડ રીસેટ કરવામાં નિષ્ફળતા."}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -582,9 +701,18 @@ def preview_theme():
 @app.route("/api/send-parent-link/<token>", methods=["POST"])
 @login_required
 def api_send_parent_link(token):
+    user_id = session.get("user_id")
+    wedding = get_wedding_by_user(user_id)
+    if not wedding:
+        return jsonify({"success": False, "error": "No wedding suite configured for this user."}), 403
+
     parent = get_parent_by_token(token)
     if not parent or not parent.get("phone"):
         return jsonify({"success": False, "error": "Parent phone number is not configured."}), 400
+        
+    # Strict Authorization / Anti-IDOR Check: Tenant Isolation
+    if parent.get("wedding_id") != wedding["id"]:
+        return jsonify({"success": False, "error": "Unauthorized: Access denied to this wedding resource."}), 403
         
     role_gu = "પિતાશ્રી (પપ્પા)" if parent["role"] == "FATHER" else "માતાશ્રી (મમ્મી)"
     side_gu = "પિતા પક્ષ" if parent["role"] == "FATHER" else "માતા પક્ષ"
@@ -627,9 +755,18 @@ def api_send_parent_link(token):
 @app.route("/api/send-guest-link/<token>", methods=["POST"])
 @login_required
 def api_send_guest_link(token):
+    user_id = session.get("user_id")
+    wedding = get_wedding_by_user(user_id)
+    if not wedding:
+        return jsonify({"success": False, "error": "No wedding suite configured for this user."}), 403
+
     contact = get_contact_by_token_db(token)
     if not contact or not contact.get("phone"):
         return jsonify({"success": False, "error": "Contact phone number is not available."}), 400
+        
+    # Strict Authorization / Anti-IDOR Check: Tenant Isolation
+    if contact.get("wedding_id") != wedding["id"]:
+        return jsonify({"success": False, "error": "Unauthorized: Access denied to this wedding resource."}), 403
         
     base_url = get_base_url()
     chat_url = f"{base_url}/chat/{contact['token']}"
