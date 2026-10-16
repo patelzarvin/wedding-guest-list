@@ -128,6 +128,32 @@ def call_baileys(endpoint, method="GET", data=None):
         ensure_baileys_running()
         return {"status": "offline", "error": str(e)}, 503
 
+@app.route("/api/system/health")
+def system_health():
+    try:
+        from database import DB_PATH, get_db
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) as count FROM parent_sessions")
+        p_count = c.fetchone()["count"]
+        c.execute("SELECT token, role, name, phone FROM parent_sessions")
+        p_tokens = [dict(r) for r in c.fetchall()]
+        c.execute("SELECT COUNT(*) as count FROM contacts")
+        c_count = c.fetchone()["count"]
+        c.execute("SELECT token, name, phone FROM contacts LIMIT 10")
+        c_tokens = [dict(r) for r in c.fetchall()]
+        conn.close()
+        return jsonify({
+            "status": "healthy",
+            "db_path": DB_PATH,
+            "parent_count": p_count,
+            "parents": p_tokens,
+            "contact_count": c_count,
+            "contacts": c_tokens
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # -------------------------------------------------------------
 # LANDING & AUTHENTICATION (STRICT PROTECTION)
 # -------------------------------------------------------------
