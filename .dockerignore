@@ -9,7 +9,6 @@ scratch/
 .agents/
 .claude/
 *.xlsx
-*.db
 .git
 .gitignore
 settings.json
