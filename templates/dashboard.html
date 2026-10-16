@@ -942,20 +942,47 @@
                         <div class="wa-status-header">
                             <div>
                                 <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Autopilot Engine</div>
-                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                <div id="sidebarWaStatusText" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
                                     {% if whatsapp_status == 'connected' %}
                                         Connected: <span style="color: var(--gold-light); font-weight: 600;">{{ whatsapp_phone }}</span>
                                     {% else %}
-                                        Offline (Requires 1-time QR link)
+                                        Offline (Scan QR Below to Link)
                                     {% endif %}
                                 </div>
                             </div>
-                            <button type="button" onclick="openWhatsAppModal()" class="btn-sm-gold">
-                                {% if whatsapp_status == 'connected' %}Status{% else %}Scan QR{% endif %}
+                            <button type="button" id="sidebarWaBtn" onclick="openWhatsAppModal()" class="btn-sm-gold">
+                                {% if whatsapp_status == 'connected' %}Status{% else %}Enlarge QR{% endif %}
                             </button>
                         </div>
 
-                        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; border-top: 1px solid rgba(212,175,55,0.1); padding-top: 8px;">
+                        <!-- Direct Inline WhatsApp QR Code Box -->
+                        <div id="sidebarInlineQrBox" style="{% if whatsapp_status == 'connected' %}display: none;{% else %}display: block;{% endif %} margin-top: 12px; border-top: 1px solid rgba(212,175,55,0.15); padding-top: 12px; text-align: center;">
+                            <div style="font-size: 11px; font-weight: 700; color: var(--gold-light); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px;">
+                                Scan To Connect WhatsApp
+                            </div>
+                            <div style="background: #FFFFFF; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 6px 20px rgba(0,0,0,0.5); cursor: pointer;" onclick="openWhatsAppModal()" title="Click to enlarge QR code">
+                                <div id="sidebarQrPlaceholder" style="width: 175px; height: 175px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #071224; border-radius: 8px;">
+                                    <div style="width: 28px; height: 28px; border: 3px solid rgba(212,175,55,0.25); border-top-color: var(--gold-primary); border-radius: 50%; margin-bottom: 8px; animation: spin 0.8s linear infinite;"></div>
+                                    <div style="font-size: 11px; font-weight: 600; color: #FFFFFF;">Generating QR...</div>
+                                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Ready in 2s</div>
+                                </div>
+                                <img id="sidebarQrImage" src="" alt="WhatsApp QR Code" style="display: none; width: 175px; height: 175px; border-radius: 6px;" />
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-creamy); margin-top: 8px; line-height: 1.4;">
+                                1. Open <strong>WhatsApp</strong> on phone<br>
+                                2. Tap <strong>Linked Devices</strong> ➔ <strong>Link a Device</strong>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                <button type="button" onclick="regenerateWhatsAppQr(this)" class="btn-sm-outline" style="flex: 1; font-size: 10px; padding: 5px;">
+                                    Refresh QR
+                                </button>
+                                <button type="button" onclick="openWhatsAppModal()" class="btn-sm-gold" style="flex: 1; font-size: 10px; padding: 5px;">
+                                    Fullscreen
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; border-top: 1px solid rgba(212,175,55,0.1); padding-top: 8px; margin-top: 10px;">
                             Auto-dispatches wedding invites in Gujarati directly to relatives upon confirmation.
                         </div>
                     </div>
@@ -1328,6 +1355,13 @@ Open WhatsApp directly to send it?')) {
             const qrPlaceholder = document.getElementById('qrLoadingPlaceholder');
             const qrBadge = document.getElementById('qrBadge');
 
+            // Sidebar inline elements
+            const sidebarQrBox = document.getElementById('sidebarInlineQrBox');
+            const sidebarQrImg = document.getElementById('sidebarQrImage');
+            const sidebarQrPlc = document.getElementById('sidebarQrPlaceholder');
+            const sidebarStatusText = document.getElementById('sidebarWaStatusText');
+            const sidebarBtn = document.getElementById('sidebarWaBtn');
+
             if (showLoading && !hasCheckedOnce && !modalConnected.style.display.includes('block')) {
                 modalLoading.style.display = 'block';
                 modalConnected.style.display = 'none';
@@ -1349,6 +1383,11 @@ Open WhatsApp directly to send it?')) {
                         modalConnected.style.display = 'block';
                         modalQr.style.display = 'none';
                         document.getElementById('modalConnectedPhone').textContent = data.phone || 'Connected';
+
+                        // Update Sidebar to Connected State
+                        if (sidebarQrBox) sidebarQrBox.style.display = 'none';
+                        if (sidebarStatusText) sidebarStatusText.innerHTML = 'Connected: <span style="color: var(--gold-light); font-weight: 600;">' + (data.phone || 'Active') + '</span>';
+                        if (sidebarBtn) sidebarBtn.textContent = 'Status';
 
                         if (wasPreviouslyOffline) {
                             wasPreviouslyOffline = false;
@@ -1376,6 +1415,16 @@ Open WhatsApp directly to send it?')) {
                         qrBadge.style.color = '#34D399';
                         qrBadge.style.borderColor = 'rgba(52, 211, 153, 0.4)';
                         qrBadge.style.background = 'rgba(16, 185, 129, 0.12)';
+
+                        // Update Sidebar Inline QR Box
+                        if (sidebarQrBox) sidebarQrBox.style.display = 'block';
+                        if (sidebarQrPlc) sidebarQrPlc.style.display = 'none';
+                        if (sidebarQrImg) {
+                            sidebarQrImg.src = data.qr;
+                            sidebarQrImg.style.display = 'block';
+                        }
+                        if (sidebarStatusText) sidebarStatusText.textContent = 'Offline (Scan QR Below to Link)';
+                        if (sidebarBtn) sidebarBtn.textContent = 'Enlarge QR';
                     } else {
                         wasPreviouslyOffline = true;
                         headerPill.className = 'status-pill offline';
@@ -1390,6 +1439,13 @@ Open WhatsApp directly to send it?')) {
                         qrBadge.style.color = 'var(--gold-light)';
                         qrBadge.style.borderColor = 'var(--gold-border)';
                         qrBadge.style.background = 'rgba(212,175,55,0.12)';
+
+                        // Update Sidebar to Loading Placeholder
+                        if (sidebarQrBox) sidebarQrBox.style.display = 'block';
+                        if (sidebarQrImg) sidebarQrImg.style.display = 'none';
+                        if (sidebarQrPlc) sidebarQrPlc.style.display = 'flex';
+                        if (sidebarStatusText) sidebarStatusText.textContent = 'Offline (Generating QR Code...)';
+                        if (sidebarBtn) sidebarBtn.textContent = 'Enlarge QR';
                     }
                 })
                 .catch(err => {
@@ -1469,15 +1525,19 @@ Open WhatsApp directly to send it?')) {
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Check immediately on load so inline QR renders without clicking!
+            checkWhatsAppStatus(false);
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('need_whatsapp') === '1') {
                 openWhatsAppModal();
             }
         });
 
+        // Fast background poll every 2.5 seconds to keep the QR alive and catch scans
         setInterval(() => {
             if (!isModalOpen) checkWhatsAppStatus(false);
-        }, 8000);
+        }, 2500);
     </script>
 </body>
 </html>
