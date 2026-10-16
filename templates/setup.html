@@ -6,7 +6,7 @@
     <title>WedVite AI - Wedding Setup Wizard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/luxury_theme.css">
     <style>
         body {
@@ -20,18 +20,26 @@
         .wizard-card {
             width: 100%;
             max-width: 1100px;
-            background: var(--bg-forest-card);
-            backdrop-filter: blur(35px);
-            -webkit-backdrop-filter: blur(35px);
+            background: var(--bg-navy-card);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
             border: 1px solid var(--gold-border);
             border-radius: 28px;
             padding: 40px 48px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px var(--gold-glow);
+            box-shadow: 0 28px 65px rgba(0,0,0,0.75), 0 0 40px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.05);
             position: relative;
             z-index: 10;
             display: flex;
             flex-direction: column;
             gap: 28px;
+            animation: fadeInScale 0.65s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .wizard-card::before {
+            content: '';
+            position: absolute; top: 0; left: 20%; right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+            border-radius: 1px; opacity: 0.55;
         }
 
         .wizard-header {

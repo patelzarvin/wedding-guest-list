@@ -20,5 +20,19 @@
       "mother_token": "bf_mot_init"
     }
   },
-  "contacts": []
+  "contacts": [
+    {
+      "id": "c_4cbc0aaf",
+      "token": "86cb68e6",
+      "side": "GROOM",
+      "added_by": "FATHER",
+      "category": "friends",
+      "name": "જયેશભાઈ પરીખ",
+      "phone": "",
+      "notes": "મિત્ર (Friend)",
+      "status": "WAITING",
+      "created_at": "2026-10-16T13:28:20.334497",
+      "household": null
+    }
+  ]
 }

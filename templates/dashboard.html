@@ -6,108 +6,701 @@
     <title>{{ wedding.title if wedding else 'Wedding Suite Dashboard' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/luxury_theme.css">
     <style>
+        :root {
+            --bg-navy-main: #050D1A;
+            --bg-navy-card: rgba(10, 22, 40, 0.72);
+            --bg-navy-card-hover: rgba(15, 30, 56, 0.82);
+            --navy-surface: rgba(7, 18, 34, 0.65);
+            --gold-primary: #D4AF37;
+            --gold-light: #F3E5AB;
+            --gold-border: rgba(212, 175, 55, 0.28);
+            --gold-border-hover: rgba(212, 175, 55, 0.55);
+            --gold-glow: rgba(212, 175, 55, 0.18);
+            --emerald: #10B981;
+            --emerald-bg: rgba(16, 185, 129, 0.12);
+            --emerald-border: rgba(16, 185, 129, 0.35);
+            --amber: #F59E0B;
+            --amber-bg: rgba(245, 158, 11, 0.12);
+            --amber-border: rgba(245, 158, 11, 0.35);
+            --text-creamy: #F5F1E6;
+            --text-muted: #8E9BAE;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            padding: 30px 40px;
+            font-family: 'Inter', sans-serif;
+            background: #030810;
+            color: var(--text-creamy);
+            min-height: 100vh;
+            padding: 24px 32px 60px;
+            overflow-x: hidden;
         }
 
         .dashboard-container {
-            max-width: 1400px;
+            max-width: 1440px;
             margin: 0 auto;
             position: relative;
             z-index: 10;
             display: flex;
             flex-direction: column;
-            gap: 28px;
+            gap: 24px;
         }
 
         /* Top Bar */
         .top-bar {
-            background: var(--bg-forest-card);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            background: var(--bg-navy-card);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
             border: 1px solid var(--gold-border);
             border-radius: 20px;
-            padding: 18px 28px;
+            padding: 16px 26px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--gold-glow);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 25px var(--gold-glow);
             flex-wrap: wrap;
             gap: 16px;
+            position: relative;
+            animation: fadeInDown 0.5s ease both;
         }
+
+        .top-bar::before {
+            content: '';
+            position: absolute; top: 0; left: 15%; right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+            opacity: 0.6;
+            border-radius: 1px;
+        }
+
         .hub-title {
             display: flex;
             align-items: center;
             gap: 16px;
+            flex-wrap: wrap;
         }
+
+        .hub-title-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+            border: 1px solid var(--gold-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold-primary);
+        }
+
         .hub-title h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px;
             font-weight: 700;
             color: #FFFFFF;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
         }
-        .hub-title span { color: var(--gold-champagne); }
 
         .status-pill {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 16px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
+
         .status-pill:hover {
             transform: scale(1.03);
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         }
+
         .status-pill.online {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid #10B981;
+            background: var(--emerald-bg);
+            border: 1px solid var(--emerald-border);
             color: #34D399;
         }
+
         .status-pill.offline {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid #EF4444;
-            color: #F87171;
+            background: var(--amber-bg);
+            border: 1px solid var(--amber-border);
+            color: #FBBF24;
         }
+
         .status-dot {
             width: 8px; height: 8px; border-radius: 50%;
         }
-        .online .status-dot { background: #10B981; box-shadow: 0 0 8px #10B981; }
-        .offline .status-dot { background: #EF4444; }
 
-        /* Modal Overlay */
+        .online .status-dot { background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+        .offline .status-dot { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* SVG Icons Inline */
+        .icon-svg {
+            width: 15px;
+            height: 15px;
+            stroke-width: 2;
+            vertical-align: middle;
+            fill: none;
+            stroke: currentColor;
+            display: inline-block;
+        }
+
+        /* Compact Stat Row (A3) */
+        .stat-row-compact {
+            background: var(--bg-navy-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--gold-border);
+            border-radius: 18px;
+            padding: 14px 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: fadeInDown 0.55s ease both;
+        }
+
+        .stat-pill-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 16px;
+            border-radius: 14px;
+            background: rgba(5, 13, 26, 0.45);
+            border: 1px solid rgba(212, 175, 55, 0.12);
+            transition: all 0.2s ease;
+        }
+
+        .stat-pill-item:hover {
+            border-color: var(--gold-border);
+            background: rgba(10, 22, 40, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .stat-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--gold-primary);
+        }
+
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-content .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .stat-content .stat-number {
+            font-size: 22px;
+            font-weight: 700;
+            color: #FFFFFF;
+            font-feature-settings: "tnum";
+            line-height: 1.2;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .stat-number .stat-sub {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gold-light);
+        }
+
+        /* 2-Column Responsive Layout (A1, A6, A10) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 1080px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Main Guest Cards Column */
+        .main-col {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* Section Header Bar */
+        .section-bar {
+            background: var(--bg-navy-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--gold-border);
+            border-radius: 18px;
+            padding: 16px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
+        }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title .badge-count {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--gold-border);
+            color: var(--gold-light);
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            min-width: 260px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(5, 13, 26, 0.7);
+            border: 1px solid var(--gold-border);
+            border-radius: 12px;
+            padding: 8px 14px 8px 36px;
+            font-size: 13px;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 12px var(--gold-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gold-primary);
+            pointer-events: none;
+        }
+
+        /* Card-based Guest Rows (A4) */
+        .guest-cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .guest-card {
+            background: var(--bg-navy-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--gold-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+            transition: all 0.25s ease;
+            animation: cardFadeUp 0.45s ease both;
+        }
+
+        .guest-card:hover {
+            border-color: var(--gold-border-hover);
+            background: var(--bg-navy-card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65), 0 0 20px var(--gold-glow);
+        }
+
+        .guest-main-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 220px;
+        }
+
+        .guest-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(10, 22, 40, 0.9));
+            border: 1px solid var(--gold-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold-light);
+            flex-shrink: 0;
+        }
+
+        .guest-details {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .guest-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: 0.2px;
+        }
+
+        .guest-phone {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-feature-settings: "tnum";
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .guest-tags {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge-pill {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-creamy);
+        }
+
+        .badge-side {
+            background: rgba(212, 175, 55, 0.08);
+            border-color: rgba(212, 175, 55, 0.22);
+            color: var(--gold-light);
+        }
+
+        .badge-headcount {
+            background: rgba(212, 175, 55, 0.12);
+            border-color: var(--gold-border);
+            color: var(--gold-light);
+            font-weight: 700;
+        }
+
+        .tag-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-confirmed {
+            background: var(--emerald-bg);
+            border: 1px solid var(--emerald-border);
+            color: #34D399;
+        }
+
+        .tag-waiting {
+            background: var(--amber-bg);
+            border: 1px solid var(--amber-border);
+            color: #FBBF24;
+        }
+
+        .guest-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Sidebar Panels (A6) */
+        .sidebar-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-card {
+            background: var(--bg-navy-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--gold-border);
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 20px var(--gold-glow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .sidebar-card::before {
+            content: '';
+            position: absolute; top: 0; left: 20%; right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+            opacity: 0.5;
+        }
+
+        .sidebar-card-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* WhatsApp Panel Status Box */
+        .wa-status-box {
+            background: rgba(5, 13, 26, 0.65);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .wa-status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Parent Collector Cards in Sidebar */
+        .parent-collector-card {
+            background: rgba(5, 13, 26, 0.65);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .parent-collector-card:hover {
+            border-color: var(--gold-border);
+            background: rgba(10, 22, 40, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .parent-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .parent-role-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gold-light);
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+
+        .parent-relatives-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(212, 175, 55, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.12);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .parent-relatives-metric .count {
+            color: var(--gold-light);
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .parent-btn-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        /* Buttons (A8) */
+        .btn-luxury-gold {
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+            color: #040906;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);
+            white-space: nowrap;
+        }
+
+        .btn-luxury-gold:hover {
+            transform: translateY(-1.5px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            filter: brightness(1.05);
+        }
+
+        .btn-luxury-outline {
+            background: rgba(5, 13, 26, 0.65);
+            border: 1px solid var(--gold-border);
+            color: var(--gold-light);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+        }
+
+        .btn-luxury-outline:hover {
+            background: rgba(212, 175, 55, 0.12);
+            border-color: var(--gold-border-hover);
+            color: #FFFFFF;
+            transform: translateY(-1px);
+        }
+
+        .btn-sm-gold {
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+            color: #040906;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-sm-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-sm-outline {
+            background: rgba(10, 22, 40, 0.6);
+            border: 1px solid var(--gold-border);
+            color: var(--gold-light);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-sm-outline:hover {
+            background: rgba(212, 175, 55, 0.12);
+            color: #FFFFFF;
+        }
+
+        /* Modals */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2, 7, 4, 0.88);
+            background: rgba(3, 8, 16, 0.88);
             backdrop-filter: blur(18px);
             z-index: 9999;
             align-items: center;
             justify-content: center;
         }
+
         .modal-overlay.active {
             display: flex;
         }
+
         .modal-card {
-            background: var(--bg-forest-card);
+            background: #0A1628;
             border: 1.5px solid var(--gold-border);
             border-radius: 24px;
             padding: 34px 38px;
             max-width: 520px;
             width: 90%;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 30px var(--gold-glow);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px var(--gold-glow);
             position: relative;
             text-align: center;
+            animation: fadeInScale 0.35s ease both;
         }
+
         .modal-close {
             position: absolute;
             top: 18px; right: 22px;
@@ -116,7 +709,9 @@
             line-height: 1;
             transition: color 0.2s;
         }
+
         .modal-close:hover { color: #FFFFFF; }
+
         .qr-frame {
             background: #FFFFFF;
             padding: 14px;
@@ -125,285 +720,38 @@
             margin: 18px auto;
             box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
+
         .qr-frame img {
-            width: 230px;
-            height: 230px;
+            width: 220px;
+            height: 220px;
             display: block;
         }
 
-        .top-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+        /* Animations (A5) */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* KPI Cards Row */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-        }
-        .kpi-card {
-            background: var(--bg-forest-card);
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--gold-border);
-            border-radius: 22px;
-            padding: 24px 26px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px var(--gold-glow);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            transition: all 0.25s ease;
-        }
-        .kpi-card:hover {
-            border-color: var(--gold-border-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 25px var(--gold-glow);
-        }
-        .kpi-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .kpi-value {
-            font-size: 38px;
-            font-weight: 800;
-            color: #FFFFFF;
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-        }
-        .kpi-gold {
-            color: var(--gold-champagne);
-            text-shadow: 0 0 15px rgba(212, 175, 55, 0.35);
+        @keyframes cardFadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Parent Collector Quick Actions Box */
-        .parents-box {
-            background: var(--bg-forest-card);
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--gold-border);
-            border-radius: 22px;
-            padding: 24px 28px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-        }
-        .parents-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.18);
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .parents-header h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 20px;
-            color: var(--gold-champagne);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .parents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-        }
-        .parent-card {
-            background: rgba(3, 12, 8, 0.55);
-            border: 1px solid var(--gold-border);
-            border-radius: 16px;
-            padding: 16px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: all 0.2s ease;
-        }
-        .parent-card:hover {
-            border-color: var(--gold-border-hover);
-            transform: translateY(-1.5px);
-        }
-        .parent-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        .parent-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #FFFFFF;
-        }
-        .parent-role {
-            font-size: 12px;
-            color: var(--gold-champagne);
-            font-weight: 600;
-        }
-        .parent-phone {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        .delivery-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
-        .delivery-pill.active {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            color: #34D399;
-        }
-        .delivery-pill.pending {
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            color: #FBBF24;
-        }
-        .relatives-metric {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(212, 175, 55, 0.05);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            border-radius: 10px;
-            padding: 6px 12px;
-            font-size: 12px;
-            color: var(--text-creamy);
-        }
-        .relatives-metric span.count {
-            color: var(--gold-champagne);
-            font-weight: 800;
-        }
-        .parent-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 4px;
-        }
-        .btn-sm-gold {
-            flex: 1;
-            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
-            color: #040906;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 700;
-            text-align: center;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-        .btn-sm-gold:hover { transform: translateY(-1px); }
-        .btn-sm-outline {
-            background: rgba(10, 30, 20, 0.55);
-            border: 1px solid var(--gold-border);
-            color: var(--gold-champagne);
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 600;
-            text-align: center;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-sm-outline:hover { background: rgba(212, 175, 55, 0.12); color: #FFFFFF; }
-
-        /* Guest List Table Section */
-        .table-card {
-            background: var(--bg-forest-card);
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--gold-border);
-            border-radius: 22px;
-            padding: 26px 28px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px var(--gold-glow);
-        }
-        .table-header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.18);
-            padding-bottom: 16px;
-            margin-bottom: 20px;
-        }
-        .table-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 22px;
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-        th {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 12px 14px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-        }
-        td {
-            padding: 14px 14px;
-            font-size: 14px;
-            color: var(--text-creamy);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        tr:hover td {
-            background: rgba(212, 175, 55, 0.04);
-        }
-        .guest-name {
-            color: #FFFFFF;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .tag-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            display: inline-block;
-        }
-        .tag-confirmed {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid #10B981;
-            color: #34D399;
-        }
-        .tag-waiting {
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid #F59E0B;
-            color: #FBBF24;
-        }
-        .headcount-badge {
-            background: rgba(212, 175, 55, 0.12);
-            border: 1px solid var(--gold-border);
-            color: var(--gold-champagne);
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-weight: 700;
-            display: inline-block;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 20px 14px; }
-            .top-bar { padding: 16px; }
-            .top-actions { width: 100%; justify-content: flex-start; }
-            .table-card { padding: 18px 14px; overflow-x: auto; }
+        /* Mobile Adjustments (A10) */
+        @media (max-width: 768px) {
+            body { padding: 14px 12px 40px; }
+            .top-bar { padding: 14px 16px; }
+            .hub-title h1 { font-size: 20px; }
+            .stat-row-compact { grid-template-columns: repeat(2, 1fr); padding: 10px; }
+            .guest-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .guest-actions { width: 100%; justify-content: flex-start; }
+            .top-actions { width: 100%; }
         }
     </style>
 </head>
@@ -414,8 +762,14 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <div class="hub-title">
-                <h1>&#128141; {{ wedding.title if wedding else 'Royal Wedding Guest Hub' }}</h1>
-                <div id="headerStatusPill" class="status-pill {% if whatsapp_status == 'connected' %}online{% else %}offline{% endif %}" onclick="openWhatsAppModal()" title="Click to view WhatsApp Status or scan QR">
+                <div class="hub-title-icon">
+                    <svg class="icon-svg" style="width:20px;height:20px;" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="8"></circle>
+                        <path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path>
+                    </svg>
+                </div>
+                <h1>{{ wedding.title if wedding else 'Royal Wedding Guest Hub' }}</h1>
+                <div id="headerStatusPill" class="status-pill {% if whatsapp_status == 'connected' %}online{% else %}offline{% endif %}" onclick="openWhatsAppModal()" title="WhatsApp Bot Status">
                     <span class="status-dot"></span>
                     <span id="headerStatusText">
                     {% if whatsapp_status == 'connected' %}
@@ -428,157 +782,231 @@
             </div>
 
             <div class="top-actions">
-                <button type="button" onclick="openAiModal()" class="btn-luxury-outline" style="padding: 9px 18px; font-size: 13px;">
+                <button type="button" onclick="openAiModal()" class="btn-luxury-outline">
                     <span id="aiStatusDot" class="status-dot" style="background:{% if gemini_configured %}#10B981; box-shadow:0 0 6px #10B981;{% else %}#F59E0B; box-shadow:0 0 6px #F59E0B;{% endif %}"></span>
-                    🤖 <span id="aiBtnText">Gemini AI {% if gemini_configured %}(Active){% else %}(Setup Key){% endif %}</span>
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"></path></svg>
+                    <span id="aiBtnText">Gemini AI {% if gemini_configured %}(Active){% else %}(Key){% endif %}</span>
                 </button>
-                <button type="button" onclick="openWhatsAppModal()" class="btn-luxury-outline" style="padding: 9px 18px; font-size: 13px; color: #34D399; border-color: rgba(16, 185, 129, 0.4);">
-                    <span class="status-dot" style="background:#10B981; box-shadow:0 0 6px #10B981;"></span> 📲 WhatsApp Gateway
+                <button type="button" onclick="openWhatsAppModal()" class="btn-luxury-outline" style="color: #34D399; border-color: rgba(16, 185, 129, 0.4);">
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    WhatsApp Gateway
                 </button>
-                <a href="/api/export" class="btn-luxury-gold" style="padding: 9px 20px; font-size: 13px;">&#128196; Export Excel</a>
-                <a href="/setup" class="btn-luxury-outline" style="padding: 9px 18px; font-size: 13px;">&#9881; Edit Setup</a>
-                <a href="/logout" class="btn-luxury-outline" style="padding: 9px 18px; font-size: 13px; color: #F87171; border-color: rgba(239, 68, 68, 0.4);">Logout</a>
+                <a href="/api/export" class="btn-luxury-gold">
+                    <svg class="icon-svg" style="stroke: #040906;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5 5 5 5-5m-5 5V3"></path></svg>
+                    Export Excel
+                </a>
+                <a href="/setup" class="btn-luxury-outline">
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7.4 1.5a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V22a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 20.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V2a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
+                </a>
+                <a href="/logout" class="btn-luxury-outline" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4);">
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"></path></svg>
+                    Logout
+                </a>
             </div>
         </div>
 
-        {% if whatsapp_status != 'connected' %}
-        <div id="waConnectBanner" style="background: rgba(212, 175, 55, 0.1); border: 1.5px solid var(--gold-primary); border-radius: 16px; padding: 16px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-                <span style="font-size: 28px;">📲</span>
-                <div>
-                    <div style="font-weight: 700; color: #FFFFFF; font-size: 16px;">Link WhatsApp to Send Bot Links to Mother &amp; Father</div>
-                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Baileys requires a 1-time QR scan. Once linked, Gujarati invitation &amp; collection links reach parents immediately.</div>
+        <!-- Compact Stat Row (A3) -->
+        <div class="stat-row-compact">
+            <div class="stat-pill-item">
+                <div class="stat-icon-wrapper">
+                    <svg class="icon-svg" style="width:18px;height:18px;" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87m-4-12a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Invited</span>
+                    <span class="stat-number">{{ stats.total_invited }} <span class="stat-sub">Relatives</span></span>
                 </div>
             </div>
-            <button type="button" onclick="openWhatsAppModal()" class="btn-luxury-gold" style="padding: 10px 20px; font-size: 13px; white-space: nowrap;">
-                ⚡ Scan WhatsApp QR Code
-            </button>
+
+            <div class="stat-pill-item">
+                <div class="stat-icon-wrapper" style="color: #34D399; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
+                    <svg class="icon-svg" style="width:18px;height:18px;" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">RSVP Confirmed</span>
+                    <span class="stat-number" style="color: #34D399;">{{ stats.confirmed }} <span class="stat-sub" style="color: var(--gold-light);">{{ (stats.confirmed / stats.total_invited * 100)|round(1) if stats.total_invited > 0 else 0 }}%</span></span>
+                </div>
+            </div>
+
+            <div class="stat-pill-item">
+                <div class="stat-icon-wrapper" style="color: #FBBF24; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);">
+                    <svg class="icon-svg" style="width:18px;height:18px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Pending Response</span>
+                    <span class="stat-number" style="color: #FBBF24;">{{ stats.pending }} <span class="stat-sub">Waiting</span></span>
+                </div>
+            </div>
+
+            <div class="stat-pill-item">
+                <div class="stat-icon-wrapper">
+                    <svg class="icon-svg" style="width:18px;height:18px;" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Headcount</span>
+                    <span class="stat-number">{{ stats.total_headcount }} <span class="stat-sub">Attendees</span></span>
+                </div>
+            </div>
         </div>
-        {% endif %}
 
-        <!-- KPI Stat Cards -->
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-label">Total Invited</div>
-                <div class="kpi-value">{{ stats.total_invited }} <span style="font-size: 14px; color: var(--text-muted);">Relatives</span></div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">RSVP Confirmed</div>
-                <div class="kpi-value kpi-gold">{{ stats.confirmed }} <span style="font-size: 14px; color: var(--gold-champagne);">{{ (stats.confirmed / stats.total_invited * 100)|round(1) if stats.total_invited > 0 else 0 }}%</span></div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Pending Response</div>
-                <div class="kpi-value">{{ stats.pending }} <span style="font-size: 14px; color: var(--amber-accent);">In Progress</span></div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Estimated Headcount</div>
-                <div class="kpi-value kpi-gold">{{ stats.total_headcount }} <span style="font-size: 14px; color: var(--gold-champagne);">Attendees</span></div>
-            </div>
-        </div>
+        <!-- 2-Column Responsive Dashboard Layout (A1, A6, A10) -->
+        <div class="dashboard-grid">
+            <!-- Left Main Column: Card-based Guests Directory (A4) -->
+            <div class="main-col">
+                <div class="section-bar">
+                    <div class="section-title">
+                        Guest Directory &amp; RSVP
+                        <span class="badge-count">{{ contacts|length if contacts else 0 }}</span>
+                    </div>
+                    <div class="search-wrapper">
+                        <svg class="icon-svg search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="guestSearch" class="search-input" placeholder="Search by name, phone or side..." onkeyup="filterGuests()" />
+                    </div>
+                </div>
 
-        <!-- Parent Collector Quick Action Cards -->
-        <div class="parents-box">
-            <div class="parents-header">
-                <h3>&#128106; Parent Collector Suites (માતા-પિતા કલેક્શન લિંક્સ)</h3>
-                <div style="font-size: 13px; color: var(--text-muted);">&#9889; 100% Autopilot Active: Collector links are dispatched directly to parents' WhatsApp.</div>
-            </div>
+                <!-- Guest Cards List (A4, A5 Staggered) -->
+                <div class="guest-cards-list" id="guestsContainer">
+                    {% if contacts and contacts|length > 0 %}
+                        {% for c in contacts %}
+                        <div class="guest-card" style="--i: {{ loop.index0 }};" data-search="{{ c.name|lower }} {{ c.phone if c.phone else '' }} {{ c.side|lower }} {{ c.category|lower }}">
+                            <div class="guest-main-info">
+                                <div class="guest-avatar">
+                                    {{ c.name[:2]|upper }}
+                                </div>
+                                <div class="guest-details">
+                                    <div class="guest-name">{{ c.name }}</div>
+                                    <div class="guest-phone">
+                                        <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                        {{ c.phone if c.phone else 'Direct Link' }}
+                                    </div>
+                                </div>
+                            </div>
 
-            <div class="parents-grid">
-                {% for p in parents %}
-                <div class="parent-card" id="card-{{ p.token }}">
-                    <div class="parent-info">
-                        <div>
-                            <div class="parent-name">{{ p.name if p.name else 'Parent' }}</div>
-                            <div class="parent-phone">{{ p.phone if p.phone else 'No Phone' }}</div>
+                            <div class="guest-tags">
+                                <span class="badge-pill">{{ c.category|title if c.category else 'Family' }}</span>
+                                <span class="badge-pill badge-side">{{ c.side if c.side else 'Family' }}</span>
+                                <span class="badge-pill" title="Invited by">{{ c.added_by if c.added_by else 'Host' }}</span>
+                                <span class="badge-pill badge-headcount">{{ c.total_headcount if c.total_headcount else 1 }} Guests</span>
+                                
+                                {% if c.status == 'CONFIRMED' %}
+                                    <span class="tag-status tag-confirmed">
+                                        <span class="status-dot" style="background: #10B981;"></span> Confirmed
+                                    </span>
+                                {% else %}
+                                    <span class="tag-status tag-waiting">
+                                        <span class="status-dot" style="background: #F59E0B;"></span> Waiting
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="guest-actions">
+                                <button type="button" class="btn-sm-gold send-wa-btn" id="sendGuestBtn-{{ c.token }}" onclick="sendGuestLinkWhatsApp('{{ c.token }}', this)">
+                                    <svg class="icon-svg" style="width:12px;height:12px;stroke:#040906;" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                    WhatsApp
+                                </button>
+                                <button type="button" class="btn-sm-outline" onclick="copyGuestLink('{{ c.token }}')">
+                                    <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    Copy
+                                </button>
+                                <a href="/chat/{{ c.token }}" target="_blank" class="btn-sm-outline">
+                                    <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    RSVP
+                                </a>
+                            </div>
                         </div>
-                        <div class="parent-role">{{ p.role }} ({{ p.side }})</div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 48px; background: var(--bg-navy-card); border: 1px solid var(--gold-border); border-radius: 18px;">
+                            <div style="width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 12px; background: rgba(212, 175, 55, 0.1); display: flex; align-items: center; justify-content: center; color: var(--gold-primary);">
+                                <svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                            </div>
+                            <div style="font-size: 16px; font-weight: 600; color: #FFFFFF; margin-bottom: 6px;">No relatives listed yet</div>
+                            <p style="font-size: 13px; color: var(--text-muted); max-width: 400px; margin: 0 auto;">
+                                As soon as Mother or Father mentions relatives in their WhatsApp collector bot, family members will automatically appear here.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Sidebar Column (A6) -->
+            <div class="sidebar-col">
+                <!-- WhatsApp Gateway Panel -->
+                <div class="sidebar-card">
+                    <div class="sidebar-card-title">
+                        <span>WhatsApp Gateway</span>
+                        <span class="status-dot" style="background:{% if whatsapp_status == 'connected' %}#10B981{% else %}#F59E0B{% endif %};"></span>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        {% if whatsapp_status == 'connected' %}
-                            <div class="delivery-pill active"><span>&#128994;</span> Auto-Dispatched via WhatsApp</div>
-                        {% else %}
-                            <div class="delivery-pill pending"><span>&#9203;</span> Dispatches on WhatsApp Connect</div>
-                        {% endif %}
-                    </div>
+                    <div class="wa-status-box">
+                        <div class="wa-status-header">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Autopilot Engine</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                    {% if whatsapp_status == 'connected' %}
+                                        Connected: <span style="color: var(--gold-light); font-weight: 600;">{{ whatsapp_phone }}</span>
+                                    {% else %}
+                                        Offline (Requires 1-time QR link)
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <button type="button" onclick="openWhatsAppModal()" class="btn-sm-gold">
+                                {% if whatsapp_status == 'connected' %}Status{% else %}Scan QR{% endif %}
+                            </button>
+                        </div>
 
-                    <div class="relatives-metric">
-                        <span>Relatives Added by {{ p.role|title }}</span>
-                        <span class="count">{{ p.collected_count|default(0) }}</span>
-                    </div>
-
-                    <div class="parent-actions">
-                        <button type="button" class="btn-sm-gold send-wa-btn" id="sendBtn-{{ p.token }}" onclick="sendParentLinkWhatsApp('{{ p.token }}', this)">📲 Send WhatsApp</button>
-                        <button type="button" class="btn-sm-outline" onclick="copyParentLink('{{ p.token }}')">&#128203; Copy</button>
-                        <a href="/collector/{{ p.token }}" target="_blank" class="btn-sm-outline">&#128279; Bot</a>
+                        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; border-top: 1px solid rgba(212,175,55,0.1); padding-top: 8px;">
+                            Auto-dispatches wedding invites in Gujarati directly to relatives upon confirmation.
+                        </div>
                     </div>
                 </div>
-                {% endfor %}
-            </div>
-        </div>
 
-        <!-- Live Guest List Table -->
-        <div class="table-card">
-            <div class="table-header-bar">
-                <div class="table-title">
-                    <span>&#128195; Confirmed &amp; Invited Relatives List</span>
+                <!-- Parent Collector Suites (A6) -->
+                <div class="sidebar-card">
+                    <div class="sidebar-card-title">
+                        <span>Parent Collectors</span>
+                        <span style="font-size: 11px; font-weight: 600; color: var(--gold-light); font-family: 'Inter', sans-serif;">{{ parents|length if parents else 0 }} Active</span>
+                    </div>
+
+                    <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                        Gujarati collection chatbots for Mother &amp; Father:
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        {% for p in parents %}
+                        <div class="parent-collector-card" id="card-{{ p.token }}">
+                            <div class="parent-top-row">
+                                <div>
+                                    <div style="font-size: 14px; font-weight: 700; color: #FFFFFF;">{{ p.name if p.name else 'Parent' }}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">{{ p.phone if p.phone else 'Direct Link' }}</div>
+                                </div>
+                                <span class="parent-role-badge">{{ p.role|title }} ({{ p.side }})</span>
+                            </div>
+
+                            <div class="parent-relatives-metric">
+                                <span>Relatives Entered:</span>
+                                <span class="count">{{ p.collected_count|default(0) }}</span>
+                            </div>
+
+                            <div class="parent-btn-row">
+                                <button type="button" class="btn-sm-gold send-wa-btn" id="sendBtn-{{ p.token }}" onclick="sendParentLinkWhatsApp('{{ p.token }}', this)" style="flex: 1;">
+                                    <svg class="icon-svg" style="width:11px;height:11px;stroke:#040906;" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                    Send
+                                </button>
+                                <button type="button" class="btn-sm-outline" onclick="copyParentLink('{{ p.token }}')">
+                                    <svg class="icon-svg" style="width:11px;height:11px;" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    Copy
+                                </button>
+                                <a href="/collector/{{ p.token }}" target="_blank" class="btn-sm-outline">
+                                    <svg class="icon-svg" style="width:11px;height:11px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    Bot
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div style="font-size: 13px; color: var(--text-muted);">Auto-updates in real time as relatives confirm.</div>
             </div>
-
-            {% if contacts and contacts|length > 0 %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Guest Name</th>
-                        <th>Category</th>
-                        <th>Side</th>
-                        <th>Invited By</th>
-                        <th>Headcount</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in contacts %}
-                    <tr>
-                        <td>
-                            <div class="guest-name">
-                                {{ c.name }}
-                                <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">({{ c.phone if c.phone else '-' }})</span>
-                            </div>
-                        </td>
-                        <td>{{ c.category|title }}</td>
-                        <td>{{ c.side }}</td>
-                        <td>{{ c.added_by }}</td>
-                        <td>
-                            <span class="headcount-badge">{{ c.total_headcount if c.total_headcount else 1 }}</span>
-                        </td>
-                        <td>
-                            {% if c.status == 'CONFIRMED' %}
-                                <span class="tag-status tag-confirmed">&#10003; Confirmed</span>
-                            {% else %}
-                                <span class="tag-status tag-waiting">&#9203; Waiting</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 6px; align-items: center;">
-                                <button type="button" class="btn-sm-gold send-wa-btn" id="sendGuestBtn-{{ c.token }}" onclick="sendGuestLinkWhatsApp('{{ c.token }}', this)" style="padding: 5px 10px; font-size: 11px;">📲 WhatsApp</button>
-                                <button type="button" class="btn-sm-outline" onclick="copyGuestLink('{{ c.token }}')" style="padding: 5px 10px; font-size: 11px;">📋 Copy</button>
-                                <a href="/chat/{{ c.token }}" target="_blank" class="btn-sm-outline" style="padding: 5px 10px; font-size: 11px;">View Chat</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                <div style="font-size: 32px; margin-bottom: 12px;">&#128141;</div>
-                <div style="font-size: 16px; font-weight: 600; color: #FFFFFF; margin-bottom: 6px;">No guests added yet</div>
-                <p style="font-size: 13px;">As soon as Mother or Father mentions relatives in their collector bot, family branches will appear here automatically.</p>
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -586,29 +1014,31 @@
     <div id="whatsappModal" class="modal-overlay" onclick="handleModalOverlayClick(event)">
         <div class="modal-card">
             <button class="modal-close" onclick="closeWhatsAppModal()">&times;</button>
-            <div style="font-size: 20px; font-weight: 700; color: #FFFFFF; font-family: 'Playfair Display', serif; margin-bottom: 6px;">
-                📲 WhatsApp Autopilot Gateway
+            <div style="font-size: 22px; font-weight: 700; color: #FFFFFF; font-family: 'Cormorant Garamond', serif; margin-bottom: 6px;">
+                WhatsApp Gateway
             </div>
             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
-                Direct Baileys automation engine for ₹0 API costs &amp; unlimited messaging.
+                Automated Gujarati messaging engine for invitations &amp; collection.
             </div>
 
             <!-- Connected View -->
             <div id="modalConnectedView" style="display: none;">
                 <div style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
-                    <div style="font-size: 36px; margin-bottom: 8px;">🟢</div>
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: #34D399;">
+                        <svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+                    </div>
                     <div style="font-size: 16px; font-weight: 700; color: #34D399;">WhatsApp Bot is Connected &amp; Active!</div>
-                    <div id="modalConnectedPhone" style="font-size: 14px; color: var(--gold-champagne); font-weight: 700; margin-top: 6px;">+91 92658 34826</div>
+                    <div id="modalConnectedPhone" style="font-size: 14px; color: var(--gold-light); font-weight: 700; margin-top: 6px;">+91 92658 34826</div>
                 </div>
                 <p style="font-size: 13px; color: var(--text-creamy); line-height: 1.6; margin-bottom: 24px;">
-                    ⚡ <strong>100% Autopilot Active</strong>: Whenever parents enter relatives in Gujarati, invitation links are automatically dispatched from this WhatsApp number without manual clicks.
+                    Whenever parents enter relatives in Gujarati, invitation links are automatically dispatched without manual effort.
                 </p>
                 <div style="display: flex; gap: 10px; justify-content: center;">
                     <button type="button" onclick="disconnectWhatsApp()" class="btn-luxury-outline" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4);">
-                        🔄 Disconnect &amp; Link New Number
+                        Disconnect Number
                     </button>
                     <button type="button" onclick="closeWhatsAppModal()" class="btn-luxury-gold">
-                        ✓ Done
+                        Close
                     </button>
                 </div>
             </div>
@@ -616,27 +1046,27 @@
             <!-- QR Code View -->
             <div id="modalQrView" style="display: none;">
                 <div style="font-size: 14px; color: var(--text-creamy); line-height: 1.5; margin-bottom: 12px;">
-                    Scan this QR code with WhatsApp to enable automated invitations:
+                    Scan this QR code with WhatsApp on your phone:
                 </div>
                 <div class="qr-frame">
                     <img id="modalQrImage" src="" alt="WhatsApp QR Code" />
                 </div>
-                <div style="text-align: left; background: rgba(3, 12, 8, 0.6); border: 1px solid var(--gold-border); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+                <div style="text-align: left; background: rgba(5, 13, 26, 0.7); border: 1px solid var(--gold-border); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; font-size: 12px; color: var(--text-muted); line-height: 1.6;">
                     <strong style="color: #FFFFFF;">How to link:</strong><br>
                     1. Open WhatsApp on your phone.<br>
                     2. Tap <strong>Settings</strong> (or <strong>3 dots</strong>) ➔ <strong>Linked Devices</strong>.<br>
-                    3. Tap <strong>Link a Device</strong> and point your camera at this QR code.
+                    3. Tap <strong>Link a Device</strong> and scan this QR code.
                 </div>
                 <button type="button" onclick="checkWhatsAppStatus(true)" class="btn-luxury-outline" style="font-size: 12px;">
-                    🔄 Refresh Status
+                    Refresh Status
                 </button>
             </div>
 
             <!-- Loading View -->
             <div id="modalLoadingView">
                 <div style="padding: 40px; color: var(--text-muted);">
-                    <div style="font-size: 32px; margin-bottom: 12px;">⏳</div>
-                    <div>Connecting to WhatsApp microservice...</div>
+                    <div style="width: 36px; height: 36px; border: 3px solid var(--gold-border); border-top-color: var(--gold-primary); border-radius: 50%; margin: 0 auto 14px; animation: spin 0.8s linear infinite;"></div>
+                    <div>Connecting to WhatsApp gateway...</div>
                 </div>
             </div>
         </div>
@@ -646,39 +1076,36 @@
     <div id="aiModal" class="modal-overlay" onclick="handleAiModalOverlayClick(event)">
         <div class="modal-card">
             <button class="modal-close" onclick="closeAiModal()">&times;</button>
-            <div style="font-size: 20px; font-weight: 700; color: #FFFFFF; font-family: 'Playfair Display', serif; margin-bottom: 6px;">
-                🤖 Google Gemini AI Engine
+            <div style="font-size: 22px; font-weight: 700; color: #FFFFFF; font-family: 'Cormorant Garamond', serif; margin-bottom: 6px;">
+                Google Gemini AI Engine
             </div>
             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
-                Powers natural conversational Gujarati chatbots for both Parents &amp; Guests.
+                Powers natural conversational Gujarati chatbots for Parents &amp; Guests.
             </div>
 
-            <div id="aiStatusCard" style="background: rgba(3, 12, 8, 0.6); border: 1px solid var(--gold-border); border-radius: 16px; padding: 18px; margin-bottom: 20px; text-align: left;">
+            <div id="aiStatusCard" style="background: rgba(5, 13, 26, 0.7); border: 1px solid var(--gold-border); border-radius: 16px; padding: 18px; margin-bottom: 20px; text-align: left;">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                    <span id="aiCardDot" style="font-size: 18px;">🟢</span>
+                    <span class="status-dot" style="background: #10B981;"></span>
                     <strong id="aiCardTitle" style="color: #FFFFFF; font-size: 14px;">
-                        Google Gemini 2.5 Flash is Active (Built-in)
+                        Google Gemini 2.5 Flash is Active
                     </strong>
                 </div>
                 <p id="aiCardDesc" style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
-                    Natural Gujarati conversation is 100% active out-of-the-box! The bot understands all Gujarati family terms ('maro chokro', 'kaka', 'mama', 'masi', 'bhai') and chats warmly with Mummy &amp; Pappa.
+                    Natural Gujarati conversation is active. The bot understands all Gujarati family terms (kaka, mama, masi, bhai) and chats warmly with Mummy &amp; Pappa.
                 </p>
             </div>
 
             <div style="text-align: left; margin-bottom: 20px;">
-                <label style="font-size: 12px; font-weight: 700; color: var(--gold-champagne); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
                     Custom Google Gemini Key (Optional)
                 </label>
                 <input type="text" id="geminiKeyInput" placeholder="Active (Built-in Key). Paste only if you want to override..." 
-                       class="luxury-input" style="font-family: monospace; font-size: 13px;" />
-                <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
-                    ✨ Built-in Gemini 2.5 Flash works directly without entering any key.
-                </div>
+                       class="luxury-input" style="font-family: monospace; font-size: 13px; width: 100%;" />
             </div>
 
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button type="button" onclick="closeAiModal()" class="btn-luxury-outline">Close</button>
-                <button type="button" onclick="saveGeminiKey()" class="btn-luxury-gold" id="saveAiKeyBtn">💾 Update Key</button>
+                <button type="button" onclick="saveGeminiKey()" class="btn-luxury-gold" id="saveAiKeyBtn">Save Key</button>
             </div>
         </div>
     </div>
@@ -688,11 +1115,26 @@
         let isModalOpen = false;
         let pollTimer = null;
 
+        function filterGuests() {
+            const query = document.getElementById('guestSearch').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.guest-card');
+            cards.forEach(card => {
+                const text = card.getAttribute('data-search') || '';
+                if (text.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
         function copyParentLink(token) {
             const url = window.location.origin + '/collector/' + token;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(() => {
-                    alert('✅ Collector link copied to clipboard!\n\n' + url);
+                    alert('Collector link copied to clipboard:
+
+' + url);
                 }).catch(() => {
                     prompt('Copy this link:', url);
                 });
@@ -705,7 +1147,7 @@
             if (!token) return;
             const origHtml = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '⏳ Sending...';
+            btn.innerHTML = 'Sending...';
 
             fetch('/api/send-parent-link/' + token, {
                 method: 'POST',
@@ -717,27 +1159,23 @@
                 btn.innerHTML = origHtml;
 
                 if (data.success) {
-                    alert('✅ ' + (data.message || 'Bot link sent to WhatsApp!'));
-                    const card = document.getElementById('card-' + token) || btn.closest('.parent-card');
-                    if (card) {
-                        const pill = card.querySelector('.delivery-pill');
-                        if (pill) {
-                            pill.className = 'delivery-pill active';
-                            pill.innerHTML = '<span>🟢</span> Dispatched via WhatsApp';
-                        }
-                    }
+                    alert(data.message || 'Bot link sent to WhatsApp!');
                 } else {
                     if (data.not_connected) {
-                        if (data.wa_direct_url && confirm('⚠️ WhatsApp Autopilot Bot is offline or not linked.\n\nWould you like to open WhatsApp directly now to send this invitation link?')) {
+                        if (data.wa_direct_url && confirm('WhatsApp Autopilot Bot is offline or not linked.
+
+Open WhatsApp directly to send this invitation link?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
                             openWhatsAppModal();
                         }
                     } else {
-                        if (data.wa_direct_url && confirm('❌ Bot send error: ' + (data.error || 'Failed') + '\n\nWould you like to open WhatsApp directly to send it?')) {
+                        if (data.wa_direct_url && confirm('Bot send error: ' + (data.error || 'Failed') + '
+
+Open WhatsApp directly to send it?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
-                            alert('❌ Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
+                            alert('Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
                         }
                     }
                 }
@@ -745,7 +1183,7 @@
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = origHtml;
-                alert('❌ Network or server error: ' + err.message);
+                alert('Network or server error: ' + err.message);
             });
         }
 
@@ -753,7 +1191,9 @@
             const url = window.location.origin + '/chat/' + token;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(() => {
-                    alert('✅ Guest RSVP chat link copied to clipboard!\n\n' + url);
+                    alert('Guest RSVP chat link copied to clipboard:
+
+' + url);
                 }).catch(() => {
                     prompt('Copy this link:', url);
                 });
@@ -766,7 +1206,7 @@
             if (!token) return;
             const origHtml = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '⏳ Sending...';
+            btn.innerHTML = 'Sending...';
 
             fetch('/api/send-guest-link/' + token, {
                 method: 'POST',
@@ -778,19 +1218,23 @@
                 btn.innerHTML = origHtml;
 
                 if (data.success) {
-                    alert('✅ ' + (data.message || 'Invitation sent to relative on WhatsApp!'));
+                    alert(data.message || 'Invitation sent to relative on WhatsApp!');
                 } else {
                     if (data.not_connected) {
-                        if (data.wa_direct_url && confirm('⚠️ WhatsApp Autopilot Bot is offline or not linked.\n\nWould you like to open WhatsApp directly now to send this invitation?')) {
+                        if (data.wa_direct_url && confirm('WhatsApp Autopilot Bot is offline or not linked.
+
+Open WhatsApp directly to send this invitation?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
                             openWhatsAppModal();
                         }
                     } else {
-                        if (data.wa_direct_url && confirm('❌ Bot send error: ' + (data.error || 'Failed') + '\n\nWould you like to open WhatsApp directly to send it?')) {
+                        if (data.wa_direct_url && confirm('Bot send error: ' + (data.error || 'Failed') + '
+
+Open WhatsApp directly to send it?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
-                            alert('❌ Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
+                            alert('Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
                         }
                     }
                 }
@@ -798,7 +1242,7 @@
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = origHtml;
-                alert('❌ Network or server error: ' + err.message);
+                alert('Network or server error: ' + err.message);
             });
         }
 
@@ -839,12 +1283,10 @@
                     document.getElementById('modalLoadingView').style.display = 'none';
                     const headerPill = document.getElementById('headerStatusPill');
                     const headerText = document.getElementById('headerStatusText');
-                    const banner = document.getElementById('waConnectBanner');
 
                     if (data.connected) {
                         headerPill.className = 'status-pill online';
                         headerText.textContent = 'WhatsApp Active (' + (data.phone || 'Connected') + ')';
-                        if (banner) banner.style.display = 'none';
 
                         document.getElementById('modalConnectedView').style.display = 'block';
                         document.getElementById('modalQrView').style.display = 'none';
@@ -857,24 +1299,14 @@
                                 .then(res => {
                                     if (res.success && res.dispatched && res.dispatched.length > 0) {
                                         console.log('[+] Auto-dispatched collector links to:', res.dispatched);
-                                        document.querySelectorAll('.delivery-pill').forEach(pill => {
-                                            pill.className = 'delivery-pill active';
-                                            pill.innerHTML = '<span>🟢</span> Auto-Dispatched via WhatsApp';
-                                        });
                                     }
                                 })
                                 .catch(e => console.log('Auto-dispatch error notice:', e));
                         }
-
-                        document.querySelectorAll('.delivery-pill').forEach(pill => {
-                            pill.className = 'delivery-pill active';
-                            pill.innerHTML = '<span>🟢</span> Auto-Dispatched via WhatsApp';
-                        });
                     } else if (data.qr) {
                         wasPreviouslyOffline = true;
                         headerPill.className = 'status-pill offline';
                         headerText.textContent = 'WhatsApp QR Ready (Click to Scan)';
-                        if (banner) banner.style.display = 'flex';
 
                         document.getElementById('modalConnectedView').style.display = 'none';
                         document.getElementById('modalQrView').style.display = 'block';
@@ -883,7 +1315,6 @@
                         wasPreviouslyOffline = true;
                         headerPill.className = 'status-pill offline';
                         headerText.textContent = 'WhatsApp Offline (Click to Link)';
-                        if (banner) banner.style.display = 'flex';
 
                         document.getElementById('modalConnectedView').style.display = 'none';
                         document.getElementById('modalQrView').style.display = 'block';
@@ -936,7 +1367,7 @@
             }
             const saveBtn = document.getElementById('saveAiKeyBtn');
             saveBtn.disabled = true;
-            saveBtn.innerHTML = '⏳ Saving...';
+            saveBtn.innerHTML = 'Saving...';
 
             fetch('/api/save-gemini-key', {
                 method: 'POST',
@@ -946,15 +1377,13 @@
             .then(r => r.json())
             .then(data => {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = '💾 Save AI Key';
+                saveBtn.innerHTML = 'Save Key';
                 if (data.success) {
-                    alert('🎉 Success! Google Gemini AI key saved successfully.\n\nNatural conversational Gujarati chatbots are now 100% active!');
+                    alert('Google Gemini AI key saved successfully.');
                     document.getElementById('aiStatusDot').style.background = '#10B981';
                     document.getElementById('aiStatusDot').style.boxShadow = '0 0 6px #10B981';
                     document.getElementById('aiBtnText').textContent = 'Gemini AI (Active)';
-                    document.getElementById('aiCardDot').textContent = '🟢';
                     document.getElementById('aiCardTitle').textContent = 'Google Gemini 2.5 Flash is Active';
-                    document.getElementById('aiCardDesc').textContent = "Natural Gujarati conversation is enabled! The bot understands Gujarati family terms ('kaka', 'mama') and chats warmly.";
                     document.getElementById('geminiKeyInput').value = '';
                     closeAiModal();
                 } else {
@@ -963,7 +1392,7 @@
             })
             .catch(err => {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = '💾 Save AI Key';
+                saveBtn.innerHTML = 'Save Key';
                 alert('Error: ' + err.message);
             });
         }

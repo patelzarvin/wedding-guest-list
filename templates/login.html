@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WedVite AI - Wedding Suite Authentication</title>
+    <title>WedVite — Royal Wedding Suite</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/luxury_theme.css">
     <style>
         body {
@@ -20,15 +20,23 @@
         .auth-card {
             width: 100%;
             max-width: 480px;
-            background: var(--bg-forest-card);
-            backdrop-filter: blur(35px);
-            -webkit-backdrop-filter: blur(35px);
+            background: var(--bg-navy-card);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
             border: 1px solid var(--gold-border);
             border-radius: 28px;
             padding: 42px 36px 36px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px var(--gold-glow);
+            box-shadow: 0 28px 65px rgba(0,0,0,0.75), 0 0 40px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.05);
             position: relative;
             z-index: 10;
+            animation: fadeInScale 0.65s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .auth-card::before {
+            content: '';
+            position: absolute; top: 0; left: 20%; right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+            border-radius: 1px; opacity: 0.55;
         }
 
         .auth-header {
@@ -36,14 +44,15 @@
             margin-bottom: 28px;
         }
         .auth-logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 26px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
             font-weight: 700;
             color: #FFFFFF;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             text-decoration: none;
             display: inline-block;
             margin-bottom: 6px;
+            animation: fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both;
         }
         .auth-logo span { color: var(--gold-champagne); font-style: italic; }
         .auth-subtitle {
@@ -63,15 +72,16 @@
             padding: 12px 16px;
             background: transparent;
             border: none;
-            font-family: 'Playfair Display', serif;
-            font-size: 18px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 19px;
             font-weight: 600;
             color: var(--text-muted);
             cursor: pointer;
-            transition: color 0.25s;
+            transition: color 0.3s ease, letter-spacing 0.3s ease;
             position: relative;
             text-align: center;
         }
+        .tab-btn:hover { color: var(--gold-champagne); letter-spacing: 0.3px; }
         .tab-btn.active {
             color: #FFFFFF;
             font-weight: 700;
@@ -104,20 +114,20 @@
         }
         .input-box {
             width: 100%;
-            background: var(--bg-forest-input);
+            background: var(--bg-navy-input);
             border: 1px solid var(--gold-border);
             border-radius: 12px;
             padding: 13px 16px;
             font-size: 14px;
             color: #FFFFFF;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
         }
         .input-box:focus {
             border-color: var(--gold-hover);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
-            background: rgba(4, 15, 9, 0.85);
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.15), 0 2px 10px rgba(0,0,0,0.35);
+            background: rgba(5, 13, 30, 0.92);
         }
         .input-box::placeholder { color: var(--text-dim); }
 
@@ -126,7 +136,7 @@
         .input-box:-webkit-autofill:hover,
         .input-box:-webkit-autofill:focus,
         .input-box:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 1000px #040F09 inset !important;
+            -webkit-box-shadow: 0 0 0 1000px #050D1A inset !important;
             -webkit-text-fill-color: #FFFFFF !important;
             caret-color: #FFFFFF !important;
             border-color: var(--gold-border) !important;
