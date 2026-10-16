@@ -60,10 +60,90 @@
           "હજુ બીજા સગા-વહાલા ઉમેરો",
           "બધા આવી ગયા છે (Done)"
         ]
+      },
+      {
+        "sender": "user",
+        "text": "મારા કાકા રમેશભાઈ નો નંબર 9825012345",
+        "timestamp": "03:06 PM"
+      },
+      {
+        "sender": "bot",
+        "text": "ખૂબ સરસ પૂજ્ય Shankarlal Patel પિતાશ્રી (પપ્પા)! આપના કાકા રમેશભાઈનો નંબર 9825012345 પણ નોંધી લીધો છે! 😊\n\nહવે આપના તરફથી બીજા કોઈ સગા-સંબંધીઓ, મિત્રો કે પરિવારના સભ્યો બાકી હોય તો કૃપા કરીને તેમના નામ અને નંબર જણાવશો. (બધા આવી જાય ત્યારે 'બધા આવી ગયા' બટન દબાવશો.)",
+        "timestamp": "03:06 PM",
+        "quick_replies": [
+          "હજુ બીજા સગા-વહાલા ઉમેરો",
+          "બધા આવી ગયા છે (Done)"
+        ]
+      },
+      {
+        "sender": "user",
+        "text": "મારા કાકા રમેશભાઈ નો નંબર 9825012345",
+        "timestamp": "03:07 PM"
+      },
+      {
+        "sender": "bot",
+        "text": "પૂજ્ય Shankarlal Patel પિતાશ્રી (પપ્પા)! આપના કાકા રમેશભાઈનો નંબર 9825012345 તો આપણે અગાઉ નોંધી લીધો છે! 😊\n\nહવે બીજા કોઈ સગા-સંબંધીઓ, મિત્રો કે પરિવારના સભ્યો બાકી હોય તો કૃપા કરીને તેમના નામ અને નંબર જણાવશો. (બધા આવી જાય ત્યારે 'બધા આવી ગયા' બટન દબાવશો.)",
+        "timestamp": "03:07 PM",
+        "quick_replies": [
+          "હજુ બીજા સગા-વહાલા ઉમેરો",
+          "બધા આવી ગયા છે (Done)"
+        ]
       }
     ],
-    "total_ai_calls": 3,
-    "invalid_streak": 0,
+    "total_ai_calls": 5,
+    "invalid_streak": 1,
     "is_completed": false
+  },
+  "g_263cef27-feb": {
+    "token": "g_263cef27-feb",
+    "contact_id": 1,
+    "name": "Mukeshbhai",
+    "category": "brothers",
+    "added_by": "FATHER",
+    "step": "COMPLETED",
+    "state": {
+      "parents_attending": null,
+      "parents_names": [],
+      "is_married": null,
+      "spouse_name": "",
+      "children": [],
+      "separate_adult_children": [],
+      "other_members": [],
+      "total_headcount": 2,
+      "is_complete": true
+    },
+    "messages": [
+      {
+        "sender": "bot",
+        "text": "💍 જય શ્રી કૃષ્ણ Mukeshbhai! 🙏\n\nઅમારા લગ્ન પ્રસંગે આપનું સહર્ષ સ્વાગત છે (Father's Side ➔ Brothers).\nલગ્નમાં આપના પરિવારમાંથી કોણ કોણ પધારી રહ્યું છે તેની વિગત માટે હું આપને માત્ર 3-4 સરળ સવાલ પૂછીશ.\n\n👉 1. શું આપના માતા-પિતા (વડીલો) આપની સાથે આવશે?",
+        "timestamp": "03:07 PM",
+        "quick_replies": [
+          "હા (Yes)",
+          "ના (No)"
+        ]
+      },
+      {
+        "sender": "user",
+        "text": "હા, અમે 2 સભ્યો જરૂર આવીશું",
+        "timestamp": "03:07 PM"
+      },
+      {
+        "sender": "bot",
+        "text": "🎉 ખૂબ ખૂબ આભાર Mukeshbhai!\n\nઆપના પરિવારની વિગત સફળતાપૂર્વક નોંધાઈ ગઈ છે:\n• Mukeshbhai (મુખ્ય / Self)\n\n👉 કુલ મહેમાનો: 2 વ્યક્તિ\n\nઅમારા લગ્ન પ્રસંગમાં આપના પરિવારનું સ્વાગત કરવા અમે ઉત્સુક છીએ! 🙏",
+        "timestamp": "03:07 PM",
+        "quick_replies": []
+      },
+      {
+        "sender": "user",
+        "text": "હા, અમે 2 સભ્યો જરૂર આવીશું",
+        "timestamp": "03:07 PM"
+      },
+      {
+        "sender": "bot",
+        "text": "🎉 ખૂબ ખૂબ આભાર Mukeshbhai!\n\nઆપના પરિવારની વિગત સફળતાપૂર્વક નોંધાઈ ગઈ છે:\n• Mukeshbhai (મુખ્ય / Self)\n\n👉 કુલ મહેમાનો: 2 વ્યક્તિ\n\nઅમારા લગ્ન પ્રસંગમાં આપના પરિવારનું સ્વાગત કરવા અમે ઉત્સુક છીએ! 🙏",
+        "timestamp": "03:07 PM",
+        "quick_replies": []
+      }
+    ]
   }
 }

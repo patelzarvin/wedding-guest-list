@@ -7,23 +7,44 @@ from email.mime.multipart import MIMEMultipart
 SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
 
 def get_smtp_credentials():
-    """Retrieve SMTP sender email and app password from settings.json or env"""
+    """Retrieve SMTP sender email and app password from env, database, settings.json, or verified fallback"""
+    # 1. Environment variables (Cloud / Render)
     smtp_email = os.environ.get("SMTP_EMAIL", "").strip()
     smtp_password = os.environ.get("SMTP_PASSWORD", "").strip()
     
-    if os.path.exists(SETTINGS_FILE):
+    # 2. Database persistent settings (wedding.db)
+    if not smtp_email or not smtp_password:
         try:
-            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                if not smtp_email:
-                    smtp_email = data.get("smtp_email", "deluxproduct3@gmail.com").strip()
-                if not smtp_password:
-                    smtp_password = data.get("smtp_password", "").strip()
+            from database import get_app_setting
+            if not smtp_email:
+                db_email = get_app_setting("smtp_email")
+                if db_email and db_email.strip():
+                    smtp_email = db_email.strip()
+            if not smtp_password:
+                db_pwd = get_app_setting("smtp_password")
+                if db_pwd and db_pwd.strip():
+                    smtp_password = db_pwd.strip()
         except Exception:
             pass
-            
+
+    # 3. Local settings.json file
+    if not smtp_email or not smtp_password:
+        if os.path.exists(SETTINGS_FILE):
+            try:
+                with open(SETTINGS_FILE, "r", encoding="utf-8") as f:                          
+                    data = json.load(f)
+                    if not smtp_email:
+                        smtp_email = data.get("smtp_email", "").strip()
+                    if not smtp_password:
+                        smtp_password = data.get("smtp_password", "").strip()
+            except Exception:
+                pass
+
+    # 4. Out-of-the-box verified production fallback
     if not smtp_email:
-        smtp_email = "deluxproduct3@gmail.com"
+        smtp_email = "zarvin.114@gmail.com"
+    if not smtp_password:
+        smtp_password = "uwfw vbvp qeqv jvpi"
         
     return smtp_email, smtp_password
 

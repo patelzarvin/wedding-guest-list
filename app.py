@@ -565,6 +565,11 @@ def api_guest_chat(token):
         return jsonify({"error": "Message is required"}), 400
         
     result = process_chat_message(token, message)
+    if isinstance(result, dict):
+        if "reply" not in result and "bot_reply" in result:
+            result["reply"] = result["bot_reply"]
+        elif "bot_reply" not in result and "reply" in result:
+            result["bot_reply"] = result["reply"]
     return jsonify(result)
 
 @app.route("/preview")
