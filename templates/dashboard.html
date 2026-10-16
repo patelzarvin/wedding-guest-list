@@ -1287,6 +1287,7 @@ Open WhatsApp directly to send it?')) {
         }
 
         let hasCheckedOnce = false;
+        let qrRetryCount = 0;
 
         function openWhatsAppModal() {
             isModalOpen = true;
@@ -1408,6 +1409,7 @@ Open WhatsApp directly to send it?')) {
                         modalConnected.style.display = 'none';
                         modalQr.style.display = 'block';
 
+                        qrRetryCount = 0;
                         qrPlaceholder.style.display = 'none';
                         qrImg.src = data.qr;
                         qrImg.style.display = 'block';
@@ -1444,12 +1446,21 @@ Open WhatsApp directly to send it?')) {
                         if (sidebarQrBox) sidebarQrBox.style.display = 'block';
                         if (sidebarQrImg) sidebarQrImg.style.display = 'none';
                         if (sidebarQrPlc) sidebarQrPlc.style.display = 'flex';
-                        if (sidebarStatusText) sidebarStatusText.textContent = 'Offline (Generating QR Code...)';
+                        if (sidebarStatusText) sidebarStatusText.textContent = 'Offline (Connecting to WhatsApp...)';
                         if (sidebarBtn) sidebarBtn.textContent = 'Enlarge QR';
+
+                        qrRetryCount++;
+                        if (qrRetryCount === 3 || qrRetryCount === 8) {
+                            fetch('/api/whatsapp-refresh-qr', { method: 'POST' }).catch(e => {});
+                        }
                     }
                 })
                 .catch(err => {
                     console.log('WhatsApp status check notice:', err);
+                    const sidebarQrPlc = document.getElementById('sidebarQrPlaceholder');
+                    if (sidebarQrPlc && (!document.getElementById('sidebarQrImage') || document.getElementById('sidebarQrImage').style.display === 'none')) {
+                        sidebarQrPlc.innerHTML = '<div style="font-size:11px;color:var(--gold-light);padding:10px;">Connecting engine...<br><span style="color:var(--text-muted);font-size:10px;">Click Refresh QR if needed</span></div>';
+                    }
                 });
         }
 

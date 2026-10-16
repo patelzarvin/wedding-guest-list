@@ -2,7 +2,8 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    Browsers
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const express = require('express');
@@ -82,7 +83,7 @@ async function startWhatsApp() {
             version,
             logger: pino({ level: 'silent' }),
             auth: state,
-            browser: ['Gujarati Wedding Bot', 'Chrome', '1.0.0'],
+            browser: Browsers.ubuntu('Chrome'),
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 60000
         });
@@ -216,6 +217,14 @@ app.get('/status', (req, res) => {
 app.post('/refresh-qr', async (req, res) => {
     try {
         console.log('[*] Force-refreshing WhatsApp socket for new QR code...');
+        if (sock) {
+            try { sock.ev.removeAllListeners(); sock.end(undefined); } catch (e) {}
+            sock = null;
+        }
+        try {
+            fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+            fs.mkdirSync(AUTH_DIR, { recursive: true });
+        } catch (e) {}
         connectionStatus = 'initializing';
         qrDataUrl = null;
         startWhatsApp();
@@ -288,9 +297,9 @@ app.post('/disconnect', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`=============================================================`);
-    console.log(`[*] Baileys WhatsApp Microservice running on http://127.0.0.1:${PORT}`);
+    console.log(`[*] Baileys WhatsApp Microservice running on http://0.0.0.0:${PORT}`);
     console.log(`=============================================================`);
     startWhatsApp();
 });

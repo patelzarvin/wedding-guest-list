@@ -121,27 +121,37 @@ def get_base_url():
     return DEFAULT_LIVE_URL
 
 def call_baileys(endpoint, method="GET", data=None):
-    url = f"{BAILEYS_SERVICE_URL}{endpoint}"
-    req_data = json.dumps(data).encode("utf-8") if data is not None else None
-    headers = {"Content-Type": "application/json"} if req_data else {}
-    req = urllib.request.Request(url, data=req_data, headers=headers, method=method)
+    urls = [
+        f"{BAILEYS_SERVICE_URL}{endpoint}",
+        f"http://127.0.0.1:5001{endpoint}",
+        f"http://localhost:5001{endpoint}"
+    ]
+    seen = set()
+    unique_urls = [u for u in urls if not (u in seen or seen.add(u))]
+    
+    last_err = None
     for attempt in range(2):
-        try:
-            with urllib.request.urlopen(req, timeout=5) as response:
-                return json.loads(response.read().decode("utf-8")), response.status
-        except urllib.error.HTTPError as e:
+        for url in unique_urls:
+            req_data = json.dumps(data).encode("utf-8") if data is not None else None
+            headers = {"Content-Type": "application/json"} if req_data else {}
+            req = urllib.request.Request(url, data=req_data, headers=headers, method=method)
             try:
-                err_body = json.loads(e.read().decode("utf-8"))
-                return err_body, e.code
-            except Exception:
-                return {"error": str(e)}, e.code
-        except Exception as e:
-            if attempt == 0:
-                ensure_baileys_running()
-                import time
-                time.sleep(1)
-            else:
-                return {"status": "offline", "error": str(e)}, 503
+                with urllib.request.urlopen(req, timeout=3) as response:
+                    return json.loads(response.read().decode("utf-8")), response.status
+            except urllib.error.HTTPError as e:
+                try:
+                    err_body = json.loads(e.read().decode("utf-8"))
+                    return err_body, e.code
+                except Exception:
+                    return {"error": str(e)}, e.code
+            except Exception as e:
+                last_err = str(e)
+        if attempt == 0:
+            ensure_baileys_running()
+            import time
+            time.sleep(1)
+            
+    return {"status": "offline", "error": last_err}, 503
 
 @app.route("/api/system/health")
 def system_health():
@@ -158,13 +168,16 @@ def system_health():
         c.execute("SELECT token, name, phone FROM contacts LIMIT 10")
         c_tokens = [dict(r) for r in c.fetchall()]
         conn.close()
+        b_res, b_code = call_baileys("/status")
         return jsonify({
             "status": "healthy",
             "db_path": DB_PATH,
             "parent_count": p_count,
             "parents": p_tokens,
             "contact_count": c_count,
-            "contacts": c_tokens
+            "contacts": c_tokens,
+            "baileys": b_res,
+            "baileys_http_code": b_code
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
