@@ -48,7 +48,29 @@ def send_via_http_api(recipient_email, subject, html_content, plain_text):
     config = get_http_email_config()
     sender_email, _ = get_smtp_credentials()
 
-    # 1. Resend API
+    # 1. Brevo API (Universal delivery to ANY recipient worldwide without sandbox limits)
+    if config["brevo_key"]:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": config["brevo_key"],
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "WedVite Luxury Suite", "email": sender_email or "zarvin.114@gmail.com"},
+                "to": [{"email": recipient_email}],
+                "subject": subject,
+                "htmlContent": html_content,
+                "textContent": plain_text
+            }
+            resp = requests.post(url, json=payload, headers=headers, timeout=6)
+            if resp.status_code in (200, 201):
+                return True, "Email sent successfully via Brevo HTTPS API"
+            return False, f"Brevo API error ({resp.status_code}): {resp.text}"
+        except Exception as e:
+            return False, f"Brevo API exception: {str(e)}"
+
+    # 2. Resend API
     if config["resend_key"]:
         try:
             url = "https://api.resend.com/emails"
@@ -75,28 +97,6 @@ def send_via_http_api(recipient_email, subject, html_content, plain_text):
             return False, f"Resend API error ({resp.status_code}): {resp.text}"
         except Exception as e:
             return False, f"Resend API exception: {str(e)}"
-
-    # 2. Brevo API (formerly Sendinblue)
-    if config["brevo_key"]:
-        try:
-            url = "https://api.brevo.com/v3/smtp/email"
-            headers = {
-                "api-key": config["brevo_key"],
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "sender": {"name": "WedVite Luxury Suite", "email": sender_email or "zarvin.114@gmail.com"},
-                "to": [{"email": recipient_email}],
-                "subject": subject,
-                "htmlContent": html_content,
-                "textContent": plain_text
-            }
-            resp = requests.post(url, json=payload, headers=headers, timeout=6)
-            if resp.status_code in (200, 201):
-                return True, "Email sent successfully via Brevo HTTPS API"
-            return False, f"Brevo API error ({resp.status_code}): {resp.text}"
-        except Exception as e:
-            return False, f"Brevo API exception: {str(e)}"
 
     # 3. SendGrid API
     if config["sendgrid_key"]:
