@@ -156,32 +156,40 @@ def clean_phone_10(p):
     digits = "".join(filter(str.isdigit, str(p)))
     return digits[-10:] if len(digits) >= 10 else digits
 
+def normalize_target(identifier):
+    if not identifier:
+        return ""
+    s = str(identifier).strip()
+    if "@" in s:
+        return s.lower()
+    return clean_phone_10(s)
+
 # User Management Functions
-def generate_and_save_otp(phone, purpose='REGISTER'):
+def generate_and_save_otp(target, purpose='REGISTER'):
     import secrets
     from datetime import timedelta
-    clean_p = clean_phone_10(phone)
-    if len(clean_p) < 10:
-        return None, "માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો. (Please enter a valid 10-digit mobile number)."
+    norm = normalize_target(target)
+    if not norm:
+        return None, "કૃપા કરીને માન્ય ઇમેઇલ દાખલ કરો."
     
     otp_code = str(secrets.randbelow(900000) + 100000)
     expires_at = (datetime.now() + timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S")
     
     conn = get_db()
     c = conn.cursor()
-    # Invalidate previous unused OTPs for this phone and purpose
-    c.execute("UPDATE otps SET is_used = 1 WHERE phone = ? AND purpose = ? AND is_used = 0", (clean_p, purpose))
+    # Invalidate previous unused OTPs for this target and purpose
+    c.execute("UPDATE otps SET is_used = 1 WHERE phone = ? AND purpose = ? AND is_used = 0", (norm, purpose))
     c.execute("INSERT INTO otps (phone, otp_code, purpose, expires_at) VALUES (?, ?, ?, ?)",
-              (clean_p, otp_code, purpose, expires_at))
+              (norm, otp_code, purpose, expires_at))
     conn.commit()
     conn.close()
     return otp_code, None
 
-def verify_otp_db(phone, otp_code, purpose='REGISTER'):
-    clean_p = clean_phone_10(phone)
+def verify_otp_db(target, otp_code, purpose='REGISTER'):
+    norm = normalize_target(target)
     code = str(otp_code).strip()
-    if len(clean_p) < 10 or not code:
-        return False, "અમાન્ય ફોન અથવા OTP કોડ. (Invalid phone or OTP code)."
+    if not norm or not code:
+        return False, "અમાન્ય ઇમેઇલ અથવા OTP કોડ."
     
     conn = get_db()
     c = conn.cursor()
@@ -190,15 +198,15 @@ def verify_otp_db(phone, otp_code, purpose='REGISTER'):
         SELECT id, expires_at FROM otps 
         WHERE phone = ? AND otp_code = ? AND purpose = ? AND is_used = 0
         ORDER BY id DESC LIMIT 1
-    """, (clean_p, code, purpose))
+    """, (norm, code, purpose))
     row = c.fetchone()
     if not row:
         conn.close()
-        return False, "ખોટો OTP કોડ છે અથવા સમય વીતી ગયો છે. (Invalid or incorrect OTP code)."
+        return False, "ખોટો OTP કોડ છે અથવા સમય વીતી ગયો છે. કૃપા કરીને ચકાસો."
     
     if row["expires_at"] < now_str:
         conn.close()
-        return False, "આ OTP ની અવધિ સમાપ્ત થઈ ગઈ છે. ફરી નવો OTP મેળવો. (OTP has expired)."
+        return False, "આ OTP ની અવધિ સમાપ્ત થઈ ગઈ છે. ફરી નવો OTP મેળવો."
     
     c.execute("UPDATE otps SET is_used = 1 WHERE id = ?", (row["id"],))
     conn.commit()
@@ -210,16 +218,23 @@ def register_user(username, email, password, phone=None):
     c = conn.cursor()
     pwd_hash = generate_password_hash(password)
     clean_p = clean_phone_10(phone) if phone else None
+    clean_email = email.strip().lower() if email else None
     
     if clean_p:
         c.execute("SELECT id FROM users WHERE phone = ?", (clean_p,))
         if c.fetchone():
             conn.close()
-            return {"success": False, "error": "આ મોબાઇલ નંબર પહેલેથી રજીસ્ટર છે. કૃપા કરીને સાઇન-ઇન કરો. (Mobile number already registered)."}
+            return {"success": False, "error": "આ મોબાઇલ નંબર પહેલેથી રજીસ્ટર છે. કૃપા કરીને સાઇન-ઇન કરો."}
+
+    if clean_email:
+        c.execute("SELECT id FROM users WHERE email = ?", (clean_email,))
+        if c.fetchone():
+            conn.close()
+            return {"success": False, "error": "આ ઇમેઇલ પહેલેથી રજીસ્ટર થયેલો છે. કૃપા કરીને સાઇન-ઇન કરો."}
 
     try:
         c.execute("INSERT INTO users (username, email, password_hash, phone) VALUES (?, ?, ?, ?)",
-                  (username.strip(), email.strip().lower() if email else None, pwd_hash, clean_p))
+                  (username.strip(), clean_email, pwd_hash, clean_p))
         conn.commit()
         user_id = c.lastrowid
         conn.close()
@@ -228,10 +243,10 @@ def register_user(username, email, password, phone=None):
         conn.close()
         err = str(e).lower()
         if "email" in err:
-            return {"success": False, "error": "આ ઇમેઇલ પહેલેથી રજીસ્ટર છે. (Email already registered)."}
+            return {"success": False, "error": "આ ઇમેઇલ પહેલેથી રજીસ્ટર છે."}
         elif "phone" in err:
-            return {"success": False, "error": "આ મોબાઇલ નંબર પહેલેથી રજીસ્ટર છે. (Mobile number already registered)."}
-        return {"success": False, "error": "આ યુઝરનેમ પહેલેથી ઉપયોગમાં છે. કૃપા કરીને બીજું પસંદ કરો. (Username already taken)."}
+            return {"success": False, "error": "આ મોબાઇલ નંબર પહેલેથી રજીસ્ટર છે."}
+        return {"success": False, "error": "આ યુઝરનેમ પહેલેથી ઉપયોગમાં છે. કૃપા કરીને બીજું પસંદ કરો."}
 
 def authenticate_user(username, password):
     conn = get_db()
@@ -246,6 +261,16 @@ def authenticate_user(username, password):
         return dict(row)
     return None
 
+def get_user_by_email(email):
+    if not email:
+        return None
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE email = ?", (email.strip().lower(),))
+    row = c.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
 def get_user_by_phone(phone):
     clean_p = clean_phone_10(phone)
     if len(clean_p) < 10:
@@ -257,20 +282,23 @@ def get_user_by_phone(phone):
     conn.close()
     return dict(row) if row else None
 
-def reset_user_password(phone, new_password):
-    clean_p = clean_phone_10(phone)
-    if len(clean_p) < 10:
-        return False, "અમાન્ય 10-અંકનો મોબાઇલ નંબર. (Invalid mobile number)."
+def reset_user_password(identifier, new_password):
+    norm = normalize_target(identifier)
+    if not norm:
+        return False, "અમાન્ય ઇમેઇલ અથવા મોબાઇલ નંબર."
     pwd_hash = generate_password_hash(new_password)
     conn = get_db()
     c = conn.cursor()
-    c.execute("UPDATE users SET password_hash = ? WHERE phone = ?", (pwd_hash, clean_p))
+    if "@" in norm:
+        c.execute("UPDATE users SET password_hash = ? WHERE email = ?", (pwd_hash, norm))
+    else:
+        c.execute("UPDATE users SET password_hash = ? WHERE phone = ?", (pwd_hash, norm))
     conn.commit()
     rows = c.rowcount
     conn.close()
     if rows > 0:
         return True, None
-    return False, "આ મોબાઈલ નંબર સાથે કોઈ એકાઉન્ટ મળ્યું નથી. (No account registered with this phone number)."
+    return False, "આ ઇમેઇલ સાથે કોઈ એકાઉન્ટ રજીસ્ટર નથી."
 
 def get_wedding_by_user(user_id):
     conn = get_db()

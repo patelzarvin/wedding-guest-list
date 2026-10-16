@@ -431,11 +431,11 @@
             </form>
         </div>
 
-        <!-- Create Account Form (With Mobile OTP Verification) -->
+        <!-- Create Account Form (With Email OTP Verification) -->
         <div id="register-section" class="form-section {% if active_tab == 'register' %}active{% endif %}">
             <form action="/register" method="POST" id="registerForm" onsubmit="return validateRegisterForm(event)">
                 <input type="hidden" name="action" value="register">
-                <input type="hidden" name="phone" id="hidden_reg_phone">
+                <input type="hidden" name="email" id="hidden_reg_email">
                 <input type="hidden" name="otp_code" id="hidden_reg_otp">
 
                 <div class="form-group">
@@ -443,34 +443,27 @@
                     <input type="text" name="username" id="reg_username" class="input-box" placeholder="e.g. bhavya_host" required minlength="3">
                 </div>
 
-                <!-- Mobile Phone + OTP Section -->
+                <!-- Email Address + Verification Section -->
                 <div class="form-group">
-                    <label>WhatsApp Mobile Number (મોબાઇલ નંબર - OTP વેરિફિકેશન)</label>
+                    <label>Email Address (ઇમેઇલ એડ્રેસ - વેરિફિકેશન કોડ માટે)</label>
                     <div class="phone-input-wrap">
-                        <span class="phone-prefix">+91</span>
-                        <input type="tel" id="reg_phone" class="input-box" placeholder="10-digit Mobile Number" maxlength="10" pattern="[0-9]{10}">
-                        <button type="button" class="btn-otp-action" id="btnRegSendOtp" onclick="sendRegisterOTP()">Get OTP</button>
+                        <input type="email" id="reg_email" class="input-box" placeholder="e.g. zarvin.114@gmail.com" required>
+                        <button type="button" class="btn-otp-action" id="btnRegSendEmailOtp" onclick="sendRegisterEmailOTP()">Send Code</button>
                     </div>
-                    <span class="otp-status-text" id="regOtpStatusText">નંબર પર 6-અંકનો સુરક્ષા કોડ મોકલવામાં આવશે.</span>
-                    <div class="otp-demo-alert" id="regDemoAlert"></div>
+                    <span class="otp-status-text" id="regEmailStatusText">૬-અંકનો સુરક્ષા કોડ સીધો તમારા ઇમેઇલ ઇનબોક્સમાં મોકલવામાં આવશે.</span>
                 </div>
 
                 <!-- OTP Input Field -->
-                <div class="form-group" id="regOtpBox" style="display: none;">
-                    <label>Enter 6-Digit WhatsApp OTP (સુરક્ષા કોડ)</label>
+                <div class="form-group" id="regEmailOtpBox" style="display: none;">
+                    <label>Enter 6-Digit Email Verification Code (ઇમેઇલ પર આવેલ કોડ)</label>
                     <div class="phone-input-wrap">
-                        <input type="text" id="reg_otp" class="input-box" placeholder="6-digit code (e.g. 123456)" maxlength="6" pattern="[0-9]{6}">
-                        <button type="button" class="btn-otp-action" id="btnRegVerifyOtp" onclick="verifyRegisterOTP()">Verify Code</button>
+                        <input type="text" id="reg_otp" class="input-box" placeholder="Enter 6-digit code from email" maxlength="6" pattern="[0-9]{6}">
+                        <button type="button" class="btn-otp-action" id="btnRegVerifyEmailOtp" onclick="verifyRegisterEmailOTP()">Verify Code</button>
                     </div>
-                    <div class="otp-verified-badge" id="regVerifiedBadge">
+                    <div class="otp-verified-badge" id="regEmailVerifiedBadge">
                         <span>✓</span>
-                        <span id="regVerifiedText">મોબાઇલ નંબર સફળતાપૂર્વક વેરિફાય થયો!</span>
+                        <span id="regEmailVerifiedText">ઇમેઇલ સફળતાપૂર્વક વેરિફાય થયો!</span>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Email Address (ઇમેઇલ એડ્રેસ - Optional)</label>
-                    <input type="email" name="email" id="reg_email" class="input-box" placeholder="e.g. host@wedding.com">
                 </div>
 
                 <div class="form-group">
@@ -504,29 +497,27 @@
             </form>
         </div>
 
-        <!-- Reset Password Form (Secure via Mobile OTP) -->
+        <!-- Reset Password Form (Secure via Email OTP) -->
         <div id="reset-section" class="form-section {% if active_tab == 'reset' %}active{% endif %}">
             <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 16px; color: var(--gold-champagne); margin-bottom: 6px;">Reset Password via WhatsApp OTP</h3>
+                <h3 style="font-size: 16px; color: var(--gold-champagne); margin-bottom: 6px;">Reset Password via Email Verification</h3>
                 <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-                    તમારા રજીસ્ટર મોબાઈલ નંબર પર 6-અંકનો સુરક્ષા કોડ મેળવી નવો પાસવર્ડ સેટ કરો.
+                    તમારા રજીસ્ટર ઇમેઇલ પર સુરક્ષા કોડ મેળવી નવો પાસવર્ડ સેટ કરો.
                 </p>
             </div>
 
             <div class="form-group">
-                <label>Registered Mobile Number (રજીસ્ટર મોબાઇલ નંબર)</label>
+                <label>Registered Email Address (રજીસ્ટર ઇમેઇલ એડ્રેસ)</label>
                 <div class="phone-input-wrap">
-                    <span class="phone-prefix">+91</span>
-                    <input type="tel" id="reset_phone" class="input-box" placeholder="10-digit Mobile Number" maxlength="10">
-                    <button type="button" class="btn-otp-action" id="btnResetSendOtp" onclick="sendResetOTP()">Send OTP</button>
+                    <input type="email" id="reset_email" class="input-box" placeholder="e.g. zarvin.114@gmail.com" required>
+                    <button type="button" class="btn-otp-action" id="btnResetSendEmailOtp" onclick="sendResetEmailOTP()">Send Code</button>
                 </div>
-                <span class="otp-status-text" id="resetOtpStatusText">OTP કોડ તમારા WhatsApp નંબર પર આવશે.</span>
-                <div class="otp-demo-alert" id="resetDemoAlert"></div>
+                <span class="otp-status-text" id="resetEmailStatusText">૬-અંકનો પાસવર્ડ રીસેટ કોડ તમારા Gmail પર આવશે.</span>
             </div>
 
             <div class="form-group" id="resetOtpBox" style="display: none;">
-                <label>Enter 6-Digit WhatsApp OTP (સુરક્ષા કોડ)</label>
-                <input type="text" id="reset_otp" class="input-box" placeholder="6-digit code (e.g. 123456)" maxlength="6">
+                <label>Enter 6-Digit Email Code (ઇમેઇલ પર આવેલ કોડ)</label>
+                <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6">
             </div>
 
             <div class="form-group" id="resetNewPwdBox" style="display: none;">
@@ -557,15 +548,15 @@
         <div class="auth-footer">
             <span class="secure-badge">&#128274; 256-Bit SSL Encrypted</span>
             <span>&bull;</span>
-            <span>OTP Verified Security</span>
+            <span>Email Verified Security</span>
             <span>&bull;</span>
             <span>Isolated Host Suite</span>
         </div>
     </div>
 
     <script>
-        let isPhoneVerified = false;
-        let verifiedPhoneNumber = "";
+        let isEmailVerified = false;
+        let verifiedEmailAddress = "";
         let verifiedOtpCode = "";
         let regTimerInterval = null;
         let resetTimerInterval = null;
@@ -685,53 +676,43 @@
         }
 
         // ==========================================
-        // REGISTER: MOBILE OTP SEND & VERIFY
+        // REGISTER: EMAIL OTP SEND & VERIFY
         // ==========================================
-        async function sendRegisterOTP() {
+        async function sendRegisterEmailOTP() {
             clearClientError();
-            const phoneInput = document.getElementById('reg_phone');
-            const phone = phoneInput.value.replace(/[^0-9]/g, '');
-            const btn = document.getElementById('btnRegSendOtp');
-            const statusText = document.getElementById('regOtpStatusText');
-            const demoAlert = document.getElementById('regDemoAlert');
+            const emailInput = document.getElementById('reg_email');
+            const email = emailInput.value.trim().toLowerCase();
+            const btn = document.getElementById('btnRegSendEmailOtp');
+            const statusText = document.getElementById('regEmailStatusText');
 
-            if (phone.length !== 10) {
-                showClientError('⚠️ કૃપા કરીને માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો.', phoneInput);
+            if (!email || !email.includes('@')) {
+                showClientError('⚠️ કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.', emailInput);
                 return;
             }
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
-            statusText.textContent = '⏳ WhatsApp OTP મોકલાઈ રહ્યો છે...';
+            statusText.textContent = '⏳ ઇમેઇલ પર સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
 
             try {
                 const res = await fetch('/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone, purpose: 'REGISTER' })
+                    body: JSON.stringify({ email: email, purpose: 'REGISTER' })
                 });
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError(data.error || 'OTP મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.');
+                    showClientError(data.error || 'ઇમેઇલ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.');
                     btn.disabled = false;
-                    btn.textContent = 'Get OTP';
-                    statusText.textContent = 'કૃપા કરીને નંબર ચકાસો.';
+                    btn.textContent = 'Send Code';
+                    statusText.textContent = 'કૃપા કરીને ઇમેઇલ ચકાસો.';
                     return;
                 }
 
                 // Show OTP Box
-                document.getElementById('regOtpBox').style.display = 'block';
-                statusText.textContent = '✓ ' + (data.message || 'OTP મોકલી દેવાયો છે.');
-                
-                // If demo fallback OTP is provided
-                if (data.demo_otp) {
-                    demoAlert.style.display = 'block';
-                    demoAlert.innerHTML = `<strong>🔐 સુરક્ષા કોડ (Demo OTP):</strong> <span style="font-size:15px; color:#F3E5AB; font-weight:700;">${data.demo_otp}</span><br><small style="color:var(--text-muted);">WhatsApp હાલ ઑફલાઇન હોવાથી આ કોડ ઓટો-ભરી શકાય છે.</small>`;
-                    document.getElementById('reg_otp').value = data.demo_otp;
-                } else {
-                    demoAlert.style.display = 'none';
-                }
+                document.getElementById('regEmailOtpBox').style.display = 'block';
+                statusText.textContent = '✓ ' + (data.message || 'કોડ મોકલી દેવાયો છે.');
 
                 // Start 60s cooldown timer
                 let countdown = 60;
@@ -741,7 +722,7 @@
                     if (countdown <= 0) {
                         clearInterval(regTimerInterval);
                         btn.disabled = false;
-                        btn.textContent = 'Resend OTP';
+                        btn.textContent = 'Resend Code';
                     } else {
                         btn.textContent = `${countdown}s`;
                     }
@@ -750,20 +731,20 @@
             } catch (err) {
                 showClientError('સર્વર સાથે સંપર્ક કરવામાં ભૂલ થઈ: ' + err.message);
                 btn.disabled = false;
-                btn.textContent = 'Get OTP';
+                btn.textContent = 'Send Code';
             }
         }
 
-        async function verifyRegisterOTP() {
+        async function verifyRegisterEmailOTP() {
             clearClientError();
-            const phone = document.getElementById('reg_phone').value.replace(/[^0-9]/g, '');
+            const email = document.getElementById('reg_email').value.trim().toLowerCase();
             const otp = document.getElementById('reg_otp').value.trim();
-            const btn = document.getElementById('btnRegVerifyOtp');
-            const badge = document.getElementById('regVerifiedBadge');
-            const badgeText = document.getElementById('regVerifiedText');
+            const btn = document.getElementById('btnRegVerifyEmailOtp');
+            const badge = document.getElementById('regEmailVerifiedBadge');
+            const badgeText = document.getElementById('regEmailVerifiedText');
 
             if (otp.length !== 6) {
-                showClientError('⚠️ કૃપા કરીને 6-અંકનો OTP કોડ દાખલ કરો.', document.getElementById('reg_otp'));
+                showClientError('⚠️ કૃપા કરીને 6-અંકનો વેરિફિકેશન કોડ દાખલ કરો.', document.getElementById('reg_otp'));
                 return;
             }
 
@@ -774,33 +755,33 @@
                 const res = await fetch('/api/auth/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone, otp_code: otp, purpose: 'REGISTER' })
+                    body: JSON.stringify({ email: email, otp_code: otp, purpose: 'REGISTER' })
                 });
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError('⚠️ ' + (data.error || 'ખોટો OTP કોડ છે.'), document.getElementById('reg_otp'));
+                    showClientError('⚠️ ' + (data.error || 'ખોટો વેરિફિકેશન કોડ છે.'), document.getElementById('reg_otp'));
                     btn.disabled = false;
                     btn.textContent = 'Verify Code';
                     return;
                 }
 
                 // Marked as verified!
-                isPhoneVerified = true;
-                verifiedPhoneNumber = phone;
+                isEmailVerified = true;
+                verifiedEmailAddress = email;
                 verifiedOtpCode = otp;
 
-                document.getElementById('hidden_reg_phone').value = phone;
+                document.getElementById('hidden_reg_email').value = email;
                 document.getElementById('hidden_reg_otp').value = otp;
 
-                // Lock phone input
-                document.getElementById('reg_phone').readOnly = true;
+                // Lock email input
+                document.getElementById('reg_email').readOnly = true;
                 document.getElementById('reg_otp').readOnly = true;
-                document.getElementById('btnRegSendOtp').style.display = 'none';
+                document.getElementById('btnRegSendEmailOtp').style.display = 'none';
                 btn.style.display = 'none';
 
                 badge.style.display = 'flex';
-                badgeText.textContent = `✓ મોબાઇલ નંબર +91 ${phone} સફળતાપૂર્વક વેરિફાય થયો!`;
+                badgeText.textContent = `✓ ઇમેઇલ (${email}) સફળતાપૂર્વક વેરિફાય થયો!`;
 
             } catch (err) {
                 showClientError('વેરિફિકેશનમાં ભૂલ: ' + err.message);
@@ -823,9 +804,9 @@
                 return false;
             }
 
-            if (!isPhoneVerified) {
+            if (!isEmailVerified) {
                 e.preventDefault();
-                showClientError('⚠️ કૃપા કરીને તમારા મોબાઇલ નંબર પર OTP મોકલી વેરિફાય કરો! કોઈ પણ તમારા નંબર વગર એકાઉન્ટ બનાવી શકશે નહીં.', document.getElementById('reg_phone'));
+                showClientError('⚠️ કૃપા કરીને પહેલા તમારા ઇમેઇલ પર કોડ મોકલી વેરિફાય કરો! તમારા ઇમેઇલ વગર કોઈ પણ એકાઉન્ટ બનાવી શકશે નહીં.', document.getElementById('reg_email'));
                 return false;
             }
 
@@ -848,38 +829,37 @@
         }
 
         // ==========================================
-        // RESET PASSWORD: SEND OTP & SUBMIT
+        // RESET PASSWORD: SEND EMAIL CODE & SUBMIT
         // ==========================================
-        async function sendResetOTP() {
+        async function sendResetEmailOTP() {
             clearClientError();
-            const phoneInput = document.getElementById('reset_phone');
-            const phone = phoneInput.value.replace(/[^0-9]/g, '');
-            const btn = document.getElementById('btnResetSendOtp');
-            const statusText = document.getElementById('resetOtpStatusText');
-            const demoAlert = document.getElementById('resetDemoAlert');
+            const emailInput = document.getElementById('reset_email');
+            const email = emailInput.value.trim().toLowerCase();
+            const btn = document.getElementById('btnResetSendEmailOtp');
+            const statusText = document.getElementById('resetEmailStatusText');
 
-            if (phone.length !== 10) {
-                showClientError('⚠️ કૃપા કરીને માન્ય 10-અંકનો રજીસ્ટર્ડ મોબાઇલ નંબર દાખલ કરો.', phoneInput);
+            if (!email || !email.includes('@')) {
+                showClientError('⚠️ કૃપા કરીને માન્ય રજીસ્ટર્ડ ઇમેઇલ દાખલ કરો.', emailInput);
                 return;
             }
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
-            statusText.textContent = '⏳ WhatsApp OTP મોકલાઈ રહ્યો છે...';
+            statusText.textContent = '⏳ ઇમેઇલ પર સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
 
             try {
                 const res = await fetch('/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone, purpose: 'RESET' })
+                    body: JSON.stringify({ email: email, purpose: 'RESET' })
                 });
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError(data.error || 'OTP મોકલવામાં ભૂલ થઈ.');
+                    showClientError(data.error || 'કોડ મોકલવામાં ભૂલ થઈ.');
                     btn.disabled = false;
-                    btn.textContent = 'Send OTP';
-                    statusText.textContent = 'કૃપા કરીને રજીસ્ટર્ડ નંબર દાખલ કરો.';
+                    btn.textContent = 'Send Code';
+                    statusText.textContent = 'કૃપા કરીને રજીસ્ટર્ડ ઇમેઇલ દાખલ કરો.';
                     return;
                 }
 
@@ -889,15 +869,7 @@
                 document.getElementById('resetConfPwdBox').style.display = 'block';
                 document.getElementById('btnResetSubmit').style.display = 'block';
 
-                statusText.textContent = '✓ ' + (data.message || 'OTP મોકલી દેવાયો છે.');
-
-                if (data.demo_otp) {
-                    demoAlert.style.display = 'block';
-                    demoAlert.innerHTML = `<strong>🔐 સુરક્ષા કોડ (Demo OTP):</strong> <span style="font-size:15px; color:#F3E5AB; font-weight:700;">${data.demo_otp}</span><br><small style="color:var(--text-muted);">WhatsApp હાલ ઑફલાઇન હોવાથી આ કોડ ઓટો-ભરી શકાય છે.</small>`;
-                    document.getElementById('reset_otp').value = data.demo_otp;
-                } else {
-                    demoAlert.style.display = 'none';
-                }
+                statusText.textContent = '✓ ' + (data.message || 'કોડ ઇમેઇલ પર મોકલી દેવાયો છે.');
 
                 let countdown = 60;
                 clearInterval(resetTimerInterval);
@@ -906,7 +878,7 @@
                     if (countdown <= 0) {
                         clearInterval(resetTimerInterval);
                         btn.disabled = false;
-                        btn.textContent = 'Resend OTP';
+                        btn.textContent = 'Resend Code';
                     } else {
                         btn.textContent = `${countdown}s`;
                     }
@@ -915,20 +887,20 @@
             } catch (err) {
                 showClientError('સર્વર ભૂલ: ' + err.message);
                 btn.disabled = false;
-                btn.textContent = 'Send OTP';
+                btn.textContent = 'Send Code';
             }
         }
 
         async function submitResetPassword() {
             clearClientError();
-            const phone = document.getElementById('reset_phone').value.replace(/[^0-9]/g, '');
+            const email = document.getElementById('reset_email').value.trim().toLowerCase();
             const otp = document.getElementById('reset_otp').value.trim();
             const newPwd = document.getElementById('reset_new_password').value;
             const confPwd = document.getElementById('reset_conf_password').value;
             const btn = document.getElementById('btnResetSubmit');
 
             if (otp.length !== 6) {
-                showClientError('⚠️ કૃપા કરીને 6-અંકનો OTP કોડ દાખલ કરો.', document.getElementById('reset_otp'));
+                showClientError('⚠️ કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો કોડ દાખલ કરો.', document.getElementById('reset_otp'));
                 return;
             }
             if (newPwd.length < 6) {
@@ -948,7 +920,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: phone,
+                        email: email,
                         otp_code: otp,
                         new_password: newPwd
                     })
@@ -964,7 +936,7 @@
 
                 alert(data.message || 'પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે સાઇન-ઇન કરી શકો છો.');
                 switchTab('signin');
-                document.getElementById('signin_username').value = phone;
+                document.getElementById('signin_username').value = email;
                 document.getElementById('signin_password').focus();
 
             } catch (err) {
@@ -981,7 +953,7 @@
 
             if (!user) {
                 e.preventDefault();
-                showClientError('⚠️ કૃપા કરીને યુઝરનેમ, ઇમેઇલ અથવા મોબાઇલ નંબર દાખલ કરો.', document.getElementById('signin_username'));
+                showClientError('⚠️ કૃપા કરીને યુઝરનેમ અથવા ઇમેઇલ દાખલ કરો.', document.getElementById('signin_username'));
                 return false;
             }
             if (!pass) {
