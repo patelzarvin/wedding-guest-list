@@ -948,9 +948,18 @@ def fallback_parent_collector_parser(parent_info, user_text):
         if not chunk or len(chunk) < 2:
             continue
             
-        phone_match = re.search(r'\b[6-9]\d{9}\b', chunk)
-        phone = phone_match.group(0) if phone_match else ""
-        cleaned = re.sub(r'\b[6-9]\d{9}\b', '', chunk).strip()
+        # Robust phone extraction supporting +91, 0, spaces, dashes
+        phone_match = re.search(r'(?:(?:\+|0{0,2})91[\s-]?)?([6-9]\d{4}[\s-]?\d{5})\b', chunk)
+        if phone_match:
+            raw_p = phone_match.group(1)
+            phone = re.sub(r'\D', '', raw_p)
+            cleaned = chunk[:phone_match.start()] + ' ' + chunk[phone_match.end():]
+        else:
+            phone_match2 = re.search(r'\b[6-9]\d{9}\b', chunk)
+            phone = phone_match2.group(0) if phone_match2 else ""
+            cleaned = re.sub(r'\b[6-9]\d{9}\b', '', chunk) if phone_match2 else chunk
+
+        cleaned = cleaned.strip()
         low = cleaned.lower()
         
         if is_completion_phrase(low):
@@ -989,6 +998,24 @@ def fallback_parent_collector_parser(parent_info, user_text):
         name = re.sub(r'\b(mara|mari|maro|chokro|dikro|dikri|chokri|son|daughter|wife|patni|kaka|fai|foi|mama|masi|bhai|ben|mitra|friend|no|nu|na|naam|name|che|chhe|eno|emno|number|mobile|phone)\b', '', cleaned, flags=re.IGNORECASE).strip()
         name = re.sub(r'[^a-zA-Z\u0A80-\u0AFF\s]', '', name).strip()
         
+        # Follow-up message handling: user sent just a phone number or "no number XXXXX"
+        if (not name or len(name) < 2) and phone:
+            wid = parent_info.get("wedding_id", 1)
+            role = parent_info.get("role", "FATHER")
+            conn_t = get_db()
+            c_t = conn_t.cursor()
+            c_t.execute("""
+                SELECT * FROM contacts 
+                WHERE wedding_id = ? AND added_by = ? AND (phone IS NULL OR phone = '')
+                ORDER BY id DESC LIMIT 1
+            """, (wid, role))
+            last_no_phone = c_t.fetchone()
+            conn_t.close()
+            if last_no_phone:
+                name = last_no_phone["name"]
+                category = last_no_phone["category"]
+                notes = last_no_phone["notes"] or "સંબંધી"
+
         # Valid if has a name and either a phone or a recognized relation keyword
         if len(name) >= 2 and (phone or has_relation_keyword):
             from guest_manager import BLOCKED_CONTACT_NAMES
@@ -1001,12 +1028,12 @@ def fallback_parent_collector_parser(parent_info, user_text):
                 })
 
     if relatives:
-        names_str = ", ".join([f"{r['name']} ({r['notes']}{(' - ' + r['phone']) if r['phone'] else ''})" for r in relatives])
+        names_str = ", ".join([f"{r['name']}{(' (' + r['phone'] + ')') if r['phone'] else ''}" for r in relatives])
         reply = (
-            f"✅ ખૂબ સરસ પૂજ્ય {parent_name}! 🙏\n"
-            f"{names_str} ને યાદીમાં ઉમેરી દીધા છે. 😊\n\n"
+            f"ખૂબ સરસ પૂજ્ય {parent_name}!\n"
+            f"{names_str} ની વિગત યાદીમાં નોંધી લીધી છે.\n\n"
             f"હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય?\n\n"
-            f"(જ્યારે બધા સંબંધીઓના નામ લખાઈ જાય ત્યારે ફક્ત 'DONE' અથવા 'બધા આવી ગયા' લખીને મોકલશો.)"
+            f"(જ્યારે બધા સંબંધીઓના નામ લખાઈ જાય ત્યારે ફક્ત 'બધા આવી ગયા' બટન દબાવશો.)"
         )
     else:
         # Check if user selected one of the category options

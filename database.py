@@ -445,11 +445,20 @@ def add_contact_db(wedding_id, side, added_by, category, name, phone, notes=""):
             conn.close()
             return dict(existing)
             
-    # Check duplicate by exact name & category on same wedding
-    c.execute("SELECT * FROM contacts WHERE wedding_id = ? AND category = ? AND LOWER(name) = ?",
-              (wedding_id, category.lower(), clean_name.lower()))
+    # Check duplicate by exact name on same wedding
+    c.execute("SELECT * FROM contacts WHERE wedding_id = ? AND LOWER(name) = ?",
+              (wedding_id, clean_name.lower()))
     existing = c.fetchone()
     if existing:
+        # If new phone number is provided, update existing record!
+        if len(clean_phone) >= 10:
+            c.execute("UPDATE contacts SET phone = ?, notes = CASE WHEN notes = '' OR notes IS NULL THEN ? ELSE notes END WHERE id = ?",
+                      (clean_phone[-10:], notes.strip(), existing["id"]))
+            conn.commit()
+            c.execute("SELECT * FROM contacts WHERE id = ?", (existing["id"],))
+            updated_record = dict(c.fetchone())
+            conn.close()
+            return updated_record
         conn.close()
         return dict(existing)
         
