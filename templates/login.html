@@ -458,14 +458,15 @@
                     <span class="otp-status-text" id="regEmailStatusText">૬-અંકનો સુરક્ષા કોડ સીધો તમારા ઇમેઇલ ઇનબોક્સમાં મોકલવામાં આવશે.</span>
                 </div>
 
-                <!-- OTP Input Field -->
-                <div class="form-group" id="regEmailOtpBox" style="display: none;">
-                    <label>Enter 6-Digit Email Verification Code (ઇમેઇલ પર આવેલ કોડ)</label>
+                <!-- OTP Input Field (Permanently Visible & Mandatory) -->
+                <div class="form-group" id="regEmailOtpBox">
+                    <label>Email Verification Code (ઇમેઇલ પર આવેલ ૬-અંકનો સુરક્ષા કોડ) <span style="color: var(--gold-champagne); font-size: 11px; font-weight: 700;">*ફરજિયાત (Mandatory)</span></label>
                     <div class="phone-input-wrap">
-                        <input type="text" id="reg_otp" class="input-box" placeholder="Enter 6-digit code from email" maxlength="6" pattern="[0-9]{6}" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyRegisterEmailOTP();}">
+                        <input type="text" id="reg_otp" class="input-box" placeholder="Enter 6-digit code from email" maxlength="6" pattern="[0-9]{6}" required onkeydown="if(event.key==='Enter'){event.preventDefault();verifyRegisterEmailOTP();}">
                         <button type="button" class="btn-otp-action" id="btnRegVerifyEmailOtp" onclick="verifyRegisterEmailOTP()">Verify Code</button>
                     </div>
-                    <div class="otp-verified-badge" id="regEmailVerifiedBadge">
+                    <span class="otp-status-text" id="regOtpStatusText">Send Code ક્લિક કર્યા પછી તમારા ઇમેઇલ પર આવેલો ૬-અંકનો કોડ અહીં લખી Verify Code દબાવો.</span>
+                    <div class="otp-verified-badge" id="regEmailVerifiedBadge" style="display: none; margin-top: 8px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         <span id="regEmailVerifiedText">ઇમેઇલ સફળતાપૂર્વક વેરિફાય થયો!</span>
                     </div>
@@ -534,14 +535,15 @@
                 <span class="otp-status-text" id="resetEmailStatusText">૬-અંકનો સુરક્ષા કોડ એકાઉન્ટ સાથે જોડાયેલ રજીસ્ટર્ડ ઇમેઇલ પર મોકલવામાં આવશે.</span>
             </div>
 
-            <!-- OTP Input Field with Verify Code button -->
-            <div class="form-group" id="resetOtpBox" style="display: none;">
-                <label>Enter 6-Digit Verification Code (ઇમેઇલ પર આવેલ કોડ)</label>
+            <!-- OTP Input Field with Verify Code button (Visible by Default & Mandatory) -->
+            <div class="form-group" id="resetOtpBox">
+                <label>Enter 6-Digit Verification Code (ઇમેઇલ પર આવેલ કોડ) <span style="color: var(--gold-champagne); font-size: 11px; font-weight: 700;">*ફરજિયાત (Mandatory)</span></label>
                 <div class="phone-input-wrap">
-                    <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyResetEmailOTP();}">
+                    <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" required onkeydown="if(event.key==='Enter'){event.preventDefault();verifyResetEmailOTP();}">
                     <button type="button" class="btn-otp-action" id="btnResetVerifyOtp" onclick="verifyResetEmailOTP()">Verify Code</button>
                 </div>
-                <div class="otp-verified-badge" id="resetVerifiedBadge" style="display: none;">
+                <span class="otp-status-text" id="resetOtpStatusText">Send Code ક્લિક કર્યા પછી ઇમેઇલમાં આવેલ ૬-અંકનો કોડ અહીં લખી Verify Code દબાવો.</span>
+                <div class="otp-verified-badge" id="resetVerifiedBadge" style="display: none; margin-top: 8px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     <span id="resetVerifiedText">કોડ વેરિફાય થયો! હવે નવો પાસવર્ડ સેટ કરો.</span>
                 </div>
@@ -836,6 +838,9 @@
 
                 badge.style.display = 'flex';
                 badgeText.textContent = `ઇમેઇલ (${email}) સફળતાપૂર્વક વેરિફાય થયો!`;
+                const otpStatus = document.getElementById('regOtpStatusText');
+                if (otpStatus) otpStatus.style.display = 'none';
+                document.getElementById('reg_phone').focus();
 
             } catch (err) {
                 showClientError('વેરિફિકેશનમાં ભૂલ: ' + err.message);
@@ -864,14 +869,19 @@
                 e.preventDefault();
                 const emailInput = document.getElementById('reg_email');
                 const emailVal = emailInput ? emailInput.value.trim() : '';
+                const otpInput = document.getElementById('reg_otp');
+                const otpVal = otpInput ? otpInput.value.trim() : '';
+
                 if (!emailVal || !emailVal.includes('@')) {
                     showClientError('કૃપા કરીને પહેલા તમારું ઇમેઇલ એડ્રેસ દાખલ કરો અને Send Code પર ક્લિક કરો.', emailInput);
-                } else {
-                    showClientError('સુરક્ષા માટે ઇમેઇલ વેરિફિકેશન જરૂરી છે. તમારા ઇમેઇલ પર આવેલ કોડ દાખલ કરો.', emailInput);
-                    if (document.getElementById('regEmailOtpBox').style.display === 'none') {
-                        sendRegisterEmailOTP();
-                    }
+                    return false;
                 }
+                if (!otpVal) {
+                    showClientError('કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો સુરક્ષા કોડ દાખલ કરો અને Verify Code દબાવો.', otpInput);
+                    return false;
+                }
+                showClientError('સુરક્ષા માટે પહેલા Verify Code બટન દબાવીને કોડ વેરિફાય કરો.', document.getElementById('btnRegVerifyEmailOtp'));
+                verifyRegisterEmailOTP();
                 return false;
             }
 
