@@ -93,5 +93,23 @@ class TestAuthApiEndpoints(unittest.TestCase):
             self.assertFalse(data["success"])
             self.assertIn("Unauthorized", data["error"])
 
+    def test_whatsapp_status_and_refresh_endpoints(self):
+        """Verify /api/whatsapp-status and /api/whatsapp-refresh-qr contracts."""
+        u = database.register_user("host_wa", "wa@example.com", "Password#123", phone="9825333333")
+        with self.client:
+            self.client.post("/login", data={"username": "host_wa", "password": "Password#123"})
+            
+            # Check status endpoint
+            res = self.client.get("/api/whatsapp-status")
+            self.assertEqual(res.status_code, 200)
+            data = res.get_json()
+            self.assertIn("status", data)
+            self.assertIn("connected", data)
+            self.assertIn("qr", data)
+
+            # Check refresh qr endpoint
+            res_refresh = self.client.post("/api/whatsapp-refresh-qr")
+            self.assertIn(res_refresh.status_code, [200, 500, 503])
+
 if __name__ == "__main__":
     unittest.main()

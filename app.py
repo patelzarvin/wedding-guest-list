@@ -54,7 +54,7 @@ BAILEYS_SERVICE_URL = os.environ.get("BAILEYS_SERVICE_URL", "http://127.0.0.1:50
 def ensure_baileys_running():
     try:
         req = urllib.request.Request(f"{BAILEYS_SERVICE_URL}/status")
-        with urllib.request.urlopen(req, timeout=1):
+        with urllib.request.urlopen(req, timeout=1.5):
             return True
     except Exception:
         server_js = os.path.join(os.path.dirname(__file__), "whatsapp_service", "server.js")
@@ -62,7 +62,8 @@ def ensure_baileys_running():
         if os.path.exists(server_js):
             try:
                 import subprocess
-                subprocess.Popen(["node", "server.js"], cwd=service_dir, shell=True)
+                # Use platform-safe execution without shell=True on POSIX
+                subprocess.Popen(["node", "server.js"], cwd=service_dir)
             except Exception as e:
                 print("Notice: could not auto-spawn Baileys service:", e)
         return False
@@ -124,18 +125,23 @@ def call_baileys(endpoint, method="GET", data=None):
     req_data = json.dumps(data).encode("utf-8") if data is not None else None
     headers = {"Content-Type": "application/json"} if req_data else {}
     req = urllib.request.Request(url, data=req_data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=5) as response:
-            return json.loads(response.read().decode("utf-8")), response.status
-    except urllib.error.HTTPError as e:
+    for attempt in range(2):
         try:
-            err_body = json.loads(e.read().decode("utf-8"))
-            return err_body, e.code
-        except Exception:
-            return {"error": str(e)}, e.code
-    except Exception as e:
-        ensure_baileys_running()
-        return {"status": "offline", "error": str(e)}, 503
+            with urllib.request.urlopen(req, timeout=5) as response:
+                return json.loads(response.read().decode("utf-8")), response.status
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = json.loads(e.read().decode("utf-8"))
+                return err_body, e.code
+            except Exception:
+                return {"error": str(e)}, e.code
+        except Exception as e:
+            if attempt == 0:
+                ensure_baileys_running()
+                import time
+                time.sleep(1)
+            else:
+                return {"status": "offline", "error": str(e)}, 503
 
 @app.route("/api/system/health")
 def system_health():
@@ -874,6 +880,13 @@ def api_whatsapp_status():
 @login_required
 def api_whatsapp_disconnect():
     b_res, code = call_baileys("/disconnect", method="POST")
+    return jsonify(b_res), code
+
+@app.route("/api/whatsapp-refresh-qr", methods=["POST"])
+@login_required
+def api_whatsapp_refresh_qr():
+    ensure_baileys_running()
+    b_res, code = call_baileys("/refresh-qr", method="POST")
     return jsonify(b_res), code
 
 @app.route("/api/ai-status")

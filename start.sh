@@ -8,8 +8,16 @@ echo "=========================================================="
 export FLASK_PORT=${PORT:-5000}
 export BAILEYS_PORT=5001
 
-echo "[*] Starting Baileys WhatsApp service on port $BAILEYS_PORT..."
-(cd /app/whatsapp_service && node server.js) &
+echo "[*] Starting Baileys WhatsApp supervisor on port $BAILEYS_PORT..."
+(
+    cd /app/whatsapp_service
+    while true; do
+        echo "[*] [Baileys Supervisor] Starting Baileys node service..."
+        node server.js || true
+        echo "[!] [Baileys Supervisor] Service exited with status $?. Restarting in 2s..."
+        sleep 2
+    done
+) &
 
 sleep 2
 

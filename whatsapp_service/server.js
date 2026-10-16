@@ -25,6 +25,14 @@ if (!fs.existsSync(AUTH_DIR)) {
     fs.mkdirSync(AUTH_DIR, { recursive: true });
 }
 
+// Prevent unhandled promise rejections from crashing the process
+process.on('uncaughtException', (err) => {
+    console.error('[!] WhatsApp Engine Uncaught Exception:', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('[!] WhatsApp Engine Unhandled Rejection:', reason);
+});
+
 let sock = null;
 let connectionStatus = 'initializing'; // initializing, qr, connecting, connected, disconnected
 let qrDataUrl = null;
@@ -50,9 +58,25 @@ function formatJid(phone) {
 
 async function startWhatsApp() {
     try {
+        if (sock) {
+            try {
+                sock.ev.removeAllListeners();
+                sock.end(undefined);
+            } catch (e) {}
+            sock = null;
+        }
+
         const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
-        const { version, isLatest } = await fetchLatestBaileysVersion();
-        console.log(`[*] Starting WhatsApp socket (Baileys v${version.join('.')}, isLatest: ${isLatest})...`);
+        let version = [2, 3000, 1043857760];
+        try {
+            const vData = await fetchLatestBaileysVersion();
+            if (vData && vData.version) {
+                version = vData.version;
+            }
+        } catch (vErr) {
+            console.log('[*] Using standard Baileys version:', version.join('.'));
+        }
+        console.log(`[*] Starting WhatsApp socket (Baileys v${version.join('.')})...`);
 
         sock = makeWASocket({
             version,
@@ -187,6 +211,19 @@ app.get('/status', (req, res) => {
         qr: qrDataUrl,
         user: currentUser
     });
+});
+
+app.post('/refresh-qr', async (req, res) => {
+    try {
+        console.log('[*] Force-refreshing WhatsApp socket for new QR code...');
+        connectionStatus = 'initializing';
+        qrDataUrl = null;
+        startWhatsApp();
+        res.json({ success: true, message: 'Initiated fresh WhatsApp QR code generation' });
+    } catch (err) {
+        console.error('[!] Failed to force refresh WhatsApp QR:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 app.post('/send', async (req, res) => {
