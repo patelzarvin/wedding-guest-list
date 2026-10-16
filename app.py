@@ -399,6 +399,10 @@ def api_guest_chat(token):
     result = process_chat_message(token, message)
     return jsonify(result)
 
+@app.route("/preview")
+def preview_theme():
+    return render_template("preview_theme.html")
+
 # -------------------------------------------------------------
 # AUTH-PROTECTED API ROUTES
 # -------------------------------------------------------------

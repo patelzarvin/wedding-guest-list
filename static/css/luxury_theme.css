@@ -1,0 +1,244 @@
+/* ==========================================================================
+   ROYAL FOREST GREEN & CHAMPAGNE GOLD LUXURY DESIGN SYSTEM
+   Palette: Forest Green (#06140D, #0D2B1D), Gold (#D4AF37, #F3E5AB),
+            Black/Obsidian (#020704), Creamy White (#FAF9F6, #FFFFFF)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg-obsidian: #020704;
+    --bg-forest-deep: #06140D;
+    --bg-forest-mid: #0A2216;
+    --bg-forest-card: rgba(8, 24, 16, 0.78);
+    --bg-forest-hover: rgba(13, 36, 25, 0.9);
+    --bg-forest-input: rgba(3, 10, 6, 0.7);
+
+    --gold-primary: #D4AF37;
+    --gold-champagne: #F3E5AB;
+    --gold-hover: #E5C158;
+    --gold-deep: #AA771C;
+    --gold-border: rgba(212, 175, 55, 0.28);
+    --gold-border-hover: rgba(212, 175, 55, 0.55);
+    --gold-glow: rgba(212, 175, 55, 0.15);
+
+    --text-white: #FFFFFF;
+    --text-creamy: #FAF9F6;
+    --text-muted: #8FA698;
+    --text-dim: #5C7063;
+
+    --emerald-accent: #10B981;
+    --emerald-soft: rgba(16, 185, 129, 0.15);
+    --amber-accent: #F59E0B;
+    --rose-accent: #EF4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: radial-gradient(circle at 50% 0%, #0D2C1E 0%, #06140D 45%, #020704 100%) fixed;
+    color: var(--text-creamy);
+    font-family: 'Plus Jakarta Sans', 'Hind Vadodara', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   MINIMAL SMOOTH ROTATING GOLDEN WATERMARK
+   ========================================================================== */
+.luxury-bg-decor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.rotating-mandala-top {
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 520px;
+    height: 520px;
+    opacity: 0.07;
+    animation: rotateSmooth 90s linear infinite;
+    transform-origin: center center;
+}
+
+.rotating-mandala-bottom {
+    position: absolute;
+    bottom: -150px;
+    left: -150px;
+    width: 600px;
+    height: 600px;
+    opacity: 0.05;
+    animation: rotateSmoothReverse 110s linear infinite;
+    transform-origin: center center;
+}
+
+@keyframes rotateSmooth {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotateSmoothReverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+/* Subtle luxury ambient glow behind content */
+.luxury-glow-spot {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+}
+.glow-spot-1 {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.09) 0%, rgba(13, 44, 30, 0.15) 50%, transparent 75%);
+    top: 50px;
+    right: 15%;
+}
+.glow-spot-2 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(6, 20, 13, 0.12) 50%, transparent 75%);
+    bottom: 10%;
+    left: 10%;
+}
+
+/* ==========================================================================
+   COMMON LUXURY CARDS, BUTTONS & BADGES
+   ========================================================================== */
+.luxury-glass-card {
+    background: var(--bg-forest-card);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid var(--gold-border);
+    border-radius: 20px;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.05);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.luxury-glass-card:hover {
+    border-color: var(--gold-border-hover);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.7), 0 0 30px rgba(212, 175, 55, 0.09);
+}
+
+.btn-luxury-gold {
+    background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+    color: #040906;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    border: none;
+    border-radius: 30px;
+    padding: 11px 26px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 18px rgba(212, 175, 55, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-luxury-gold:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 7px 24px rgba(212, 175, 55, 0.5);
+    filter: brightness(1.05);
+}
+
+.btn-luxury-outline {
+    background: rgba(10, 30, 20, 0.55);
+    color: var(--gold-champagne);
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid var(--gold-border);
+    border-radius: 30px;
+    padding: 10px 24px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-luxury-outline:hover {
+    background: rgba(212, 175, 55, 0.12);
+    border-color: var(--gold-hover);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.luxury-input {
+    width: 100%;
+    background: var(--bg-forest-input);
+    border: 1px solid var(--gold-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.luxury-input:focus {
+    border-color: var(--gold-hover);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.status-badge-emerald {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34D399;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge-gold {
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    color: var(--gold-champagne);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge-amber {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #FBBF24;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}

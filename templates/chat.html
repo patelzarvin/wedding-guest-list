@@ -6,14 +6,11 @@
     <title>{{ contact.name }} - લગ્ન આમંત્રણ &amp; RSVP</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/luxury_theme.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #0c1017;
-            color: #FFFFFF;
-            font-family: 'Plus Jakarta Sans', 'Hind Vadodara', sans-serif;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -24,20 +21,22 @@
             width: 100%;
             max-width: 520px;
             height: 100vh;
-            background: #111622;
+            background: var(--bg-obsidian);
             display: flex;
             flex-direction: column;
-            border-left: 1px solid rgba(229, 193, 88, 0.25);
-            border-right: 1px solid rgba(229, 193, 88, 0.25);
+            border-left: 1px solid var(--gold-border);
+            border-right: 1px solid var(--gold-border);
             position: relative;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
+            z-index: 10;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.85);
         }
 
-        /* WhatsApp-style Header matching Screen 5 */
+        /* Header */
         .chat-header {
-            background: rgba(18, 24, 38, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1.5px solid rgba(229, 193, 88, 0.35);
+            background: var(--bg-forest-card);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1.5px solid var(--gold-border);
             padding: 14px 18px;
             display: flex;
             align-items: center;
@@ -46,14 +45,14 @@
         }
         .avatar {
             width: 44px; height: 44px; border-radius: 50%;
-            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
-            color: #0E1218;
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+            color: #040906;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             font-weight: 800;
-            box-shadow: 0 0 12px rgba(229, 193, 88, 0.4);
+            box-shadow: 0 0 15px var(--gold-glow);
         }
         .header-info h2 {
             font-size: 16px;
@@ -62,14 +61,14 @@
         }
         .header-info p {
             font-size: 12px;
-            color: #4ADE80;
+            color: #34D399;
             display: flex;
             align-items: center;
             gap: 5px;
         }
         .online-dot {
-            width: 7px; height: 7px; border-radius: 50%; background: #4ADE80;
-            box-shadow: 0 0 6px #4ADE80;
+            width: 7px; height: 7px; border-radius: 50%; background: #10B981;
+            box-shadow: 0 0 6px #10B981;
         }
 
         /* Chat History Area */
@@ -80,12 +79,12 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
-            background: radial-gradient(circle at 50% 20%, #161D2B 0%, #0C1017 100%);
+            background: radial-gradient(circle at 50% 20%, #0A2216 0%, #020704 100%);
         }
 
         .bubble {
-            max-width: 82%;
-            padding: 12px 16px;
+            max-width: 84%;
+            padding: 13px 17px;
             border-radius: 18px;
             font-size: 14px;
             line-height: 1.55;
@@ -94,19 +93,19 @@
         }
         .bubble-bot {
             align-self: flex-start;
-            background: rgba(26, 34, 52, 0.9);
-            color: #F8FAFC;
-            border: 1px solid rgba(229, 193, 88, 0.25);
+            background: rgba(10, 30, 20, 0.92);
+            color: var(--text-creamy);
+            border: 1px solid var(--gold-border);
             border-bottom-left-radius: 4px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
         .bubble-user {
             align-self: flex-end;
-            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
-            color: #0E1218;
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+            color: #040906;
             font-weight: 600;
             border-bottom-right-radius: 4px;
-            box-shadow: 0 4px 15px rgba(229, 193, 88, 0.35);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
         }
         .bubble-time {
             font-size: 10px;
@@ -116,50 +115,50 @@
             opacity: 0.7;
         }
 
-        /* Quick Replies Bar with Tactile Chips matching Screen 5 */
+        /* Quick Replies Bar */
         .quick-replies-bar {
             padding: 12px 14px;
             display: flex;
             gap: 10px;
-            background: rgba(18, 24, 38, 0.95);
-            border-top: 1px solid rgba(229, 193, 88, 0.2);
+            background: var(--bg-forest-card);
+            border-top: 1px solid var(--gold-border);
             justify-content: center;
         }
         .quick-chip {
             flex: 1;
-            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
-            color: #0E1218;
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+            color: #040906;
             font-size: 14px;
             font-weight: 700;
-            padding: 10px 16px;
+            padding: 11px 16px;
             border-radius: 14px;
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(229, 193, 88, 0.3);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
             transition: transform 0.1s;
         }
         .quick-chip:active {
             transform: scale(0.96);
         }
         .quick-chip-outline {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(229, 193, 88, 0.35);
-            color: #FFFFFF;
+            background: rgba(10, 30, 20, 0.55);
+            border: 1px solid var(--gold-border);
+            color: var(--gold-champagne);
         }
 
         /* Input Form Bar */
         .input-bar {
             padding: 12px 14px;
-            background: rgba(18, 24, 38, 0.98);
-            border-top: 1px solid rgba(229, 193, 88, 0.25);
+            background: var(--bg-forest-card);
+            border-top: 1px solid var(--gold-border);
             display: flex;
             align-items: center;
             gap: 10px;
         }
         .text-input {
             flex: 1;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(229, 193, 88, 0.3);
+            background: var(--bg-forest-input);
+            border: 1px solid var(--gold-border);
             border-radius: 25px;
             padding: 12px 18px;
             font-size: 14px;
@@ -168,25 +167,27 @@
             outline: none;
         }
         .text-input:focus {
-            border-color: #E5C158;
-            box-shadow: 0 0 12px rgba(229, 193, 88, 0.25);
+            border-color: var(--gold-hover);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
         }
         .btn-send {
             width: 44px; height: 44px; border-radius: 50%;
-            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
             border: none;
-            color: #0E1218;
+            color: #040906;
             font-size: 18px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(229, 193, 88, 0.4);
+            box-shadow: 0 0 15px var(--gold-glow);
         }
     </style>
 </head>
 <body>
+    {% include 'luxury_bg.html' %}
+
     <div class="chat-app-container">
         <!-- Header -->
         <div class="chat-header">
@@ -251,7 +252,6 @@
                     appendBubble('bot', data.reply, 'Just now');
                 }
                 if (data.is_completed) {
-                    // Trigger Celebratory Confetti!
                     triggerConfetti();
                     document.getElementById('quickBar').style.display = 'none';
                 }

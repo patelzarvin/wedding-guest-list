@@ -3,54 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aisle &amp; Vows - Wedding Setup Wizard</title>
+    <title>WedVite AI - Wedding Setup Wizard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/luxury_theme.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #0c1017;
-            color: #FFFFFF;
-            font-family: 'Plus Jakarta Sans', 'Hind Vadodara', sans-serif;
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 30px 20px;
-            position: relative;
-            overflow-x: hidden;
+            padding: 40px 20px;
         }
-
-        /* Bokeh Background Accents matching Theme 2 */
-        .bokeh-container {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 1;
-        }
-        .bokeh {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(85px);
-            opacity: 0.5;
-        }
-        .b1 { width: 380px; height: 380px; background: radial-gradient(circle, #E5C158 0%, rgba(212,175,55,0.15) 60%, transparent 80%); top: 50px; right: 10%; }
-        .b2 { width: 480px; height: 480px; background: radial-gradient(circle, #D4AF37 0%, rgba(229,193,88,0.1) 60%, transparent 80%); bottom: 50px; left: 8%; }
-        .b3 { width: 280px; height: 280px; background: radial-gradient(circle, #FFDF78 0%, rgba(255,215,0,0.12) 60%, transparent 80%); top: 40%; left: 30%; }
 
         /* Central Setup Wizard Card */
         .wizard-card {
             width: 100%;
             max-width: 1100px;
-            background: rgba(18, 24, 38, 0.78);
+            background: var(--bg-forest-card);
             backdrop-filter: blur(35px);
             -webkit-backdrop-filter: blur(35px);
-            border: 1.5px solid rgba(229, 193, 88, 0.4);
+            border: 1px solid var(--gold-border);
             border-radius: 28px;
             padding: 40px 48px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(229, 193, 88, 0.2);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px var(--gold-glow);
             position: relative;
             z-index: 10;
             display: flex;
@@ -62,7 +38,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(229, 193, 88, 0.2);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
             padding-bottom: 22px;
             flex-wrap: wrap;
             gap: 14px;
@@ -75,18 +51,18 @@
         }
         .wizard-title p {
             font-size: 14px;
-            color: #94A3B8;
+            color: var(--text-muted);
             margin-top: 4px;
         }
         .step-pill {
-            background: rgba(229, 193, 88, 0.15);
-            border: 1px solid rgba(229, 193, 88, 0.5);
-            color: #F6D87A;
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid var(--gold-border);
+            color: var(--gold-champagne);
             font-size: 13px;
             font-weight: 700;
             padding: 8px 22px;
             border-radius: 30px;
-            box-shadow: 0 0 15px rgba(229, 193, 88, 0.2);
+            box-shadow: 0 0 15px var(--gold-glow);
         }
 
         /* Error Banner */
@@ -110,7 +86,7 @@
             80% { transform: translateX(4px); }
         }
 
-        /* Two columns matching Screen 2 inputs */
+        /* Two columns */
         .columns-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -120,8 +96,8 @@
             display: flex;
             flex-direction: column;
             gap: 18px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(229, 193, 88, 0.15);
+            background: rgba(3, 12, 8, 0.55);
+            border: 1px solid var(--gold-border);
             border-radius: 20px;
             padding: 24px 26px;
         }
@@ -129,11 +105,11 @@
             font-family: 'Playfair Display', serif;
             font-size: 20px;
             font-weight: 700;
-            color: #F6D87A;
+            color: var(--gold-champagne);
             display: flex;
             align-items: center;
             gap: 10px;
-            border-bottom: 1px solid rgba(229, 193, 88, 0.15);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
             padding-bottom: 10px;
             margin-bottom: 4px;
         }
@@ -147,12 +123,12 @@
         .form-group label {
             font-size: 13px;
             font-weight: 600;
-            color: #CBD5E1;
+            color: var(--text-creamy);
         }
         .input-box {
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid rgba(229, 193, 88, 0.25);
+            background: var(--bg-forest-input);
+            border: 1.5px solid var(--gold-border);
             border-radius: 12px;
             padding: 12px 16px;
             font-size: 14px;
@@ -162,31 +138,31 @@
             transition: all 0.2s ease;
         }
         .input-box:focus {
-            border-color: #E5C158;
-            box-shadow: 0 0 15px rgba(229, 193, 88, 0.25);
-            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--gold-hover);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+            background: rgba(4, 15, 9, 0.85);
         }
-        .input-box::placeholder { color: #64748B; }
+        .input-box::placeholder { color: var(--text-dim); }
 
         /* Professional Phone Input Group with +91 Prefix */
         .phone-group {
             display: flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid rgba(229, 193, 88, 0.28);
+            background: var(--bg-forest-input);
+            border: 1.5px solid var(--gold-border);
             border-radius: 12px;
             overflow: hidden;
             transition: all 0.2s ease;
         }
         .phone-group:focus-within {
-            border-color: #E5C158;
-            box-shadow: 0 0 16px rgba(229, 193, 88, 0.3);
-            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--gold-hover);
+            box-shadow: 0 0 16px rgba(212, 175, 55, 0.3);
+            background: rgba(4, 15, 9, 0.85);
         }
         .phone-prefix {
-            background: rgba(229, 193, 88, 0.14);
-            border-right: 1.5px solid rgba(229, 193, 88, 0.3);
-            color: #F6D87A;
+            background: rgba(212, 175, 55, 0.12);
+            border-right: 1.5px solid var(--gold-border);
+            color: var(--gold-champagne);
             font-size: 13px;
             font-weight: 700;
             padding: 12px 14px;
@@ -215,11 +191,11 @@
             user-select: none;
         }
         .phone-group.is-valid {
-            border-color: #22C55E !important;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.25) !important;
+            border-color: #10B981 !important;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.25) !important;
         }
         .phone-group.is-valid .phone-badge {
-            color: #4ADE80;
+            color: #34D399;
         }
         .phone-group.is-invalid {
             border-color: #EF4444 !important;
@@ -231,7 +207,7 @@
 
         .field-hint {
             font-size: 11px;
-            color: #94A3B8;
+            color: var(--text-muted);
             margin-top: 3px;
             display: flex;
             align-items: center;
@@ -262,8 +238,8 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(229, 193, 88, 0.15);
+            background: rgba(3, 12, 8, 0.55);
+            border: 1px solid var(--gold-border);
             border-radius: 20px;
             padding: 22px 26px;
         }
@@ -272,7 +248,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid rgba(229, 193, 88, 0.2);
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
             padding-top: 22px;
             flex-wrap: wrap;
             gap: 16px;
@@ -281,22 +257,22 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #94A3B8;
+            color: var(--text-muted);
             font-size: 13px;
         }
         .autopilot-tag span {
-            color: #E5C158;
+            color: var(--gold-champagne);
             font-weight: 600;
         }
         .btn-submit {
-            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
-            color: #0E1218;
-            font-size: 16px;
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+            color: #040906;
+            font-size: 15px;
             font-weight: 700;
             padding: 14px 42px;
             border-radius: 14px;
             border: none;
-            box-shadow: 0 6px 25px rgba(229, 193, 88, 0.4);
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.35);
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             display: inline-flex;
@@ -305,26 +281,27 @@
         }
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(229, 193, 88, 0.55);
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.5);
         }
         .btn-submit:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
+
+        @media (max-width: 768px) {
+            .wizard-card { padding: 24px 20px; }
+            .extra-row { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-    <div class="bokeh-container">
-        <div class="bokeh b1"></div>
-        <div class="bokeh b2"></div>
-        <div class="bokeh b3"></div>
-    </div>
+    {% include 'luxury_bg.html' %}
 
     <form action="/setup" method="POST" class="wizard-card" id="setupForm" onsubmit="return validateSetupForm(event)" novalidate>
         <div class="wizard-header">
             <div class="wizard-title">
-                <h1>&#128141; Aisle &amp; Vows &mdash; Wedding Setup Wizard</h1>
+                <h1>&#128141; Royal Wedding Setup Wizard</h1>
                 <p>Enter couple and family contacts once to initialize the 100% Autopilot AI WhatsApp Concierge.</p>
             </div>
             <div class="step-pill">Step 1 of 3: Couple &amp; Family Details</div>
@@ -340,7 +317,7 @@
                 
                 <div class="form-group">
                     <label>Groom's Full Name (વરરાજાનું પૂરું નામ) *</label>
-                    <input type="text" name="groom_name" id="groom_name" class="input-box" value="{{ wedding.groom_name if wedding else '' }}" placeholder="દા.ત. Zarvin Patel" required>
+                    <input type="text" name="groom_name" id="groom_name" class="input-box" value="{{ wedding.groom_name if wedding else '' }}" placeholder="દા.ત. Groom Full Name" required>
                     <span class="field-hint">ઓછામાં ઓછા ૨ અક્ષર</span>
                 </div>
                 
@@ -387,7 +364,7 @@
                 
                 <div class="form-group">
                     <label>Bride's Full Name (કન્યાનું પૂરું નામ) *</label>
-                    <input type="text" name="bride_name" id="bride_name" class="input-box" value="{{ wedding.bride_name if wedding else '' }}" placeholder="દા.ત. Krupali Patel" required>
+                    <input type="text" name="bride_name" id="bride_name" class="input-box" value="{{ wedding.bride_name if wedding else '' }}" placeholder="દા.ત. Bride Full Name" required>
                     <span class="field-hint">ઓછામાં ઓછા ૨ અક્ષર</span>
                 </div>
                 

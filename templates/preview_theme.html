@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Preview - Midnight Mehrangarh &amp; Brushed Gold</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(circle at 50% 0%, #0D2C1E 0%, #06140D 45%, #020704 100%) fixed;
+            color: #FAF9F6;
+            font-family: 'Plus Jakarta Sans', 'Hind Vadodara', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Top Control Bar: Device Switcher */
+        .preview-controls {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            background: rgba(6, 20, 13, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1.5px solid rgba(212, 175, 55, 0.35);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.7);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .preview-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #E5C158;
+        }
+        .device-buttons {
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 30px;
+            border: 1px solid rgba(229, 193, 88, 0.25);
+        }
+        .dev-btn {
+            background: transparent;
+            border: none;
+            color: #94A3B8;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dev-btn.active {
+            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
+            color: #081226;
+            box-shadow: 0 2px 10px rgba(229, 193, 88, 0.35);
+        }
+
+        /* Stage Wrapper */
+        .stage-wrapper {
+            padding: 30px 20px 60px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - 65px);
+            background: radial-gradient(circle at 50% 10%, #0d1e3d 0%, #050b17 100%);
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive Frame */
+        .theme-frame {
+            width: 100%;
+            max-width: 1300px;
+            background: #081226;
+            border: 1.5px solid rgba(229, 193, 88, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(229, 193, 88, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Phone Frame Mode */
+        .theme-frame.mode-phone {
+            max-width: 400px;
+            border-radius: 40px;
+            border: 2px solid rgba(229, 193, 88, 0.45);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(229, 193, 88, 0.2);
+        }
+
+        /* Delicate Rotating Mandala Watermarks */
+        .mandala-corner {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            pointer-events: none;
+            opacity: 0.18;
+            animation: rotateMandala 60s linear infinite;
+            z-index: 1;
+        }
+        .mandala-tl { top: -40px; left: -40px; }
+        .mandala-tr { top: -40px; right: -40px; }
+        .mandala-br { bottom: -40px; right: -40px; }
+        @keyframes rotateMandala {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Main Content Container inside Frame */
+        .app-body {
+            position: relative;
+            z-index: 10;
+            padding: 28px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .mode-phone .app-body {
+            padding: 20px 16px;
+            gap: 16px;
+        }
+
+        /* Navbar */
+        .app-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(229, 193, 88, 0.2);
+            padding-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+        .brand-title span { color: #E5C158; }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .badge-countdown {
+            background: rgba(229, 193, 88, 0.12);
+            border: 1px solid rgba(229, 193, 88, 0.4);
+            color: #F6D87A;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .badge-wa-status {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid #22C55E;
+            color: #4ADE80;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #4ADE80;
+            box-shadow: 0 0 8px #4ADE80;
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
+            color: #081226;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(229, 193, 88, 0.3);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 4 Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .mode-phone .metrics-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .metric-card {
+            background: rgba(14, 25, 48, 0.7);
+            border: 1.5px solid rgba(229, 193, 88, 0.25);
+            border-radius: 16px;
+            padding: 16px 18px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        .metric-card:hover {
+            border-color: #E5C158;
+            box-shadow: 0 8px 25px rgba(229, 193, 88, 0.2);
+            transform: translateY(-2px);
+        }
+        .metric-card .label {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .metric-card .value {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+        .mode-phone .metric-card .value { font-size: 20px; }
+        .metric-card .sub {
+            font-size: 11px;
+            color: #E5C158;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* Search & Filter Bar */
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(229, 193, 88, 0.25);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: #FFFFFF;
+            font-size: 13px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #E5C158;
+            box-shadow: 0 0 12px rgba(229, 193, 88, 0.25);
+        }
+        .tabs-filter {
+            display: flex;
+            gap: 6px;
+        }
+        .tab-filter-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(229, 193, 88, 0.2);
+            color: #CBD5E1;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .tab-filter-btn.active {
+            background: rgba(229, 193, 88, 0.2);
+            border-color: #E5C158;
+            color: #F6D87A;
+        }
+
+        /* Desktop Table View */
+        .desktop-table-card {
+            background: rgba(14, 25, 48, 0.7);
+            border: 1.5px solid rgba(229, 193, 88, 0.25);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .mode-phone .desktop-table-card { display: none; }
+        .guest-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        .guest-table th {
+            background: rgba(229, 193, 88, 0.1);
+            color: #E5C158;
+            font-weight: 700;
+            padding: 14px 18px;
+            border-bottom: 1.5px solid rgba(229, 193, 88, 0.25);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        .guest-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(229, 193, 88, 0.12);
+            color: #E2E8F0;
+            vertical-align: middle;
+        }
+        .guest-table tr:hover td {
+            background: rgba(229, 193, 88, 0.04);
+        }
+
+        .category-pill {
+            display: inline-block;
+            background: rgba(229, 193, 88, 0.14);
+            border: 1px solid rgba(229, 193, 88, 0.4);
+            color: #F6D87A;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .phone-text {
+            font-family: monospace;
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .status-confirmed {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid #22C55E;
+            color: #4ADE80;
+        }
+        .status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid #F59E0B;
+            color: #FCD34D;
+        }
+        .btn-wa-action {
+            background: rgba(37, 211, 102, 0.15);
+            border: 1px solid #25D366;
+            color: #25D366;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-wa-action:hover {
+            background: #25D366;
+            color: #081226;
+            transform: scale(1.1);
+        }
+
+        /* Mobile Card List View (Only shows in phone mode) */
+        .mobile-cards-list {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .mode-phone .mobile-cards-list {
+            display: flex;
+        }
+        .guest-mobile-card {
+            background: rgba(14, 25, 48, 0.85);
+            border: 1.5px solid rgba(229, 193, 88, 0.25);
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .mobile-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mobile-guest-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+        .mobile-card-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #94A3B8;
+        }
+
+        /* Parent Collector Chat View (Tab 3) */
+        .chat-view-container {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .chat-header-mobile {
+            background: rgba(14, 25, 48, 0.9);
+            border-bottom: 1.5px solid rgba(229, 193, 88, 0.3);
+            padding: 12px 14px;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .chat-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
+            color: #081226;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+        .chat-bubble {
+            max-width: 82%;
+            padding: 11px 15px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .bubble-bot {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(229, 193, 88, 0.25);
+            color: #FAF9F6;
+        }
+        .bubble-user {
+            align-self: flex-end;
+            background: rgba(229, 193, 88, 0.18);
+            border: 1px solid rgba(229, 193, 88, 0.45);
+            color: #FFFFFF;
+        }
+        .chips-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .chip-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(229, 193, 88, 0.35);
+            color: #F6D87A;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .chip-btn.done {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22C55E;
+            color: #4ADE80;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sticky Device Switcher at top -->
+    <div class="preview-controls">
+        <div class="preview-title">
+            <span>👑 Midnight Mehrangarh &amp; Brushed Gold</span>
+            <span style="color: #94A3B8; font-weight: 400;">(Live Responsive Preview)</span>
+        </div>
+        <div class="device-buttons">
+            <button class="dev-btn active" id="btnDesk" onclick="setMode('desktop')">💻 Desktop View</button>
+            <button class="dev-btn" id="btnPhone" onclick="setMode('phone')">📱 Phone View</button>
+            <button class="dev-btn" id="btnChat" onclick="setMode('chat')">💬 Mummy/Pappa Chat</button>
+        </div>
+    </div>
+
+    <div class="stage-wrapper">
+        <div class="theme-frame" id="themeFrame">
+            
+            <!-- Rotating Golden Mandala SVG Watermarks -->
+            <svg class="mandala-corner mandala-tl" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="44" stroke="#E5C158" stroke-width="1.2" fill="none" stroke-dasharray="3, 3"/>
+                <circle cx="50" cy="50" r="32" stroke="#E5C158" stroke-width="1" fill="none"/>
+                <polygon points="50,6 60,35 94,50 60,65 50,94 40,65 6,50 40,35" stroke="#E5C158" stroke-width="1.2" fill="none"/>
+                <polygon points="50,18 72,50 50,82 28,50" stroke="#E5C158" stroke-width="0.8" fill="none"/>
+            </svg>
+            <svg class="mandala-corner mandala-tr" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="44" stroke="#E5C158" stroke-width="1.2" fill="none" stroke-dasharray="3, 3"/>
+                <circle cx="50" cy="50" r="32" stroke="#E5C158" stroke-width="1" fill="none"/>
+                <polygon points="50,6 60,35 94,50 60,65 50,94 40,65 6,50 40,35" stroke="#E5C158" stroke-width="1.2" fill="none"/>
+                <polygon points="50,18 72,50 50,82 28,50" stroke="#E5C158" stroke-width="0.8" fill="none"/>
+            </svg>
+
+            <!-- Dashboard View -->
+            <div class="app-body" id="dashboardView">
+                <!-- App Navbar -->
+                <div class="app-navbar">
+                    <div class="brand-title">Aisle &amp; Vows <span>Weddings</span></div>
+                    <div class="nav-actions">
+                        <span class="badge-countdown">💍 45 Days to Wedding</span>
+                        <span class="badge-wa-status"><span class="status-dot"></span> WhatsApp Connected</span>
+                        <a href="javascript:void(0)" class="btn-gold">📥 Export Excel</a>
+                    </div>
+                </div>
+
+                <!-- 4 Metric Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="label">Total Invited</div>
+                        <div class="value">450</div>
+                        <div class="sub">124 Households</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Confirmed RSVP</div>
+                        <div class="value" style="color: #4ADE80;">310</div>
+                        <div class="sub">69% Response Rate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Pending</div>
+                        <div class="value" style="color: #FCD34D;">140</div>
+                        <div class="sub">31% Remaining</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Total Coming</div>
+                        <div class="value" style="color: #E5C158;">780</div>
+                        <div class="sub">Estimated Catering</div>
+                    </div>
+                </div>
+
+                <!-- Filter & Search Row -->
+                <div class="filter-row">
+                    <input type="text" class="search-box" placeholder="🔍 Search guest name, phone, or relation...">
+                    <div class="tabs-filter">
+                        <button class="tab-filter-btn active">All (450)</button>
+                        <button class="tab-filter-btn">વરરાજા પક્ષ</button>
+                        <button class="tab-filter-btn">કન્યા પક્ષ</button>
+                    </div>
+                </div>
+
+                <!-- Desktop Table View (No fake photos, real practical fields) -->
+                <div class="desktop-table-card">
+                    <table class="guest-table">
+                        <thead>
+                            <tr>
+                                <th>Guest Name</th>
+                                <th>Category / Side</th>
+                                <th>Phone (+91)</th>
+                                <th>Headcount</th>
+                                <th>RSVP Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>રમેશભાઈ પટેલ</strong> (Ramesh Patel)</td>
+                                <td><span class="category-pill">મામા પક્ષ (Maternal)</span></td>
+                                <td><span class="phone-text">+91 98250 12345</span></td>
+                                <td><strong>4 સભ્યો</strong> (Family of 4)</td>
+                                <td><span class="status-badge status-confirmed">✓ Confirmed</span></td>
+                                <td><button class="btn-wa-action" title="Send WhatsApp">💬</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>જયેશભાઈ શાહ</strong> (Jayeshbhai Shah)</td>
+                                <td><span class="category-pill">કાકા પક્ષ (Paternal)</span></td>
+                                <td><span class="phone-text">+91 99099 87654</span></td>
+                                <td><strong>2 સભ્યો</strong> (Couple)</td>
+                                <td><span class="status-badge status-pending">⏳ Pending</span></td>
+                                <td><button class="btn-wa-action" title="Send WhatsApp">💬</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>રેખાબેન પ્રજાપતિ</strong> (Rekhaben)</td>
+                                <td><span class="category-pill">ફોઈ પક્ષ (Aunt)</span></td>
+                                <td><span class="phone-text">+91 98765 43210</span></td>
+                                <td><strong>5 સભ્યો</strong> (Family of 5)</td>
+                                <td><span class="status-badge status-confirmed">✓ Confirmed</span></td>
+                                <td><button class="btn-wa-action" title="Send WhatsApp">💬</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>તીર્થ પટેલ</strong> (Tirth Patel)</td>
+                                <td><span class="category-pill">મિત્ર મંડળ (Friends)</span></td>
+                                <td><span class="phone-text">+91 81030 13148</span></td>
+                                <td><strong>1 સભ્ય</strong> (Single)</td>
+                                <td><span class="status-badge status-confirmed">✓ Confirmed</span></td>
+                                <td><button class="btn-wa-action" title="Send WhatsApp">💬</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phone Mode Guest Cards (Auto appears when Phone View selected) -->
+                <div class="mobile-cards-list">
+                    <div class="guest-mobile-card">
+                        <div class="mobile-card-top">
+                            <div class="mobile-guest-name">રમેશભાઈ પટેલ</div>
+                            <span class="status-badge status-confirmed">✓ Confirmed</span>
+                        </div>
+                        <div class="mobile-card-details">
+                            <span class="category-pill">મામા પક્ષ</span>
+                            <span class="phone-text">+91 98250 12345</span>
+                            <button class="btn-wa-action">💬</button>
+                        </div>
+                    </div>
+
+                    <div class="guest-mobile-card">
+                        <div class="mobile-card-top">
+                            <div class="mobile-guest-name">જયેશભાઈ શાહ</div>
+                            <span class="status-badge status-pending">⏳ Pending</span>
+                        </div>
+                        <div class="mobile-card-details">
+                            <span class="category-pill">કાકા પક્ષ</span>
+                            <span class="phone-text">+91 99099 87654</span>
+                            <button class="btn-wa-action">💬</button>
+                        </div>
+                    </div>
+
+                    <div class="guest-mobile-card">
+                        <div class="mobile-card-top">
+                            <div class="mobile-guest-name">રેખાબેન પ્રજાપતિ</div>
+                            <span class="status-badge status-confirmed">✓ Confirmed</span>
+                        </div>
+                        <div class="mobile-card-details">
+                            <span class="category-pill">ફોઈ પક્ષ</span>
+                            <span class="phone-text">+91 98765 43210</span>
+                            <button class="btn-wa-action">💬</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent Collector Chat View (Tab 3) -->
+            <div class="app-body chat-view-container" id="chatView">
+                <div class="chat-header-mobile">
+                    <div class="chat-avatar">💍</div>
+                    <div>
+                        <div style="font-size: 15px; font-weight: 700; color: #FFFFFF;">બીજલબેન (માતાશ્રી)</div>
+                        <div style="font-size: 12px; color: #4ADE80;">● સગા-સંબંધી યાદી સહાયક Active</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; padding: 10px 0;">
+                    <div class="chat-bubble bubble-bot">
+                        જય શ્રી કૃષ્ણ પૂજ્ય માતાશ્રી! 🙏<br>
+                        લગ્ન માટે આપના પિયર પક્ષ અને સંબંધીઓની યાદી તૈયાર કરવા હું હાજર છું.<br>
+                        નીચે આપેલા બટન પરથી પસંદ કરો અથવા સીધું નામ અને નંબર લખો:
+                    </div>
+                    <div class="chat-bubble bubble-user">
+                        👨 મામાશ્રી (પિયર પક્ષ)
+                    </div>
+                    <div class="chat-bubble bubble-bot">
+                        ખૂબ સરસ! આપના મામાશ્રીના નામ અને મોબાઈલ નંબર જણાવશો.<br>
+                        દા.ત.: 'રમેશભાઈ 9825012345'
+                    </div>
+                    <div class="chat-bubble bubble-user">
+                        મામા રમેશભાઈ 9825012345 અને માસી ગીતાબેન 9909912345
+                    </div>
+                    <div class="chat-bubble bubble-bot">
+                        ✅ સરસ! રમેશભાઈ (મામા) અને ગીતાબેન (માસી) ની નોંધણી થઈ ગઈ છે. બીજા કોઈ બાકી છે?
+                    </div>
+                </div>
+
+                <div class="chips-row">
+                    <button class="chip-btn">👨 મામાશ્રી</button>
+                    <button class="chip-btn">👩 માસી</button>
+                    <button class="chip-btn">👶 મારાં સંતાનો</button>
+                    <button class="chip-btn">👵 કાકી / મામી</button>
+                    <button class="chip-btn done">✅ બધા આવી ગયા છે (Done)</button>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <input type="text" class="search-box" style="border-radius: 25px;" placeholder="લખો: [સંબંધ] [નામ] [મોબાઈલ નંબર]...">
+                    <button class="btn-gold" style="border-radius: 50%; width: 42px; height: 42px; padding: 0; justify-content: center;">➤</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function setMode(mode) {
+            document.querySelectorAll('.dev-btn').forEach(b => b.classList.remove('active'));
+            const frame = document.getElementById('themeFrame');
+            const dash = document.getElementById('dashboardView');
+            const chat = document.getElementById('chatView');
+
+            if (mode === 'desktop') {
+                document.getElementById('btnDesk').classList.add('active');
+                frame.className = 'theme-frame';
+                dash.style.display = 'flex';
+                chat.style.display = 'none';
+            } else if (mode === 'phone') {
+                document.getElementById('btnPhone').classList.add('active');
+                frame.className = 'theme-frame mode-phone';
+                dash.style.display = 'flex';
+                chat.style.display = 'none';
+            } else if (mode === 'chat') {
+                document.getElementById('btnChat').classList.add('active');
+                frame.className = 'theme-frame mode-phone';
+                dash.style.display = 'none';
+                chat.style.display = 'flex';
+            }
+        }
+    </script>
+</body>
+</html>

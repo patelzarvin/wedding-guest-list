@@ -3,43 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WedVite AI - The Modern Wedding Guest Concierge & WhatsApp RSVP</title>
+    <title>WedVite AI - Royal Wedding Guest Concierge &amp; WhatsApp RSVP</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/luxury_theme.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background-color: #0c1017;
-            color: #FFFFFF;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Bokeh Background Accents matching Theme 2 */
-        .bokeh-container {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 1;
-        }
-        .bokeh {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(85px);
-            opacity: 0.45;
-        }
-        .b1 { width: 380px; height: 380px; background: radial-gradient(circle, #E5C158 0%, rgba(212,175,55,0.15) 60%, transparent 80%); top: 40px; right: 10%; }
-        .b2 { width: 480px; height: 480px; background: radial-gradient(circle, #D4AF37 0%, rgba(229,193,88,0.1) 60%, transparent 80%); bottom: 10%; left: 5%; }
-        .b3 { width: 280px; height: 280px; background: radial-gradient(circle, #FFDF78 0%, rgba(255,215,0,0.12) 60%, transparent 80%); top: 40%; left: 20%; }
-        .b4 { width: 320px; height: 320px; background: radial-gradient(circle, #C59B27 0%, rgba(197,155,39,0.15) 60%, transparent 80%); bottom: 20%; right: 15%; }
-
         /* Top Navigation */
         nav {
             width: 90%;
@@ -49,12 +18,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(18, 24, 38, 0.72);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(229, 193, 88, 0.3);
+            background: var(--bg-forest-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--gold-border);
             border-radius: 50px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(229, 193, 88, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--gold-glow);
             position: relative;
             z-index: 10;
         }
@@ -65,33 +34,21 @@
             color: #FFFFFF;
             letter-spacing: 0.5px;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .logo span { color: #E5C158; font-style: italic; }
+        .logo span { color: var(--gold-champagne); font-style: italic; }
         .nav-links {
             display: flex;
             gap: 36px;
             list-style: none;
             font-size: 15px;
             font-weight: 500;
-            color: #CBD5E1;
+            color: var(--text-muted);
         }
-        .nav-links a { color: #CBD5E1; text-decoration: none; transition: color 0.2s; }
-        .nav-links a:hover { color: #E5C158; }
-        .nav-btn {
-            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
-            color: #0E1218;
-            padding: 10px 26px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 14px;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(229, 193, 88, 0.35);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .nav-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(229, 193, 88, 0.5);
-        }
+        .nav-links a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--gold-champagne); }
 
         /* Hero */
         .hero {
@@ -100,7 +57,7 @@
             text-align: center;
             width: 90%;
             max-width: 1200px;
-            margin: 50px auto 70px;
+            margin: 60px auto 70px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -111,82 +68,55 @@
             gap: 8px;
             padding: 8px 22px;
             border-radius: 30px;
-            background: rgba(229, 193, 88, 0.12);
-            border: 1px solid rgba(229, 193, 88, 0.4);
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--gold-border);
             font-size: 13px;
             font-weight: 600;
-            color: #F6D87A;
-            margin-bottom: 22px;
-            box-shadow: 0 0 15px rgba(229, 193, 88, 0.15);
+            color: var(--gold-champagne);
+            margin-bottom: 24px;
+            box-shadow: 0 0 15px var(--gold-glow);
         }
         .hero-title {
             font-family: 'Playfair Display', serif;
-            font-size: clamp(38px, 5vw, 60px);
+            font-size: clamp(38px, 5.5vw, 64px);
             font-weight: 700;
             line-height: 1.18;
-            margin-bottom: 18px;
-            background: linear-gradient(180deg, #FFFFFF 30%, #E2E8F0 70%, #CBD5E1 100%);
+            margin-bottom: 20px;
+            color: #FFFFFF;
+        }
+        .hero-title em {
+            color: var(--gold-champagne);
+            font-style: normal;
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .hero-title em {
-            color: #E5C158;
-            -webkit-text-fill-color: #E5C158;
-            font-style: normal;
-        }
         .hero-desc {
             font-size: 18px;
-            color: #94A3B8;
+            color: var(--text-muted);
             max-width: 780px;
-            line-height: 1.6;
-            margin-bottom: 36px;
+            line-height: 1.65;
+            margin-bottom: 40px;
         }
         .hero-actions {
             display: flex;
             gap: 18px;
-            margin-bottom: 48px;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #E5C158 0%, #C49836 100%);
-            color: #0E1218;
-            padding: 15px 36px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 16px;
-            text-decoration: none;
-            box-shadow: 0 6px 25px rgba(229, 193, 88, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(229, 193, 88, 0.55);
-        }
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(229, 193, 88, 0.35);
-            color: #FFFFFF;
-            padding: 15px 32px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 16px;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-        .btn-secondary:hover {
-            background: rgba(229, 193, 88, 0.12);
+            margin-bottom: 52px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
-        /* Glassmorphic Showcase Card matching Screen 2 */
+        /* Glassmorphic Showcase Card */
         .preview-glass-card {
             width: 100%;
             max-width: 1100px;
-            background: rgba(18, 24, 38, 0.72);
+            background: var(--bg-forest-card);
             backdrop-filter: blur(35px);
             -webkit-backdrop-filter: blur(35px);
-            border: 1.5px solid rgba(229, 193, 88, 0.38);
+            border: 1px solid var(--gold-border);
             border-radius: 28px;
             padding: 34px 40px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(229, 193, 88, 0.18);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px var(--gold-glow);
             display: flex;
             flex-direction: column;
             gap: 24px;
@@ -195,7 +125,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(229, 193, 88, 0.2);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
             padding-bottom: 18px;
             flex-wrap: wrap;
             gap: 12px;
@@ -209,22 +139,6 @@
             align-items: center;
             gap: 12px;
         }
-        .live-tag {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid #22C55E;
-            color: #4ADE80;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 5px 14px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .live-dot {
-            width: 8px; height: 8px; border-radius: 50%; background: #22C55E;
-            box-shadow: 0 0 8px #22C55E;
-        }
 
         .stats-row {
             display: grid;
@@ -232,30 +146,40 @@
             gap: 18px;
         }
         .stat-box {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(229, 193, 88, 0.2);
+            background: rgba(3, 12, 8, 0.55);
+            border: 1px solid var(--gold-border);
             border-radius: 18px;
             padding: 20px 22px;
             display: flex;
             flex-direction: column;
             gap: 6px;
             text-align: left;
+            transition: all 0.25s ease;
+        }
+        .stat-box:hover {
+            border-color: var(--gold-border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
         }
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: #94A3B8;
+            color: var(--text-muted);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .stat-value {
-            font-size: 30px;
+            font-size: 32px;
             font-weight: 800;
             color: #FFFFFF;
             display: flex;
             align-items: baseline;
             gap: 8px;
         }
-        .stat-val-gold { color: #E5C158; text-shadow: 0 0 15px rgba(229,193,88,0.3); }
+        .stat-val-gold {
+            color: var(--gold-champagne);
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.35);
+        }
 
         .card-action-row {
             display: flex;
@@ -269,66 +193,71 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            color: #94A3B8;
+            color: var(--text-muted);
             font-size: 14px;
         }
-        .action-info span { color: #E5C158; font-weight: 600; }
+        .action-info span { color: var(--gold-champagne); font-weight: 600; }
+
+        @media (max-width: 768px) {
+            nav { padding: 14px 20px; margin-top: 16px; }
+            .nav-links { display: none; }
+            .preview-glass-card { padding: 24px 20px; }
+            .hero-title { font-size: 32px; }
+            .hero { margin: 40px auto 50px; }
+        }
     </style>
 </head>
 <body>
-    <div class="bokeh-container">
-        <div class="bokeh b1"></div>
-        <div class="bokeh b2"></div>
-        <div class="bokeh b3"></div>
-        <div class="bokeh b4"></div>
-    </div>
+    {% include 'luxury_bg.html' %}
 
     <nav>
-        <a href="/" class="logo">Aisle &amp; Vows <span>Weddings</span></a>
+        <a href="/" class="logo">
+            <span>✨</span> WedVite <span>Luxury Suite</span>
+        </a>
         <ul class="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#how-it-works">How It Works</a></li>
-            <li><a href="#whatsapp">WhatsApp AI</a></li>
-            <li><a href="#excel">Excel Sync</a></li>
+            <li><a href="/login">Features</a></li>
+            <li><a href="/login">WhatsApp Concierge</a></li>
+            <li><a href="/login">Excel Sync</a></li>
+            <li><a href="/login">Parent Collector</a></li>
         </ul>
-        <a href="/login" class="nav-btn">Sign In to Dashboard</a>
+        <a href="/login" class="btn-luxury-gold" style="padding: 9px 22px; font-size: 13px;">Sign In to Suite</a>
     </nav>
 
     <div class="hero">
         <div class="hero-badge">&#10024; Multi-Family Intelligent Wedding Concierge</div>
-        <h1 class="hero-title">The Modern Wedding Guest Concierge<br>& <em>Automated WhatsApp RSVP</em></h1>
+        <h1 class="hero-title">The Royal Wedding Guest Concierge<br>&amp; <em>Automated WhatsApp RSVP</em></h1>
         <p class="hero-desc">Invite family branches effortlessly, collect confirmed attendee headcounts with automated Gujlish AI, and manage your caterer guest list in real time with 100% Autopilot.</p>
 
         <div class="hero-actions">
-            <a href="/login" class="btn-primary">Get Started for Free &rarr;</a>
-            <a href="/login" class="btn-secondary">Sign In to Suite</a>
+            <a href="/login" class="btn-luxury-gold" style="padding: 14px 34px; font-size: 15px;">Get Started for Free &rarr;</a>
+            <a href="/login" class="btn-luxury-outline" style="padding: 14px 30px; font-size: 15px;">Sign In to Suite</a>
         </div>
 
         <div class="preview-glass-card">
             <div class="card-header-bar">
                 <div class="card-title">
-                    <span>&#128141; Jyot &amp; Stuti Wedding Hub</span>
-                    <span class="live-tag"><span class="live-dot"></span> WhatsApp AI Concierge Active</span>
+                    <span>&#128141; Royal Wedding Guest Hub</span>
+                    <span class="status-badge-emerald"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981;"></span> WhatsApp AI Concierge Active</span>
                 </div>
-                <div style="color: #94A3B8; font-size: 14px;">Multi-Family Session: <strong>Groom &amp; Bride Family Suite</strong></div>
+                <div style="color: var(--text-muted); font-size: 13px;">Multi-Family Session: <strong>Groom &amp; Bride Family Suite</strong></div>
             </div>
 
             <div class="stats-row">
                 <div class="stat-box">
                     <div class="stat-label">Total Invited</div>
-                    <div class="stat-value">320 <span style="font-size: 14px; color: #94A3B8;">Relatives</span></div>
+                    <div class="stat-value">320 <span style="font-size: 14px; color: var(--text-muted);">Relatives</span></div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">RSVP Confirmed</div>
-                    <div class="stat-value stat-val-gold">285 <span style="font-size: 14px; color: #E5C158;">89%</span></div>
+                    <div class="stat-value stat-val-gold">285 <span style="font-size: 14px; color: var(--gold-champagne);">89%</span></div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">Pending Response</div>
-                    <div class="stat-value">35 <span style="font-size: 14px; color: #F59E0B;">In Progress</span></div>
+                    <div class="stat-value">35 <span style="font-size: 14px; color: var(--amber-accent);">In Progress</span></div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">Estimated Headcount</div>
-                    <div class="stat-value stat-val-gold">840 <span style="font-size: 14px; color: #E5C158;">Attendees</span></div>
+                    <div class="stat-value stat-val-gold">840 <span style="font-size: 14px; color: var(--gold-champagne);">Attendees</span></div>
                 </div>
             </div>
 
@@ -338,7 +267,7 @@
                     <div>&bull;</div>
                     <div>&#128172; Active Relatives: <span>14 Branch chats ongoing</span></div>
                 </div>
-                <a href="/login" class="btn-primary" style="padding: 10px 24px; font-size: 14px;">Launch Wedding Hub &rarr;</a>
+                <a href="/login" class="btn-luxury-gold" style="padding: 10px 24px; font-size: 13px;">Launch Wedding Hub &rarr;</a>
             </div>
         </div>
     </div>
