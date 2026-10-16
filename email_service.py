@@ -172,13 +172,56 @@ def send_verification_email(recipient_email, otp_code, purpose="REGISTER"):
     msg.attach(MIMEText(html_content, "html"))
     
     import ssl
+    import socket
+
+    orig_create_conn = socket.create_connection
+
+    # Cloud / Render environment fix: Force IPv4 connection to prevent [Errno 101] Network is unreachable
+    def create_ipv4_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+        host, port = address
+        err = None
+        for res in socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket.socket(af, socktype, proto)
+                if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(sa)
+                return sock
+            except Exception as e:
+                err = e
+                if sock is not None:
+                    sock.close()
+        if err is not None:
+            raise err
+        raise socket.error("Could not resolve IPv4 address for SMTP host")
+
+    context = ssl.create_default_context()
+    socket.create_connection = create_ipv4_connection
+
     try:
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=12) as server:
-            server.login(sender_email, clean_pwd)
-            server.sendmail(sender_email, [recipient_email], msg.as_string())
-        return True, "Email sent successfully"
-    except smtplib.SMTPAuthenticationError:
-        return False, "Gmail Authentication failed. Please check your Google App Password."
-    except Exception as e:
-        return False, f"Failed to send email: {str(e)}"
+        # Method 1: Port 587 with STARTTLS and IPv4 (Standard for Cloud & Render)
+        try:
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=12) as server:
+                server.ehlo()
+                server.starttls(context=context)
+                server.ehlo()
+                server.login(sender_email, clean_pwd)
+                server.sendmail(sender_email, [recipient_email], msg.as_string())
+            return True, "Email sent successfully via Port 587"
+        except Exception as err587:
+            # Method 2: Port 465 with SSL and IPv4 fallback
+            try:
+                with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=12) as server:
+                    server.login(sender_email, clean_pwd)
+                    server.sendmail(sender_email, [recipient_email], msg.as_string())
+                return True, "Email sent successfully via Port 465"
+            except smtplib.SMTPAuthenticationError:
+                return False, "Gmail Authentication failed. Please check your Google App Password."
+            except Exception as err465:
+                return False, f"Failed to send email: {str(err587)} | Fallback error: {str(err465)}"
+    finally:
+        socket.create_connection = orig_create_conn
