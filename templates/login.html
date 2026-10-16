@@ -19,7 +19,7 @@
         /* Central Luxury Card */
         .auth-card {
             width: 100%;
-            max-width: 470px;
+            max-width: 480px;
             background: var(--bg-forest-card);
             backdrop-filter: blur(35px);
             -webkit-backdrop-filter: blur(35px);
@@ -209,7 +209,7 @@
             text-align: center;
         }
 
-        /* Password Input Wrapper with Eye Toggle */
+        /* Password Input Wrapper with Professional SVG Eye Toggle */
         .password-wrap {
             position: relative;
             display: flex;
@@ -224,7 +224,6 @@
             background: transparent;
             border: none;
             color: var(--text-muted);
-            font-size: 18px;
             cursor: pointer;
             padding: 4px;
             display: flex;
@@ -235,6 +234,11 @@
         }
         .toggle-pwd-btn:hover {
             color: var(--gold-champagne);
+        }
+        .toggle-pwd-btn svg {
+            width: 18px;
+            height: 18px;
+            display: block;
         }
 
         /* Password Strength Bar & Hints */
@@ -336,18 +340,7 @@
             font-weight: 600;
             margin-top: 8px;
             align-items: center;
-            gap: 6px;
-        }
-        .otp-demo-alert {
-            display: none;
-            background: rgba(212, 175, 55, 0.12);
-            border: 1px solid var(--gold-primary);
-            color: var(--gold-champagne);
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin-top: 8px;
-            line-height: 1.4;
+            gap: 8px;
         }
         .btn-back-link {
             display: inline-block;
@@ -377,7 +370,7 @@
         .secure-badge {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             color: var(--gold-champagne);
             font-weight: 600;
         }
@@ -401,7 +394,7 @@
 
         <div id="clientErrorBanner" class="alert-error client-banner"></div>
 
-        <!-- Tabs Header (Only Sign In & Create Account) -->
+        <!-- Tabs Header (Sign In & Create Account) -->
         <div class="tabs-header" id="mainTabsHeader">
             <button type="button" class="tab-btn {% if active_tab != 'register' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
             <button type="button" class="tab-btn {% if active_tab == 'register' %}active{% endif %}" onclick="switchTab('register')">Create Account</button>
@@ -419,7 +412,9 @@
                     <label>Password</label>
                     <div class="password-wrap">
                         <input type="password" name="password" id="signin_password" class="input-box" placeholder="Enter your password" required autocomplete="new-password">
-                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('signin_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('signin_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
                     </div>
                 </div>
                 <div class="remember-row">
@@ -430,7 +425,7 @@
             </form>
         </div>
 
-        <!-- Create Account Form (With Email OTP Verification) -->
+        <!-- Create Account Form (With Email OTP Verification + 10-Digit Mobile) -->
         <div id="register-section" class="form-section {% if active_tab == 'register' %}active{% endif %}">
             <form action="/register" method="POST" id="registerForm" onsubmit="return validateRegisterForm(event)">
                 <input type="hidden" name="action" value="register">
@@ -460,16 +455,28 @@
                         <button type="button" class="btn-otp-action" id="btnRegVerifyEmailOtp" onclick="verifyRegisterEmailOTP()">Verify Code</button>
                     </div>
                     <div class="otp-verified-badge" id="regEmailVerifiedBadge">
-                        <span>✓</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         <span id="regEmailVerifiedText">ઇમેઇલ સફળતાપૂર્વક વેરિફાય થયો!</span>
                     </div>
+                </div>
+
+                <!-- Mobile Number Input -->
+                <div class="form-group">
+                    <label>Mobile Number (મોબાઇલ નંબર - 10 અંક)</label>
+                    <div class="phone-input-wrap">
+                        <div class="phone-prefix">+91</div>
+                        <input type="tel" name="phone" id="reg_phone" class="input-box" placeholder="e.g. 9876543210" maxlength="10" pattern="[0-9]{10}" required autocomplete="tel">
+                    </div>
+                    <span class="otp-status-text">આ મોબાઇલ નંબરથી પણ તમે સીધા સાઇન-ઇન કરી શકશો.</span>
                 </div>
 
                 <div class="form-group">
                     <label>Create Password (નવો પાસવર્ડ - Min 6 Characters)</label>
                     <div class="password-wrap">
                         <input type="password" name="password" id="reg_password" class="input-box" placeholder="Create strong password" required minlength="6" oninput="handlePasswordStrength(this)">
-                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
                     </div>
                     <!-- Password Strength Meter -->
                     <div class="pwd-strength-container" id="strengthContainer">
@@ -487,7 +494,9 @@
                     <label>Confirm Password (પાસવર્ડ ફરીથી લખો)</label>
                     <div class="password-wrap">
                         <input type="password" name="confirm_password" id="reg_confirm_password" class="input-box" placeholder="Re-enter password to confirm" required oninput="handlePasswordMatch()">
-                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_confirm_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+                        <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_confirm_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
                     </div>
                     <span class="pwd-hint-text" id="confirmHint"></span>
                 </div>
@@ -496,26 +505,26 @@
             </form>
         </div>
 
-        <!-- Reset Password Form (Secure via Email OTP) -->
+        <!-- Reset Password Form (Secure via Email OTP / Mobile) -->
         <div id="reset-section" class="form-section {% if active_tab == 'reset' %}active{% endif %}">
             <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 16px; color: var(--gold-champagne); margin-bottom: 6px;">Reset Password via Email Verification</h3>
+                <h3 style="font-size: 16px; color: var(--gold-champagne); margin-bottom: 6px;">Reset Password via Verification</h3>
                 <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-                    તમારા રજીસ્ટર ઇમેઇલ પર સુરક્ષા કોડ મેળવી નવો પાસવર્ડ સેટ કરો.
+                    તમારા રજીસ્ટર ઇમેઇલ અથવા મોબાઇલ નંબર દ્વારા સુરક્ષા કોડ મેળવી નવો પાસવર્ડ સેટ કરો.
                 </p>
             </div>
 
             <div class="form-group">
-                <label>Registered Email Address (રજીસ્ટર ઇમેઇલ એડ્રેસ)</label>
+                <label>Registered Email or Mobile (રજીસ્ટર ઇમેઇલ અથવા મોબાઇલ નંબર)</label>
                 <div class="phone-input-wrap">
-                    <input type="email" id="reset_email" class="input-box" placeholder="e.g. zarvin.114@gmail.com" required>
+                    <input type="text" id="reset_identifier" class="input-box" placeholder="e.g. zarvin.114@gmail.com or 9876543210" required>
                     <button type="button" class="btn-otp-action" id="btnResetSendEmailOtp" onclick="sendResetEmailOTP()">Send Code</button>
                 </div>
-                <span class="otp-status-text" id="resetEmailStatusText">૬-અંકનો પાસવર્ડ રીસેટ કોડ તમારા Gmail પર આવશે.</span>
+                <span class="otp-status-text" id="resetEmailStatusText">૬-અંકનો સુરક્ષા કોડ તમારા રજીસ્ટર્ડ Gmail ઇનબોક્સમાં મોકલવામાં આવશે.</span>
             </div>
 
             <div class="form-group" id="resetOtpBox" style="display: none;">
-                <label>Enter 6-Digit Email Code (ઇમેઇલ પર આવેલ કોડ)</label>
+                <label>Enter 6-Digit Verification Code (ઇમેઇલ પર આવેલ કોડ)</label>
                 <input type="text" id="reset_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6">
             </div>
 
@@ -523,7 +532,9 @@
                 <label>New Password (નવો પાસવર્ડ - Min 6 Characters)</label>
                 <div class="password-wrap">
                     <input type="password" id="reset_new_password" class="input-box" placeholder="Enter new strong password" minlength="6">
-                    <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_new_password', this)">👁️</button>
+                    <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_new_password', this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
                 </div>
             </div>
 
@@ -531,7 +542,9 @@
                 <label>Confirm New Password (નવો પાસવર્ડ ફરીથી લખો)</label>
                 <div class="password-wrap">
                     <input type="password" id="reset_conf_password" class="input-box" placeholder="Re-enter new password" minlength="6">
-                    <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_conf_password', this)">👁️</button>
+                    <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_conf_password', this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
                 </div>
             </div>
 
@@ -545,7 +558,10 @@
         </div>
 
         <div class="auth-footer">
-            <span class="secure-badge">&#128274; 256-Bit SSL Encrypted</span>
+            <span class="secure-badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                256-Bit SSL Encrypted
+            </span>
             <span>&bull;</span>
             <span>Email Verified Security</span>
             <span>&bull;</span>
@@ -554,11 +570,15 @@
     </div>
 
     <script>
+        const SVG_EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        const SVG_EYE_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
         let isEmailVerified = false;
         let verifiedEmailAddress = "";
         let verifiedOtpCode = "";
         let regTimerInterval = null;
         let resetTimerInterval = null;
+        let verifiedResetEmail = "";
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -585,11 +605,11 @@
             if (!input) return;
             if (input.type === 'password') {
                 input.type = 'text';
-                btn.textContent = '🙈';
+                btn.innerHTML = SVG_EYE_OFF;
                 btn.title = 'Hide Password';
             } else {
                 input.type = 'password';
-                btn.textContent = '👁️';
+                btn.innerHTML = SVG_EYE;
                 btn.title = 'Show Password';
             }
         }
@@ -617,7 +637,7 @@
             if (val.length < 6) {
                 fill.style.width = '25%';
                 fill.style.backgroundColor = '#EF4444';
-                label.textContent = '⚠️ બહુ ટૂંકો છે (Too Short - min 6)';
+                label.textContent = 'બહુ ટૂંકો છે (Too Short - min 6)';
                 label.style.color = '#FCA5A5';
             } else if (score === 1) {
                 fill.style.width = '40%';
@@ -651,10 +671,10 @@
             }
 
             if (pwd === conf) {
-                hint.textContent = '✓ પાસવર્ડ સરખા છે (Passwords match)';
+                hint.textContent = 'પાસવર્ડ સરખા છે (Passwords match)';
                 hint.className = 'pwd-hint-text success';
             } else {
-                hint.textContent = '✕ પાસવર્ડ મેચ થતા નથી (Passwords do not match)';
+                hint.textContent = 'પાસવર્ડ મેચ થતા નથી (Passwords do not match)';
                 hint.className = 'pwd-hint-text error';
             }
         }
@@ -687,13 +707,13 @@
             const statusText = document.getElementById('regEmailStatusText');
 
             if (!email || !email.includes('@')) {
-                showClientError('⚠️ કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.', emailInput);
+                showClientError('કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.', emailInput);
                 return;
             }
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
-            statusText.textContent = '⏳ ઇમેઇલ પર સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
+            statusText.textContent = 'ઇમેઇલ પર સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
 
             try {
                 const res = await fetch('/api/auth/send-otp', {
@@ -713,7 +733,7 @@
 
                 // Show OTP Box
                 document.getElementById('regEmailOtpBox').style.display = 'block';
-                statusText.textContent = '✓ ' + (data.message || 'કોડ મોકલી દેવાયો છે.');
+                statusText.textContent = data.message || 'કોડ મોકલી દેવાયો છે.';
 
                 // Start 60s cooldown timer
                 let countdown = 60;
@@ -745,7 +765,7 @@
             const badgeText = document.getElementById('regEmailVerifiedText');
 
             if (otp.length !== 6) {
-                showClientError('⚠️ કૃપા કરીને 6-અંકનો વેરિફિકેશન કોડ દાખલ કરો.', document.getElementById('reg_otp'));
+                showClientError('કૃપા કરીને 6-અંકનો વેરિફિકેશન કોડ દાખલ કરો.', document.getElementById('reg_otp'));
                 return;
             }
 
@@ -761,7 +781,7 @@
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError('⚠️ ' + (data.error || 'ખોટો વેરિફિકેશન કોડ છે.'), document.getElementById('reg_otp'));
+                    showClientError(data.error || 'ખોટો વેરિફિકેશન કોડ છે.', document.getElementById('reg_otp'));
                     btn.disabled = false;
                     btn.textContent = 'Verify Code';
                     return;
@@ -782,7 +802,7 @@
                 btn.style.display = 'none';
 
                 badge.style.display = 'flex';
-                badgeText.textContent = `✓ ઇમેઇલ (${email}) સફળતાપૂર્વક વેરિફાય થયો!`;
+                badgeText.textContent = `ઇમેઇલ (${email}) સફળતાપૂર્વક વેરિફાય થયો!`;
 
             } catch (err) {
                 showClientError('વેરિફિકેશનમાં ભૂલ: ' + err.message);
@@ -794,6 +814,8 @@
         function validateRegisterForm(e) {
             clearClientError();
             const username = document.getElementById('reg_username').value.trim();
+            const phoneInput = document.getElementById('reg_phone');
+            const phoneVal = phoneInput ? phoneInput.value.trim().replace(/\D/g, '') : '';
             const pwdInput = document.getElementById('reg_password');
             const confInput = document.getElementById('reg_confirm_password');
             const pwd = pwdInput.value;
@@ -801,58 +823,64 @@
 
             if (username.length < 3) {
                 e.preventDefault();
-                showClientError('⚠️ યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જોઈએ. (Username must be at least 3 chars)', document.getElementById('reg_username'));
+                showClientError('યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જોઈએ. (Username must be at least 3 chars)', document.getElementById('reg_username'));
                 return false;
             }
 
             if (!isEmailVerified) {
                 e.preventDefault();
-                showClientError('⚠️ કૃપા કરીને પહેલા તમારા ઇમેઇલ પર કોડ મોકલી વેરિફાય કરો! તમારા ઇમેઇલ વગર કોઈ પણ એકાઉન્ટ બનાવી શકશે નહીં.', document.getElementById('reg_email'));
+                showClientError('કૃપા કરીને પહેલા તમારા ઇમેઇલ પર કોડ મોકલી વેરિફાય કરો! સુરક્ષા માટે ઇમેઇલ વેરિફિકેશન ફરજિયાત છે.', document.getElementById('reg_email'));
+                return false;
+            }
+
+            if (phoneVal.length !== 10) {
+                e.preventDefault();
+                showClientError('કૃપા કરીને માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો.', phoneInput);
                 return false;
             }
 
             if (pwd.length < 6) {
                 e.preventDefault();
-                showClientError('⚠️ પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ! (Password must be at least 6 characters)', pwdInput);
+                showClientError('પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ! (Password must be at least 6 characters)', pwdInput);
                 return false;
             }
 
             if (pwd !== conf) {
                 e.preventDefault();
-                showClientError('⚠️ પાસવર્ડ અને Confirm Password મેચ થતા નથી! કૃપા કરીને ચકાસો.', confInput);
+                showClientError('પાસવર્ડ અને Confirm Password મેચ થતા નથી! કૃપા કરીને ચકાસો.', confInput);
                 return false;
             }
 
             const btn = document.getElementById('regSubmitBtn');
             btn.disabled = true;
-            btn.textContent = '⏳ સુરક્ષિત એકાઉન્ટ બની રહ્યું છે...';
+            btn.textContent = 'સુરક્ષિત એકાઉન્ટ બની રહ્યું છે...';
             return true;
         }
 
         // ==========================================
-        // RESET PASSWORD: SEND EMAIL CODE & SUBMIT
+        // RESET PASSWORD: SEND VERIFICATION CODE & SUBMIT
         // ==========================================
         async function sendResetEmailOTP() {
             clearClientError();
-            const emailInput = document.getElementById('reset_email');
-            const email = emailInput.value.trim().toLowerCase();
+            const identInput = document.getElementById('reset_identifier');
+            const identifier = identInput.value.trim();
             const btn = document.getElementById('btnResetSendEmailOtp');
             const statusText = document.getElementById('resetEmailStatusText');
 
-            if (!email || !email.includes('@')) {
-                showClientError('⚠️ કૃપા કરીને માન્ય રજીસ્ટર્ડ ઇમેઇલ દાખલ કરો.', emailInput);
+            if (!identifier) {
+                showClientError('કૃપા કરીને માન્ય રજીસ્ટર્ડ ઇમેઇલ અથવા 10-અંકનો મોબાઇલ નંબર દાખલ કરો.', identInput);
                 return;
             }
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
-            statusText.textContent = '⏳ ઇમેઇલ પર સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
+            statusText.textContent = 'સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
 
             try {
                 const res = await fetch('/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email, purpose: 'RESET' })
+                    body: JSON.stringify({ identifier: identifier, purpose: 'RESET' })
                 });
                 const data = await res.json();
 
@@ -860,9 +888,11 @@
                     showClientError(data.error || 'કોડ મોકલવામાં ભૂલ થઈ.');
                     btn.disabled = false;
                     btn.textContent = 'Send Code';
-                    statusText.textContent = 'કૃપા કરીને રજીસ્ટર્ડ ઇમેઇલ દાખલ કરો.';
+                    statusText.textContent = 'કૃપા કરીને રજીસ્ટર્ડ ઇમેઇલ અથવા મોબાઇલ નંબર દાખલ કરો.';
                     return;
                 }
+
+                verifiedResetEmail = data.target_email || identifier;
 
                 // Show inputs for OTP and New Password
                 document.getElementById('resetOtpBox').style.display = 'block';
@@ -870,7 +900,7 @@
                 document.getElementById('resetConfPwdBox').style.display = 'block';
                 document.getElementById('btnResetSubmit').style.display = 'block';
 
-                statusText.textContent = '✓ ' + (data.message || 'કોડ ઇમેઇલ પર મોકલી દેવાયો છે.');
+                statusText.textContent = data.message || 'કોડ મોકલી દેવાયો છે.';
 
                 let countdown = 60;
                 clearInterval(resetTimerInterval);
@@ -894,34 +924,34 @@
 
         async function submitResetPassword() {
             clearClientError();
-            const email = document.getElementById('reset_email').value.trim().toLowerCase();
+            const identifier = document.getElementById('reset_identifier').value.trim();
             const otp = document.getElementById('reset_otp').value.trim();
             const newPwd = document.getElementById('reset_new_password').value;
             const confPwd = document.getElementById('reset_conf_password').value;
             const btn = document.getElementById('btnResetSubmit');
 
             if (otp.length !== 6) {
-                showClientError('⚠️ કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો કોડ દાખલ કરો.', document.getElementById('reset_otp'));
+                showClientError('કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો કોડ દાખલ કરો.', document.getElementById('reset_otp'));
                 return;
             }
             if (newPwd.length < 6) {
-                showClientError('⚠️ નવો પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ.', document.getElementById('reset_new_password'));
+                showClientError('નવો પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ.', document.getElementById('reset_new_password'));
                 return;
             }
             if (newPwd !== confPwd) {
-                showClientError('⚠️ નવો પાસવર્ડ અને Confirm Password મેચ થતા નથી.', document.getElementById('reset_conf_password'));
+                showClientError('નવો પાસવર્ડ અને Confirm Password મેચ થતા નથી.', document.getElementById('reset_conf_password'));
                 return;
             }
 
             btn.disabled = true;
-            btn.textContent = '⏳ પાસવર્ડ અપડેટ થઈ રહ્યો છે...';
+            btn.textContent = 'પાસવર્ડ અપડેટ થઈ રહ્યો છે...';
 
             try {
                 const res = await fetch('/api/auth/reset-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        email: email,
+                        identifier: verifiedResetEmail || identifier,
                         otp_code: otp,
                         new_password: newPwd
                     })
@@ -929,16 +959,22 @@
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError('⚠️ ' + (data.error || 'પાસવર્ડ બદલવામાં નિષ્ફળતા.'));
+                    showClientError(data.error || 'પાસવર્ડ બદલવામાં નિષ્ફળતા.');
                     btn.disabled = false;
                     btn.textContent = 'Update Password & Sign In →';
                     return;
                 }
 
-                alert(data.message || 'પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે સાઇન-ઇન કરી શકો છો.');
                 switchTab('signin');
-                document.getElementById('signin_username').value = email;
+                const signinInput = document.getElementById('signin_username');
+                signinInput.value = identifier;
                 document.getElementById('signin_password').focus();
+                
+                // Show clean success message in signin
+                const banner = document.getElementById('clientErrorBanner');
+                banner.className = 'alert-success';
+                banner.textContent = data.message || 'પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે સાઇન-ઇન કરી શકો છો.';
+                banner.style.display = 'block';
 
             } catch (err) {
                 showClientError('ભૂલ: ' + err.message);
@@ -954,18 +990,18 @@
 
             if (!user) {
                 e.preventDefault();
-                showClientError('⚠️ કૃપા કરીને યુઝરનેમ અથવા ઇમેઇલ દાખલ કરો.', document.getElementById('signin_username'));
+                showClientError('કૃપા કરીને યુઝરનેમ, ઇમેઇલ અથવા 10-અંકનો મોબાઇલ નંબર દાખલ કરો.', document.getElementById('signin_username'));
                 return false;
             }
             if (!pass) {
                 e.preventDefault();
-                showClientError('⚠️ કૃપા કરીને પાસવર્ડ દાખલ કરો.', document.getElementById('signin_password'));
+                showClientError('કૃપા કરીને પાસવર્ડ દાખલ કરો.', document.getElementById('signin_password'));
                 return false;
             }
 
             const btn = document.getElementById('signinSubmitBtn');
             btn.disabled = true;
-            btn.textContent = '⏳ સાઇન ઇન થઈ રહ્યું છે... (Signing in...)';
+            btn.textContent = 'સાઇન ઇન થઈ રહ્યું છે... (Signing in...)';
             return true;
         }
 

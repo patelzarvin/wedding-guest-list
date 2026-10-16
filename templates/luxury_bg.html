@@ -1,52 +1,106 @@
-<!-- Royal Forest Green & Gold Minimal Rotating Mandala Background -->
+<!-- Royal Forest Green & Champagne Gold Sacred Geometry Rotating Background -->
 <div class="luxury-bg-decor" aria-hidden="true">
-    <!-- Top-Right Rotating Mandala -->
-    <svg class="rotating-mandala-top" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="250" cy="250" r="230" stroke="#D4AF37" stroke-width="1.2" stroke-dasharray="4 6"/>
-        <circle cx="250" cy="250" r="200" stroke="#D4AF37" stroke-width="1.5"/>
-        <circle cx="250" cy="250" r="170" stroke="#D4AF37" stroke-width="1" stroke-dasharray="6 6"/>
-        <circle cx="250" cy="250" r="130" stroke="#D4AF37" stroke-width="1.2"/>
-        <circle cx="250" cy="250" r="80" stroke="#D4AF37" stroke-width="1.5"/>
-        <circle cx="250" cy="250" r="40" stroke="#D4AF37" stroke-width="1.2"/>
-        <circle cx="250" cy="250" r="12" fill="#D4AF37"/>
-        <!-- 16 Radial Rays -->
-        <g stroke="#D4AF37" stroke-width="1.2">
-            <line x1="250" y1="20" x2="250" y2="480"/>
-            <line x1="20" y1="250" x2="480" y2="250"/>
-            <line x1="87" y1="87" x2="413" y2="413"/>
-            <line x1="87" y1="413" x2="413" y2="87"/>
-            <line x1="162" y1="38" x2="338" y2="462"/>
-            <line x1="338" y1="38" x2="162" y2="462"/>
-            <line x1="38" y1="162" x2="462" y2="338"/>
-            <line x1="38" y1="338" x2="462" y2="162"/>
-        </g>
-        <!-- Outer Diamond & Petal Accents -->
-        <g stroke="#D4AF37" stroke-width="1">
-            <polygon points="250,50 391,109 450,250 391,391 250,450 109,391 50,250 109,109"/>
-            <polygon points="250,80 370,130 420,250 370,370 250,420 130,370 80,250 130,130"/>
+    <!-- Top-Right Rotating Royal Sacred Geometry Mandala -->
+    <svg class="rotating-mandala-top" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="royalGlowTop" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                </feMerge>
+            </filter>
+            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#F3E5AB" />
+                <stop offset="50%" stop-color="#D4AF37" />
+                <stop offset="100%" stop-color="#AA771C" />
+            </linearGradient>
+        </defs>
+
+        <g filter="url(#royalGlowTop)">
+            <!-- Outer Beaded Orbit Ring -->
+            <circle cx="300" cy="300" r="280" stroke="url(#goldGradient)" stroke-width="1.8" stroke-dasharray="4 8" />
+            <circle cx="300" cy="300" r="260" stroke="#D4AF37" stroke-width="1.8" />
+            <circle cx="300" cy="300" r="240" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="6 6" />
+
+            <!-- 12-Petal Sacred Interlocking Arcs -->
+            <g stroke="#D4AF37" stroke-width="1.8">
+                <!-- Outer 12 Petals -->
+                <circle cx="300" cy="180" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+                <circle cx="300" cy="420" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+                <circle cx="180" cy="300" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+                <circle cx="420" cy="300" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+                <circle cx="215" cy="215" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+                <circle cx="385" cy="215" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+                <circle cx="215" cy="385" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+                <circle cx="385" cy="385" r="120" stroke-width="1.6" stroke-opacity="0.9" />
+            </g>
+
+            <!-- Octagram Sacred Geometry Stars -->
+            <polygon points="300,70 345,210 490,210 375,295 420,435 300,350 180,435 225,295 110,210 255,210" stroke="#D4AF37" stroke-width="1.8" fill="none" />
+            <polygon points="300,100 440,240 440,360 300,500 160,360 160,240" stroke="#D4AF37" stroke-width="1.6" stroke-dasharray="8 6" fill="none" />
+            <polygon points="240,160 360,160 440,240 440,360 360,440 240,440 160,360 160,240" stroke="#D4AF37" stroke-width="1.6" fill="none" />
+
+            <!-- Core Sacred Rings & Sun Center -->
+            <circle cx="300" cy="300" r="150" stroke="#D4AF37" stroke-width="1.8" />
+            <circle cx="300" cy="300" r="110" stroke="url(#goldGradient)" stroke-width="2.0" />
+            <circle cx="300" cy="300" r="70" stroke="#D4AF37" stroke-width="1.8" stroke-dasharray="3 5" />
+            <circle cx="300" cy="300" r="35" stroke="#D4AF37" stroke-width="2.0" />
+            <circle cx="300" cy="300" r="10" fill="#D4AF37" />
+
+            <!-- 16 Radial Scepter Rays -->
+            <g stroke="#D4AF37" stroke-width="1.8">
+                <line x1="300" y1="20" x2="300" y2="580" />
+                <line x1="20" y1="300" x2="580" y2="300" />
+                <line x1="102" y1="102" x2="498" y2="498" />
+                <line x1="102" y1="498" x2="498" y2="102" />
+                <line x1="193" y1="41" x2="407" y2="559" />
+                <line x1="407" y1="41" x2="193" y2="559" />
+                <line x1="41" y1="193" x2="559" y2="407" />
+                <line x1="41" y1="407" x2="559" y2="193" />
+            </g>
         </g>
     </svg>
 
-    <!-- Bottom-Left Reverse-Rotating Mandala -->
-    <svg class="rotating-mandala-bottom" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="250" cy="250" r="220" stroke="#D4AF37" stroke-width="1" stroke-dasharray="3 5"/>
-        <circle cx="250" cy="250" r="180" stroke="#D4AF37" stroke-width="1.2"/>
-        <circle cx="250" cy="250" r="140" stroke="#D4AF37" stroke-width="1"/>
-        <circle cx="250" cy="250" r="90" stroke="#D4AF37" stroke-width="1.4"/>
-        <circle cx="250" cy="250" r="30" stroke="#D4AF37" stroke-width="1"/>
-        <circle cx="250" cy="250" r="8" fill="#D4AF37"/>
-        <g stroke="#D4AF37" stroke-width="1">
-            <line x1="250" y1="30" x2="250" y2="470"/>
-            <line x1="30" y1="250" x2="470" y2="250"/>
-            <line x1="94" y1="94" x2="406" y2="406"/>
-            <line x1="94" y1="406" x2="406" y2="94"/>
-        </g>
-        <g stroke="#D4AF37" stroke-width="1">
-            <polygon points="250,70 377,123 430,250 377,377 250,430 123,377 70,250 123,123"/>
+    <!-- Bottom-Left Counter-Rotating Royal Sacred Geometry Mandala -->
+    <svg class="rotating-mandala-bottom" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="royalGlowBottom" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                </feMerge>
+            </filter>
+        </defs>
+
+        <g filter="url(#royalGlowBottom)">
+            <circle cx="300" cy="300" r="270" stroke="#D4AF37" stroke-width="1.8" stroke-dasharray="5 7" />
+            <circle cx="300" cy="300" r="230" stroke="#D4AF37" stroke-width="1.8" />
+            <circle cx="300" cy="300" r="180" stroke="#D4AF37" stroke-width="1.6" stroke-dasharray="4 6" />
+
+            <!-- Interlocking Hexagonal Geometry -->
+            <polygon points="300,70 499,185 499,415 300,530 101,415 101,185" stroke="#D4AF37" stroke-width="1.8" fill="none" />
+            <polygon points="300,530 101,415 101,185 300,70 499,185 499,415" transform="rotate(30 300 300)" stroke="#D4AF37" stroke-width="1.6" stroke-dasharray="6 6" fill="none" />
+            <polygon points="300,110 464,205 464,395 300,490 136,395 136,205" stroke="#D4AF37" stroke-width="1.8" fill="none" />
+
+            <!-- Core Concentric Rings -->
+            <circle cx="300" cy="300" r="130" stroke="#D4AF37" stroke-width="1.8" />
+            <circle cx="300" cy="300" r="80" stroke="#D4AF37" stroke-width="2.0" />
+            <circle cx="300" cy="300" r="30" stroke="#D4AF37" stroke-width="1.8" stroke-dasharray="3 4" />
+            <circle cx="300" cy="300" r="8" fill="#D4AF37" />
+
+            <!-- Scepter Rays -->
+            <g stroke="#D4AF37" stroke-width="1.8">
+                <line x1="300" y1="30" x2="300" y2="570" />
+                <line x1="30" y1="300" x2="570" y2="300" />
+                <line x1="109" y1="109" x2="491" y2="491" />
+                <line x1="109" y1="491" x2="491" y2="109" />
+            </g>
         </g>
     </svg>
 
-    <!-- Ambient Luxury Glow Spots -->
+    <!-- Subtle Luxury Ambient Glow Spots -->
     <div class="luxury-glow-spot glow-spot-1"></div>
     <div class="luxury-glow-spot glow-spot-2"></div>
 </div>

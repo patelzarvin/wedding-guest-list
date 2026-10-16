@@ -65,23 +65,25 @@ body {
 
 .rotating-mandala-top {
     position: absolute;
-    top: -120px;
-    right: -120px;
-    width: 520px;
-    height: 520px;
-    opacity: 0.07;
-    animation: rotateSmooth 90s linear infinite;
+    top: -100px;
+    right: -100px;
+    width: 580px;
+    height: 580px;
+    opacity: 0.16;
+    filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.45));
+    animation: rotateSmooth 100s linear infinite;
     transform-origin: center center;
 }
 
 .rotating-mandala-bottom {
     position: absolute;
-    bottom: -150px;
-    left: -150px;
-    width: 600px;
-    height: 600px;
-    opacity: 0.05;
-    animation: rotateSmoothReverse 110s linear infinite;
+    bottom: -120px;
+    left: -120px;
+    width: 620px;
+    height: 620px;
+    opacity: 0.13;
+    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.38));
+    animation: rotateSmoothReverse 120s linear infinite;
     transform-origin: center center;
 }
 
