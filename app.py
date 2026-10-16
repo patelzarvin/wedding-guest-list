@@ -451,20 +451,22 @@ def dashboard():
 # Strict Token-Based Isolation: No credentials needed for parents
 # -------------------------------------------------------------
 @app.route("/collector/<token>")
+@app.route("/collector/<token>/")
 def parent_collector_view(token):
-    parent = get_parent_by_token(token)
+    clean_token = str(token).strip().rstrip('/')
+    parent = get_parent_by_token(clean_token)
     if not parent:
-        return "અમાન્ય અથવા એક્સપાયર થયેલી લિંક (Invalid or expired link).", 404
+        return render_template("error_link.html"), 404
         
-    history = get_chat_history_db(token)
+    history = get_chat_history_db(clean_token)
     if not history:
-        role_gu = "પિતાશ્રી (પપ્પા)" if parent["role"] == "FATHER" else "માતાશ્રી (મમ્મી)"
-        side_gu = "પિતા પક્ષ (Father's Side)" if parent["role"] == "FATHER" else "માતા પક્ષ (Mother's Side)"
+        role_gu = "પિતાશ્રી (પપ્પા)" if parent.get("role") == "FATHER" else "માતાશ્રી (મમ્મી)"
+        side_gu = "પિતા પક્ષ (Father's Side)" if parent.get("role") == "FATHER" else "માતા પક્ષ (Mother's Side)"
         groom = parent.get("groom_name", "").strip() or "વરરાજા"
         bride = parent.get("bride_name", "").strip() or "કન્યા"
         
         initial_greeting = (
-            f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent['name']} {role_gu}! 🙏\n\n"
+            f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent.get('name', '')} {role_gu}! 🙏\n\n"
             f"{groom} અને {bride} ના લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા માટે હું આપનો સહાયક છું.\n\n"
             f"આપ આપના સંબંધીઓ (આપના ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો વગેરે) ના નામ અને મોબાઈલ નંબર અહીં જણાવો.\n\n"
             f"દાખલા તરીકે:\n"
@@ -472,14 +474,16 @@ def parent_collector_view(token):
             f"• 'કાકા મહેશભાઈ 9824012345'\n\n"
             f"શરૂ કરવા માટે જણાવશો, આપના ભાઈઓ કે કાકા કોણ કોણ છે?"
         )
-        log_chat_message_db(token, "bot", initial_greeting)
-        history = get_chat_history_db(token)
+        log_chat_message_db(clean_token, "bot", initial_greeting)
+        history = get_chat_history_db(clean_token)
         
     return render_template("parent_collector.html", parent=parent, history=history)
 
 @app.route("/api/collector-chat/<token>", methods=["POST"])
+@app.route("/api/collector-chat/<token>/", methods=["POST"])
 def api_collector_chat(token):
-    parent = get_parent_by_token(token)
+    clean_token = str(token).strip().rstrip('/')
+    parent = get_parent_by_token(clean_token)
     if not parent:
         return jsonify({"error": "Invalid token"}), 404
         
@@ -496,31 +500,36 @@ def api_collector_chat(token):
 # Zero Data Leakage: Guest only sees their family chat
 # -------------------------------------------------------------
 @app.route("/chat/<token>")
+@app.route("/chat/<token>/")
 def guest_chat_view(token):
-    contact = get_contact_by_token_db(token)
+    clean_token = str(token).strip().rstrip('/')
+    contact = get_contact_by_token_db(clean_token)
     if not contact:
-        return "અમાન્ય અથવા એક્સપાયર થયેલી લિંક (Invalid or expired link).", 404
+        return render_template("error_link.html"), 404
         
-    history = get_chat_history_db(token)
+    history = get_chat_history_db(clean_token)
     if not history:
         groom = contact.get("groom_name", "").strip() or "વરરાજા"
         bride = contact.get("bride_name", "").strip() or "કન્યા"
         side_label = "વર પક્ષ" if contact.get("side") == "GROOM" else "કન્યા પક્ષ"
+        cat_name = contact.get("category", "").title()
         
         initial_greeting = (
-            f"💍 જય શ્રી કૃષ્ણ {contact['name']}! 🙏\n\n"
-            f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગે આપનું અને આપના પરિવારનું હાર્દિક સ્વાગત છે ({side_label} ➔ {contact['category'].title()}).\n\n"
+            f"💍 જય શ્રી કૃષ્ણ {contact.get('name', '')}! 🙏\n\n"
+            f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગે આપનું અને આપના પરિવારનું હાર્દિક સ્વાગત છે ({side_label} ➔ {cat_name}).\n\n"
             f"લગ્નમાં આપના પરિવારમાંથી કોણ કોણ પધારી રહ્યું છે તેની વિગત માટે હું આપને માત્ર ૨ સરળ સવાલ પૂછીશ.\n\n"
             f"👉 ૧. શું આપના માતા-પિતા (વડીલો) આપની સાથે આવશે? (હા / ના)"
         )
-        log_chat_message_db(token, "bot", initial_greeting)
-        history = get_chat_history_db(token)
+        log_chat_message_db(clean_token, "bot", initial_greeting)
+        history = get_chat_history_db(clean_token)
         
     return render_template("chat.html", contact=contact, history=history)
 
 @app.route("/api/guest-chat/<token>", methods=["POST"])
+@app.route("/api/guest-chat/<token>/", methods=["POST"])
 def api_guest_chat(token):
-    contact = get_contact_by_token_db(token)
+    clean_token = str(token).strip().rstrip('/')
+    contact = get_contact_by_token_db(clean_token)
     if not contact:
         return jsonify({"error": "Invalid token"}), 404
         

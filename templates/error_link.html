@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WedVite - લિંક અમાન્ય અથવા એક્સપાયર થયેલી છે</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/luxury_theme.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .error-card {
+            width: 100%;
+            max-width: 460px;
+            background: var(--bg-forest-card);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1px solid var(--gold-border);
+            border-radius: 28px;
+            padding: 44px 32px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px var(--gold-glow);
+            position: relative;
+            z-index: 10;
+        }
+        .error-icon-wrap {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.12);
+            border: 1.5px solid var(--gold-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold-champagne);
+        }
+        .error-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            color: #FFFFFF;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        .error-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+        .btn-home {
+            display: inline-block;
+            background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #B8860B 100%);
+            color: #040906;
+            padding: 13px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+    </style>
+</head>
+<body>
+    {% include 'luxury_bg.html' %}
+
+    <div class="error-card">
+        <div class="error-icon-wrap">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <h2 class="error-title">લિંક અમાન્ય અથવા એક્સપાયર થયેલી છે</h2>
+        <p class="error-desc">
+            આ લિંક હવે સક્રિય નથી અથવા ખોટી દાખલ થઈ છે. કૃપા કરીને લગ્નના આયોજક (Host) નો સંપર્ક કરી નવી લિંક મેળવો.
+        </p>
+        <a href="/" class="btn-home">WedVite પોર્ટલ પર જાઓ &rarr;</a>
+    </div>
+</body>
+</html>

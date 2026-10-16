@@ -402,9 +402,17 @@ def get_parent_sessions(wedding_id):
     return [dict(r) for r in rows]
 
 def get_parent_by_token(token):
+    if not token:
+        return None
+    clean_t = str(token).strip().rstrip('/')
     conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT p.*, w.groom_name, w.bride_name, w.title FROM parent_sessions p JOIN weddings w ON p.wedding_id = w.id WHERE p.token = ?", (token,))
+    c.execute("""
+        SELECT p.*, w.groom_name, w.bride_name, w.title 
+        FROM parent_sessions p 
+        LEFT JOIN weddings w ON p.wedding_id = w.id 
+        WHERE LOWER(p.token) = LOWER(?)
+    """, (clean_t,))
     row = c.fetchone()
     conn.close()
     return dict(row) if row else None
@@ -477,6 +485,9 @@ def get_contacts_by_wedding(wedding_id):
     return [dict(r) for r in rows]
 
 def get_contact_by_token_db(token):
+    if not token:
+        return None
+    clean_t = str(token).strip().rstrip('/')
     conn = get_db()
     c = conn.cursor()
     c.execute("""
@@ -484,9 +495,9 @@ def get_contact_by_token_db(token):
                w.groom_name, w.bride_name, w.title
         FROM contacts c
         LEFT JOIN rsvps r ON c.id = r.contact_id
-        JOIN weddings w ON c.wedding_id = w.id
-        WHERE c.token = ?
-    """, (token,))
+        LEFT JOIN weddings w ON c.wedding_id = w.id
+        WHERE LOWER(c.token) = LOWER(?)
+    """, (clean_t,))
     row = c.fetchone()
     conn.close()
     return dict(row) if row else None

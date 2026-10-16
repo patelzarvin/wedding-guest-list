@@ -20,9 +20,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local Database & Exports
-*.db
 *.sqlite
 *.sqlite3
+!wedding.db
 *.xlsx
 *.csv
 
