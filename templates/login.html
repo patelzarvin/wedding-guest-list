@@ -277,6 +277,91 @@
             font-weight: 600;
         }
 
+        /* Mobile Phone & OTP Input Styles */
+        .phone-input-wrap {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .phone-prefix {
+            background: rgba(4, 15, 9, 0.9);
+            border: 1px solid var(--gold-border);
+            color: var(--gold-champagne);
+            font-weight: 700;
+            font-size: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .phone-input-wrap .input-box {
+            flex: 1;
+        }
+        .btn-otp-action {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(184, 134, 11, 0.3) 100%);
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-champagne);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .btn-otp-action:hover:not(:disabled) {
+            background: var(--gold-primary);
+            color: #040906;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+        }
+        .btn-otp-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+        .otp-status-text {
+            font-size: 12px;
+            color: var(--gold-champagne);
+            margin-top: 6px;
+            display: block;
+        }
+        .otp-verified-badge {
+            display: none;
+            background: rgba(16, 185, 129, 0.18);
+            border: 1px solid #10B981;
+            color: #86EFAC;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+            align-items: center;
+            gap: 6px;
+        }
+        .otp-demo-alert {
+            display: none;
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-champagne);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        .btn-back-link {
+            display: inline-block;
+            margin-top: 14px;
+            color: var(--gold-champagne);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-back-link:hover {
+            text-decoration: underline;
+        }
+
         .auth-footer {
             margin-top: 24px;
             text-align: center;
@@ -318,17 +403,18 @@
 
         <!-- Tabs Header -->
         <div class="tabs-header">
-            <button type="button" class="tab-btn {% if active_tab != 'register' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
+            <button type="button" class="tab-btn {% if active_tab != 'register' and active_tab != 'reset' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
             <button type="button" class="tab-btn {% if active_tab == 'register' %}active{% endif %}" onclick="switchTab('register')">Create Account</button>
+            <button type="button" class="tab-btn {% if active_tab == 'reset' %}active{% endif %}" id="tabBtnReset" onclick="switchTab('reset')">Reset Password</button>
         </div>
 
         <!-- Sign In Form -->
-        <div id="signin-section" class="form-section {% if active_tab != 'register' %}active{% endif %}">
+        <div id="signin-section" class="form-section {% if active_tab != 'register' and active_tab != 'reset' %}active{% endif %}">
             <form action="/login" method="POST" onsubmit="return validateSignInForm(event)" autocomplete="off">
                 <input type="hidden" name="action" value="login">
                 <div class="form-group">
-                    <label>Username / Email</label>
-                    <input type="text" name="username" id="signin_username" class="input-box" placeholder="Enter your username or email" required autofocus autocomplete="username">
+                    <label>Username / Email / Mobile</label>
+                    <input type="text" name="username" id="signin_username" class="input-box" placeholder="Enter username, email or 10-digit mobile" required autofocus autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -339,24 +425,54 @@
                 </div>
                 <div class="remember-row">
                     <label><input type="checkbox" name="remember" checked> Remember My Family</label>
-                    <a href="javascript:void(0)" onclick="alert('Please contact your administrator or register a new family account.')">Forgot Password?</a>
+                    <a href="javascript:void(0)" onclick="switchTab('reset')">Forgot Password?</a>
                 </div>
                 <button type="submit" class="btn-submit" id="signinSubmitBtn">Sign In to Dashboard &rarr;</button>
             </form>
         </div>
 
-        <!-- Create Account Form -->
+        <!-- Create Account Form (With Mobile OTP Verification) -->
         <div id="register-section" class="form-section {% if active_tab == 'register' %}active{% endif %}">
             <form action="/register" method="POST" id="registerForm" onsubmit="return validateRegisterForm(event)">
                 <input type="hidden" name="action" value="register">
+                <input type="hidden" name="phone" id="hidden_reg_phone">
+                <input type="hidden" name="otp_code" id="hidden_reg_otp">
+
                 <div class="form-group">
                     <label>Choose Username (ઓછામાં ઓછા 3 અક્ષર)</label>
-                    <input type="text" name="username" id="reg_username" class="input-box" placeholder="e.g. wedding_host" required minlength="3">
+                    <input type="text" name="username" id="reg_username" class="input-box" placeholder="e.g. bhavya_host" required minlength="3">
                 </div>
+
+                <!-- Mobile Phone + OTP Section -->
                 <div class="form-group">
-                    <label>Email Address (ઇમેઇલ એડ્રેસ)</label>
-                    <input type="email" name="email" id="reg_email" class="input-box" placeholder="e.g. host@wedding.com" required>
+                    <label>WhatsApp Mobile Number (મોબાઇલ નંબર - OTP વેરિફિકેશન)</label>
+                    <div class="phone-input-wrap">
+                        <span class="phone-prefix">+91</span>
+                        <input type="tel" id="reg_phone" class="input-box" placeholder="10-digit Mobile Number" maxlength="10" pattern="[0-9]{10}">
+                        <button type="button" class="btn-otp-action" id="btnRegSendOtp" onclick="sendRegisterOTP()">Get OTP</button>
+                    </div>
+                    <span class="otp-status-text" id="regOtpStatusText">નંબર પર 6-અંકનો સુરક્ષા કોડ મોકલવામાં આવશે.</span>
+                    <div class="otp-demo-alert" id="regDemoAlert"></div>
                 </div>
+
+                <!-- OTP Input Field -->
+                <div class="form-group" id="regOtpBox" style="display: none;">
+                    <label>Enter 6-Digit WhatsApp OTP (સુરક્ષા કોડ)</label>
+                    <div class="phone-input-wrap">
+                        <input type="text" id="reg_otp" class="input-box" placeholder="6-digit code (e.g. 123456)" maxlength="6" pattern="[0-9]{6}">
+                        <button type="button" class="btn-otp-action" id="btnRegVerifyOtp" onclick="verifyRegisterOTP()">Verify Code</button>
+                    </div>
+                    <div class="otp-verified-badge" id="regVerifiedBadge">
+                        <span>✓</span>
+                        <span id="regVerifiedText">મોબાઇલ નંબર સફળતાપૂર્વક વેરિફાય થયો!</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address (ઇમેઇલ એડ્રેસ - Optional)</label>
+                    <input type="email" name="email" id="reg_email" class="input-box" placeholder="e.g. host@wedding.com">
+                </div>
+
                 <div class="form-group">
                     <label>Create Password (નવો પાસવર્ડ - Min 6 Characters)</label>
                     <div class="password-wrap">
@@ -374,6 +490,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label>Confirm Password (પાસવર્ડ ફરીથી લખો)</label>
                     <div class="password-wrap">
@@ -382,28 +499,92 @@
                     </div>
                     <span class="pwd-hint-text" id="confirmHint"></span>
                 </div>
+
                 <button type="submit" class="btn-submit" id="regSubmitBtn">Create Wedding Suite &rarr;</button>
             </form>
+        </div>
+
+        <!-- Reset Password Form (Secure via Mobile OTP) -->
+        <div id="reset-section" class="form-section {% if active_tab == 'reset' %}active{% endif %}">
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 16px; color: var(--gold-champagne); margin-bottom: 6px;">Reset Password via WhatsApp OTP</h3>
+                <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                    તમારા રજીસ્ટર મોબાઈલ નંબર પર 6-અંકનો સુરક્ષા કોડ મેળવી નવો પાસવર્ડ સેટ કરો.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Registered Mobile Number (રજીસ્ટર મોબાઇલ નંબર)</label>
+                <div class="phone-input-wrap">
+                    <span class="phone-prefix">+91</span>
+                    <input type="tel" id="reset_phone" class="input-box" placeholder="10-digit Mobile Number" maxlength="10">
+                    <button type="button" class="btn-otp-action" id="btnResetSendOtp" onclick="sendResetOTP()">Send OTP</button>
+                </div>
+                <span class="otp-status-text" id="resetOtpStatusText">OTP કોડ તમારા WhatsApp નંબર પર આવશે.</span>
+                <div class="otp-demo-alert" id="resetDemoAlert"></div>
+            </div>
+
+            <div class="form-group" id="resetOtpBox" style="display: none;">
+                <label>Enter 6-Digit WhatsApp OTP (સુરક્ષા કોડ)</label>
+                <input type="text" id="reset_otp" class="input-box" placeholder="6-digit code (e.g. 123456)" maxlength="6">
+            </div>
+
+            <div class="form-group" id="resetNewPwdBox" style="display: none;">
+                <label>New Password (નવો પાસવર્ડ - Min 6 Characters)</label>
+                <div class="password-wrap">
+                    <input type="password" id="reset_new_password" class="input-box" placeholder="Enter new strong password" minlength="6">
+                    <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_new_password', this)">👁️</button>
+                </div>
+            </div>
+
+            <div class="form-group" id="resetConfPwdBox" style="display: none;">
+                <label>Confirm New Password (નવો પાસવર્ડ ફરીથી લખો)</label>
+                <div class="password-wrap">
+                    <input type="password" id="reset_conf_password" class="input-box" placeholder="Re-enter new password" minlength="6">
+                    <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reset_conf_password', this)">👁️</button>
+                </div>
+            </div>
+
+            <button type="button" class="btn-submit" id="btnResetSubmit" style="display: none;" onclick="submitResetPassword()">
+                Update Password & Sign In &rarr;
+            </button>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="javascript:void(0)" class="btn-back-link" onclick="switchTab('signin')">&larr; Back to Sign In</a>
+            </div>
         </div>
 
         <div class="auth-footer">
             <span class="secure-badge">&#128274; 256-Bit SSL Encrypted</span>
             <span>&bull;</span>
-            <span>Protected Guest Data</span>
+            <span>OTP Verified Security</span>
+            <span>&bull;</span>
+            <span>Isolated Host Suite</span>
         </div>
     </div>
 
     <script>
+        let isPhoneVerified = false;
+        let verifiedPhoneNumber = "";
+        let verifiedOtpCode = "";
+        let regTimerInterval = null;
+        let resetTimerInterval = null;
+
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
             clearClientError();
+            
+            const tabBtnReset = document.getElementById('tabBtnReset');
             if (tab === 'signin') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('signin-section').classList.add('active');
-            } else {
+            } else if (tab === 'register') {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('register-section').classList.add('active');
+            } else if (tab === 'reset') {
+                if (tabBtnReset) tabBtnReset.classList.add('active');
+                document.getElementById('reset-section').classList.add('active');
             }
         }
 
@@ -503,10 +684,134 @@
             banner.textContent = '';
         }
 
+        // ==========================================
+        // REGISTER: MOBILE OTP SEND & VERIFY
+        // ==========================================
+        async function sendRegisterOTP() {
+            clearClientError();
+            const phoneInput = document.getElementById('reg_phone');
+            const phone = phoneInput.value.replace(/[^0-9]/g, '');
+            const btn = document.getElementById('btnRegSendOtp');
+            const statusText = document.getElementById('regOtpStatusText');
+            const demoAlert = document.getElementById('regDemoAlert');
+
+            if (phone.length !== 10) {
+                showClientError('⚠️ કૃપા કરીને માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો.', phoneInput);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            statusText.textContent = '⏳ WhatsApp OTP મોકલાઈ રહ્યો છે...';
+
+            try {
+                const res = await fetch('/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone, purpose: 'REGISTER' })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showClientError(data.error || 'OTP મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.');
+                    btn.disabled = false;
+                    btn.textContent = 'Get OTP';
+                    statusText.textContent = 'કૃપા કરીને નંબર ચકાસો.';
+                    return;
+                }
+
+                // Show OTP Box
+                document.getElementById('regOtpBox').style.display = 'block';
+                statusText.textContent = '✓ ' + (data.message || 'OTP મોકલી દેવાયો છે.');
+                
+                // If demo fallback OTP is provided
+                if (data.demo_otp) {
+                    demoAlert.style.display = 'block';
+                    demoAlert.innerHTML = `<strong>🔐 સુરક્ષા કોડ (Demo OTP):</strong> <span style="font-size:15px; color:#F3E5AB; font-weight:700;">${data.demo_otp}</span><br><small style="color:var(--text-muted);">WhatsApp હાલ ઑફલાઇન હોવાથી આ કોડ ઓટો-ભરી શકાય છે.</small>`;
+                    document.getElementById('reg_otp').value = data.demo_otp;
+                } else {
+                    demoAlert.style.display = 'none';
+                }
+
+                // Start 60s cooldown timer
+                let countdown = 60;
+                clearInterval(regTimerInterval);
+                regTimerInterval = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(regTimerInterval);
+                        btn.disabled = false;
+                        btn.textContent = 'Resend OTP';
+                    } else {
+                        btn.textContent = `${countdown}s`;
+                    }
+                }, 1000);
+
+            } catch (err) {
+                showClientError('સર્વર સાથે સંપર્ક કરવામાં ભૂલ થઈ: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Get OTP';
+            }
+        }
+
+        async function verifyRegisterOTP() {
+            clearClientError();
+            const phone = document.getElementById('reg_phone').value.replace(/[^0-9]/g, '');
+            const otp = document.getElementById('reg_otp').value.trim();
+            const btn = document.getElementById('btnRegVerifyOtp');
+            const badge = document.getElementById('regVerifiedBadge');
+            const badgeText = document.getElementById('regVerifiedText');
+
+            if (otp.length !== 6) {
+                showClientError('⚠️ કૃપા કરીને 6-અંકનો OTP કોડ દાખલ કરો.', document.getElementById('reg_otp'));
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone, otp_code: otp, purpose: 'REGISTER' })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showClientError('⚠️ ' + (data.error || 'ખોટો OTP કોડ છે.'), document.getElementById('reg_otp'));
+                    btn.disabled = false;
+                    btn.textContent = 'Verify Code';
+                    return;
+                }
+
+                // Marked as verified!
+                isPhoneVerified = true;
+                verifiedPhoneNumber = phone;
+                verifiedOtpCode = otp;
+
+                document.getElementById('hidden_reg_phone').value = phone;
+                document.getElementById('hidden_reg_otp').value = otp;
+
+                // Lock phone input
+                document.getElementById('reg_phone').readOnly = true;
+                document.getElementById('reg_otp').readOnly = true;
+                document.getElementById('btnRegSendOtp').style.display = 'none';
+                btn.style.display = 'none';
+
+                badge.style.display = 'flex';
+                badgeText.textContent = `✓ મોબાઇલ નંબર +91 ${phone} સફળતાપૂર્વક વેરિફાય થયો!`;
+
+            } catch (err) {
+                showClientError('વેરિફિકેશનમાં ભૂલ: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Verify Code';
+            }
+        }
+
         function validateRegisterForm(e) {
             clearClientError();
             const username = document.getElementById('reg_username').value.trim();
-            const email = document.getElementById('reg_email').value.trim();
             const pwdInput = document.getElementById('reg_password');
             const confInput = document.getElementById('reg_confirm_password');
             const pwd = pwdInput.value;
@@ -515,6 +820,12 @@
             if (username.length < 3) {
                 e.preventDefault();
                 showClientError('⚠️ યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જોઈએ. (Username must be at least 3 chars)', document.getElementById('reg_username'));
+                return false;
+            }
+
+            if (!isPhoneVerified) {
+                e.preventDefault();
+                showClientError('⚠️ કૃપા કરીને તમારા મોબાઇલ નંબર પર OTP મોકલી વેરિફાય કરો! કોઈ પણ તમારા નંબર વગર એકાઉન્ટ બનાવી શકશે નહીં.', document.getElementById('reg_phone'));
                 return false;
             }
 
@@ -532,8 +843,135 @@
 
             const btn = document.getElementById('regSubmitBtn');
             btn.disabled = true;
-            btn.textContent = '⏳ એકાઉન્ટ બની રહ્યું છે... (Creating...)';
+            btn.textContent = '⏳ સુરક્ષિત એકાઉન્ટ બની રહ્યું છે...';
             return true;
+        }
+
+        // ==========================================
+        // RESET PASSWORD: SEND OTP & SUBMIT
+        // ==========================================
+        async function sendResetOTP() {
+            clearClientError();
+            const phoneInput = document.getElementById('reset_phone');
+            const phone = phoneInput.value.replace(/[^0-9]/g, '');
+            const btn = document.getElementById('btnResetSendOtp');
+            const statusText = document.getElementById('resetOtpStatusText');
+            const demoAlert = document.getElementById('resetDemoAlert');
+
+            if (phone.length !== 10) {
+                showClientError('⚠️ કૃપા કરીને માન્ય 10-અંકનો રજીસ્ટર્ડ મોબાઇલ નંબર દાખલ કરો.', phoneInput);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            statusText.textContent = '⏳ WhatsApp OTP મોકલાઈ રહ્યો છે...';
+
+            try {
+                const res = await fetch('/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone, purpose: 'RESET' })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showClientError(data.error || 'OTP મોકલવામાં ભૂલ થઈ.');
+                    btn.disabled = false;
+                    btn.textContent = 'Send OTP';
+                    statusText.textContent = 'કૃપા કરીને રજીસ્ટર્ડ નંબર દાખલ કરો.';
+                    return;
+                }
+
+                // Show inputs for OTP and New Password
+                document.getElementById('resetOtpBox').style.display = 'block';
+                document.getElementById('resetNewPwdBox').style.display = 'block';
+                document.getElementById('resetConfPwdBox').style.display = 'block';
+                document.getElementById('btnResetSubmit').style.display = 'block';
+
+                statusText.textContent = '✓ ' + (data.message || 'OTP મોકલી દેવાયો છે.');
+
+                if (data.demo_otp) {
+                    demoAlert.style.display = 'block';
+                    demoAlert.innerHTML = `<strong>🔐 સુરક્ષા કોડ (Demo OTP):</strong> <span style="font-size:15px; color:#F3E5AB; font-weight:700;">${data.demo_otp}</span><br><small style="color:var(--text-muted);">WhatsApp હાલ ઑફલાઇન હોવાથી આ કોડ ઓટો-ભરી શકાય છે.</small>`;
+                    document.getElementById('reset_otp').value = data.demo_otp;
+                } else {
+                    demoAlert.style.display = 'none';
+                }
+
+                let countdown = 60;
+                clearInterval(resetTimerInterval);
+                resetTimerInterval = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(resetTimerInterval);
+                        btn.disabled = false;
+                        btn.textContent = 'Resend OTP';
+                    } else {
+                        btn.textContent = `${countdown}s`;
+                    }
+                }, 1000);
+
+            } catch (err) {
+                showClientError('સર્વર ભૂલ: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        async function submitResetPassword() {
+            clearClientError();
+            const phone = document.getElementById('reset_phone').value.replace(/[^0-9]/g, '');
+            const otp = document.getElementById('reset_otp').value.trim();
+            const newPwd = document.getElementById('reset_new_password').value;
+            const confPwd = document.getElementById('reset_conf_password').value;
+            const btn = document.getElementById('btnResetSubmit');
+
+            if (otp.length !== 6) {
+                showClientError('⚠️ કૃપા કરીને 6-અંકનો OTP કોડ દાખલ કરો.', document.getElementById('reset_otp'));
+                return;
+            }
+            if (newPwd.length < 6) {
+                showClientError('⚠️ નવો પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ.', document.getElementById('reset_new_password'));
+                return;
+            }
+            if (newPwd !== confPwd) {
+                showClientError('⚠️ નવો પાસવર્ડ અને Confirm Password મેચ થતા નથી.', document.getElementById('reset_conf_password'));
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ પાસવર્ડ અપડેટ થઈ રહ્યો છે...';
+
+            try {
+                const res = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: phone,
+                        otp_code: otp,
+                        new_password: newPwd
+                    })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showClientError('⚠️ ' + (data.error || 'પાસવર્ડ બદલવામાં નિષ્ફળતા.'));
+                    btn.disabled = false;
+                    btn.textContent = 'Update Password & Sign In →';
+                    return;
+                }
+
+                alert(data.message || 'પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે સાઇન-ઇન કરી શકો છો.');
+                switchTab('signin');
+                document.getElementById('signin_username').value = phone;
+                document.getElementById('signin_password').focus();
+
+            } catch (err) {
+                showClientError('ભૂલ: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Update Password & Sign In →';
+            }
         }
 
         function validateSignInForm(e) {
@@ -543,7 +981,7 @@
 
             if (!user) {
                 e.preventDefault();
-                showClientError('⚠️ કૃપા કરીને યુઝરનેમ અથવા ઇમેઇલ દાખલ કરો.', document.getElementById('signin_username'));
+                showClientError('⚠️ કૃપા કરીને યુઝરનેમ, ઇમેઇલ અથવા મોબાઇલ નંબર દાખલ કરો.', document.getElementById('signin_username'));
                 return false;
             }
             if (!pass) {

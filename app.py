@@ -12,7 +12,9 @@ from database import (
     get_wedding_by_user, get_wedding_by_id, save_or_update_wedding,
     get_parent_sessions, get_parent_by_token, add_contact_db,
     get_contacts_by_wedding, get_contact_by_token_db, update_rsvp_db,
-    get_wedding_stats_db, log_chat_message_db, get_chat_history_db
+    get_wedding_stats_db, log_chat_message_db, get_chat_history_db,
+    generate_and_save_otp, verify_otp_db, get_user_by_phone, reset_user_password,
+    clean_phone_10
 )
 from auth import login_required
 from excel_export import export_guest_list_excel
@@ -168,17 +170,32 @@ def register():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        otp_code = request.form.get("otp_code", "").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
         
         if len(username) < 3:
-            return render_template("login.html", active_tab="register", error="Username must be at least 3 characters.")
+            return render_template("login.html", active_tab="register", error="યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જરૂરી છે. (Username must be at least 3 characters).")
         if len(password) < 6:
-            return render_template("login.html", active_tab="register", error="Password must be at least 6 characters.")
+            return render_template("login.html", active_tab="register", error="પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ. (Password must be at least 6 characters).")
         if confirm_password and password != confirm_password:
-            return render_template("login.html", active_tab="register", error="Passwords do not match. Please verify your password.")
+            return render_template("login.html", active_tab="register", error="પાસવર્ડ મેળ ખાતો નથી. (Passwords do not match).")
+        
+        # Phone & OTP Verification
+        clean_p = clean_phone_10(phone)
+        if not clean_p or len(clean_p) < 10:
+            return render_template("login.html", active_tab="register", error="માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરવો ફરજિયાત છે. (Valid 10-digit mobile number required).")
+        
+        # Verify OTP if provided
+        if not otp_code:
+            return render_template("login.html", active_tab="register", error="કૃપા કરીને તમારા ફોન પર આવેલ 6-અંકનો OTP કોડ દાખલ કરો. (Please verify OTP sent to your phone).")
             
-        res = register_user(username, email, password)
+        is_valid, otp_err = verify_otp_db(clean_p, otp_code, purpose="REGISTER")
+        if not is_valid:
+            return render_template("login.html", active_tab="register", error=otp_err)
+            
+        res = register_user(username, email, password, phone=clean_p)
         if res.get("success"):
             session["user_id"] = res["user_id"]
             session["username"] = username
@@ -186,9 +203,112 @@ def register():
             session["logged_in"] = True
             return redirect(url_for("setup_wizard"))
         else:
-            return render_template("login.html", active_tab="register", error=res.get("error", "Registration failed."))
+            return render_template("login.html", active_tab="register", error=res.get("error", "નોંધણી નિષ્ફળ રહી."))
             
     return render_template("login.html", active_tab="register", error=None)
+
+# -------------------------------------------------------------
+# MOBILE OTP AUTHENTICATION & PASSWORD RESET ENDPOINTS
+# -------------------------------------------------------------
+@app.route("/api/auth/send-otp", methods=["POST"])
+def auth_send_otp():
+    try:
+        data = request.get_json(silent=True) or request.form
+        phone = data.get("phone", "").strip()
+        purpose = data.get("purpose", "REGISTER").strip().upper()
+        
+        clean_p = clean_phone_10(phone)
+        if not clean_p or len(clean_p) < 10:
+            return jsonify({"success": False, "error": "માન્ય 10-અંકનો મોબાઇલ નંબર દાખલ કરો. (Invalid 10-digit mobile number)."}), 400
+        
+        # Check purpose rules
+        existing_user = get_user_by_phone(clean_p)
+        if purpose == "REGISTER" and existing_user:
+            return jsonify({
+                "success": False,
+                "error": "આ મોબાઇલ નંબર પહેલેથી રજીસ્ટર થયેલો છે. કૃપા કરીને સાઇન-ઇન કરો અથવા પાસવર્ડ રીસેટ કરો."
+            }), 400
+        elif purpose == "RESET" and not existing_user:
+            return jsonify({
+                "success": False,
+                "error": "આ મોબાઇલ નંબર સાથે કોઈ એકાઉન્ટ રજીસ્ટર નથી. કૃપા કરીને નવું એકાઉન્ટ બનાવો."
+            }), 404
+            
+        otp_code, err = generate_and_save_otp(clean_p, purpose=purpose)
+        if err:
+            return jsonify({"success": False, "error": err}), 400
+            
+        # Send via Baileys WhatsApp microservice
+        otp_msg = (
+            f"👑 *WedVite Luxury Suite Security Code*\n\n"
+            f"તમારો વેરિફિકેશન સુરક્ષા OTP કોડ છે:\n"
+            f"👉 *{otp_code}*\n\n"
+            f"⏳ આ કોડ 10 મિનિટ માટે માન્ય છે.\n"
+            f"સુરક્ષા માટે આ કોડ કોઈની સાથે શેર કરશો નહીં."
+        )
+        
+        wa_res, wa_status = send_baileys_message(clean_p, otp_msg)
+        
+        # If WhatsApp is offline or not yet connected, return demo fallback
+        if wa_status != 200 or wa_res.get("status") != "success":
+            return jsonify({
+                "success": True,
+                "channel": "fallback",
+                "demo_otp": otp_code,
+                "message": f"સુરક્ષા OTP જનરેટ થઈ ગયો છે: {otp_code} (WhatsApp કનેક્ટેડ ન હોવાથી ડેમો માટે સ્ક્રીન પર આપેલ છે)."
+            })
+            
+        return jsonify({
+            "success": True,
+            "channel": "whatsapp",
+            "message": f"OTP સફળતાપૂર્વક +91 {clean_p} ના WhatsApp પર મોકલી દેવાયો છે!"
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": f"OTP મોકલવામાં ભૂલ: {str(e)}"}), 500
+
+@app.route("/api/auth/verify-otp", methods=["POST"])
+def auth_verify_otp():
+    try:
+        data = request.get_json(silent=True) or request.form
+        phone = data.get("phone", "").strip()
+        otp_code = data.get("otp_code", "").strip()
+        purpose = data.get("purpose", "REGISTER").strip().upper()
+        
+        clean_p = clean_phone_10(phone)
+        is_valid, err = verify_otp_db(clean_p, otp_code, purpose=purpose)
+        if is_valid:
+            return jsonify({"success": True, "message": "OTP વેરિફિકેશન સફળ રહ્યું! ✓"})
+        return jsonify({"success": False, "error": err or "અમાન્ય OTP"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/auth/reset-password", methods=["POST"])
+def auth_reset_password():
+    try:
+        data = request.get_json(silent=True) or request.form
+        phone = data.get("phone", "").strip()
+        otp_code = data.get("otp_code", "").strip()
+        new_password = data.get("new_password", "").strip()
+        
+        clean_p = clean_phone_10(phone)
+        if len(new_password) < 6:
+            return jsonify({"success": False, "error": "નવો પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ."}), 400
+            
+        # Verify OTP
+        is_valid, err = verify_otp_db(clean_p, otp_code, purpose="RESET")
+        if not is_valid:
+            return jsonify({"success": False, "error": err or "અમાન્ય અથવા એક્સપાયર થયેલ OTP કોડ."}), 400
+            
+        # Reset Password
+        ok, res_err = reset_user_password(clean_p, new_password)
+        if ok:
+            return jsonify({
+                "success": True,
+                "message": "તમારો પાસવર્ડ સફળતાપૂર્વક અપડેટ થઈ ગયો છે! હવે તમે નવા પાસવર્ડથી સાઇન-ઇન કરી શકો છો."
+            })
+        return jsonify({"success": False, "error": res_err or "પાસવર્ડ બદલવામાં નિષ્ફળતા."}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route("/logout")
 def logout():
