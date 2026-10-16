@@ -150,6 +150,15 @@ def init_db():
     );
     """)
 
+    # 9. Persistent Chat Sessions (Guarantees state machine never resets on worker restarts)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS chat_sessions (
+        token TEXT PRIMARY KEY,
+        session_data TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     # Backward-compatible migrations for existing tables
     c.execute("PRAGMA table_info(users)")
     user_cols = [row[1] for row in c.fetchall()]
@@ -746,7 +755,7 @@ def get_contacts_by_wedding(wedding_id):
     conn = get_db()
     c = conn.cursor()
     c.execute("""
-        SELECT c.*, r.parents_attending, r.spouse_name, r.children_names, r.other_members, r.total_headcount, r.is_confirmed
+        SELECT c.*, r.parents_attending, r.parents_names, r.spouse_name, r.children_names, r.other_members, r.total_headcount, r.is_confirmed
         FROM contacts c
         LEFT JOIN rsvps r ON c.id = r.contact_id
         WHERE c.wedding_id = ?
@@ -763,7 +772,7 @@ def get_contact_by_token_db(token):
     conn = get_db()
     c = conn.cursor()
     c.execute("""
-        SELECT c.*, r.parents_attending, r.spouse_name, r.children_names, r.other_members, r.total_headcount, r.is_confirmed,
+        SELECT c.*, r.parents_attending, r.parents_names, r.spouse_name, r.children_names, r.other_members, r.total_headcount, r.is_confirmed,
                w.groom_name, w.bride_name, w.title
         FROM contacts c
         LEFT JOIN rsvps r ON c.id = r.contact_id
@@ -804,6 +813,86 @@ def update_rsvp_db(contact_id, rsvp_data):
     c.execute("UPDATE contacts SET status = 'CONFIRMED' WHERE id = ?", (contact_id,))
     conn.commit()
     conn.close()
+
+def update_guest_family_db(contact_id, data):
+    """
+    Updates the complete household breakdown (Parents, Spouse, Children, Other members)
+    and synchronizes total headcount across contacts and rsvps.
+    """
+    conn = get_db()
+    c = conn.cursor()
+
+    p_names = (data.get("parents_names") or "").strip()
+    sp_name = (data.get("spouse_name") or "").strip()
+    ch_names = (data.get("children_names") or "").strip()
+    om_names = (data.get("other_members") or "").strip()
+
+    # Calculate actual headcount: 1 (Self) + count(parents) + (1 if spouse else 0) + count(children) + count(others)
+    headcount = 1
+    if p_names:
+        headcount += len([x for x in p_names.split(",") if x.strip()])
+    if sp_name:
+        headcount += 1
+    if ch_names:
+        headcount += len([x for x in ch_names.split(",") if x.strip()])
+    if om_names:
+        headcount += len([x for x in om_names.split(",") if x.strip()])
+
+    explicit_hc = data.get("total_headcount")
+    if explicit_hc and int(explicit_hc) > 0:
+        headcount = max(int(explicit_hc), headcount)
+
+    c.execute("""
+        INSERT INTO rsvps (contact_id, parents_attending, parents_names, is_married, spouse_name, children_names, other_members, total_headcount, is_confirmed, confirmed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+        ON CONFLICT(contact_id) DO UPDATE SET
+            parents_attending = CASE WHEN excluded.parents_names != '' THEN 1 ELSE 0 END,
+            parents_names = excluded.parents_names,
+            is_married = CASE WHEN excluded.spouse_name != '' THEN 1 ELSE 0 END,
+            spouse_name = excluded.spouse_name,
+            children_names = excluded.children_names,
+            other_members = excluded.other_members,
+            total_headcount = excluded.total_headcount,
+            is_confirmed = 1,
+            confirmed_at = CURRENT_TIMESTAMP
+    """, (
+        contact_id,
+        1 if p_names else 0,
+        p_names,
+        1 if sp_name else 0,
+        sp_name,
+        ch_names,
+        om_names,
+        headcount
+    ))
+    c.execute("UPDATE contacts SET status = 'CONFIRMED' WHERE id = ?", (contact_id,))
+    conn.commit()
+    conn.close()
+    return headcount
+
+def save_chat_session_db(token, session_dict):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO chat_sessions (token, session_data, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(token) DO UPDATE SET session_data=excluded.session_data, updated_at=CURRENT_TIMESTAMP
+    """, (token, json.dumps(session_dict, ensure_ascii=False)))
+    conn.commit()
+    conn.close()
+
+def load_chat_session_db(token):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT session_data FROM chat_sessions WHERE token = ?", (token,))
+    row = c.fetchone()
+    conn.close()
+    if row and row["session_data"]:
+        try:
+            return json.loads(row["session_data"])
+        except Exception:
+            return None
+    return None
 
 def get_wedding_stats_db(wedding_id):
     conn = get_db()

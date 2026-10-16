@@ -132,6 +132,14 @@ def save_conversations(convs):
 
 def get_or_create_chat_session(contact):
     token = contact["token"]
+    try:
+        from database import load_chat_session_db
+        db_sess = load_chat_session_db(token)
+        if db_sess:
+            return db_sess
+    except Exception:
+        pass
+
     convs = load_conversations()
     if token in convs:
         return convs[token]
@@ -182,7 +190,7 @@ def call_gemini_llm(api_key, contact, conversation_history, user_message, curren
     and return structured updates + warm conversational response.
     Supports auto model fallback (gemini-2.5-flash -> gemini-2.0-flash).
     """
-    candidate_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    candidate_models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
     
     system_prompt = f"""
 You are an intelligent, polite, and warm Gujarati Wedding Hospitality Concierge Chatbot assisting {contact['name']} (Relation: {contact.get('added_by', '')} side {contact.get('category', '')}).
@@ -264,8 +272,8 @@ def fallback_rule_based_parser(contact, session, user_text):
     quick_replies = []
     next_step = step
 
-    is_yes = any(w in text for w in ["ha", "haa", "yes", "che", "h", "aavshe", "avse", "avsu", "avisu", "sure"])
-    is_no = any(w in text for w in ["na", "naa", "no", "nathi", "nahi", "none", "no one", "single"])
+    is_yes = any(w in text for w in ["ha", "haa", "yes", "che", "h", "aavshe", "avse", "avsu", "avisu", "sure", "હા", "હાજી", "આવશે", "છે", "ચોક્કસ"])
+    is_no = any(w in text for w in ["na", "naa", "no", "nathi", "nahi", "none", "no one", "single", "ના", "નાજી", "નથી", "નહિ", "નહીં"])
 
     # Direct headcount pattern (e.g. '4 લોકો', '3 જણા', '4 members', '2 person')
     headcount_match = re.search(r'(\d+)\s*(?:people|members|person|જના|જણા|લોકો|સભ્યો|વ્યક્તિ|jna|loko|sabyo)', text, re.IGNORECASE)
@@ -295,11 +303,23 @@ def fallback_rule_based_parser(contact, session, user_text):
         next_step = "ASK_MARRIED"
 
     elif step == "ASK_MARRIED":
+        clean_spouse = re.sub(r'^(patni|wife|husband|pati|spouse)\s*', '', user_text.strip(), flags=re.IGNORECASE).rstrip('. ')
         if is_yes:
             state["is_married"] = True
-            state["total_headcount"] += 1
             bot_reply = "આપના જીવનસાથી (પત્ની/પતિ - Spouse) નું નામ જણાવશો:"
             next_step = "GET_SPOUSE_NAME"
+        elif is_no:
+            state["is_married"] = False
+            bot_reply = "બરાબર. શું આપની સાથે અન્ય કોઈ પરિવારજન (ભાઈ, બહેન કે અન્ય વડીલ) પધારશે?"
+            quick_replies = ["ના (બસ હું એકલો/એકલી)", "હા (+ Add Member)"]
+            next_step = "ASK_OTHER_FOR_SINGLE"
+        elif clean_spouse and len(clean_spouse) >= 2:
+            # User directly supplied spouse name (e.g. 'Stuti', 'Stuti.', 'Wife Stuti')
+            state["is_married"] = True
+            state["spouse_name"] = clean_spouse
+            bot_reply = f"આભાર! જીવનસાથી {clean_spouse} નું નામ નોંધી લીધું છે. 👍\n\nશું આપને બાળકો છે (Do you have children)?"
+            quick_replies = ["હા (Yes)", "ના (No)"]
+            next_step = "ASK_CHILDREN"
         else:
             state["is_married"] = False
             bot_reply = "બરાબર. શું આપની સાથે અન્ય કોઈ પરિવારજન (ભાઈ, બહેન કે અન્ય વડીલ) પધારશે?"
@@ -307,8 +327,10 @@ def fallback_rule_based_parser(contact, session, user_text):
             next_step = "ASK_OTHER_FOR_SINGLE"
 
     elif step == "GET_SPOUSE_NAME":
-        state["spouse_name"] = user_text.strip()
-        bot_reply = f"આભાર! {user_text.strip()} નું નામ નોંધી લીધું છે. 👍\n\nશું આપને બાળકો છે (Do you have children)?"
+        clean_spouse = re.sub(r'^(patni|wife|husband|pati|spouse)\s*', '', user_text.strip(), flags=re.IGNORECASE).rstrip('. ')
+        state["spouse_name"] = clean_spouse
+        state["is_married"] = True
+        bot_reply = f"આભાર! {clean_spouse} નું નામ નોંધી લીધું છે. 👍\n\nશું આપને બાળકો છે (Do you have children)?"
         quick_replies = ["હા (Yes)", "ના (No)"]
         next_step = "ASK_CHILDREN"
 
@@ -415,8 +437,8 @@ def finalize_chat_summary(contact, session, state):
     for om in state.get("other_members", []):
         members_summary.append(f"• {om['name']} (પરિવારજન / Member)")
 
-    if not state.get("total_headcount") or state["total_headcount"] <= 1:
-        state["total_headcount"] = len(members_summary)
+    exact_count = len(members_summary)
+    state["total_headcount"] = max(state.get("total_headcount", 0), exact_count)
     headcount = state["total_headcount"]
     
     bot_reply = (
@@ -504,9 +526,15 @@ def process_chat_message(token, user_message):
 
     convs[token] = session
     save_conversations(convs)
+    try:
+        from database import save_chat_session_db
+        save_chat_session_db(token, session)
+    except Exception:
+        pass
 
     return {
         "bot_reply": bot_entry["text"],
+        "reply": bot_entry["text"],
         "quick_replies": bot_entry["quick_replies"],
         "state": final_state,
         "is_complete": final_state.get("is_complete", False)

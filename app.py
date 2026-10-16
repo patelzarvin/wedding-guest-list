@@ -11,7 +11,7 @@ from database import (
     get_db, init_db, register_user, authenticate_user as db_auth_user,
     get_wedding_by_user, get_wedding_by_id, save_or_update_wedding,
     get_parent_sessions, get_parent_by_token, add_contact_db,
-    get_contacts_by_wedding, get_contact_by_token_db, update_rsvp_db,
+    get_contacts_by_wedding, get_contact_by_token_db, update_rsvp_db, update_guest_family_db,
     get_wedding_stats_db, log_chat_message_db, get_chat_history_db,
     generate_and_save_otp, verify_otp_db, get_user_by_email, get_user_by_phone, reset_user_password,
     consume_reset_token, verify_registration_token
@@ -871,6 +871,21 @@ def api_dispatch_all_parents():
         "success": len(dispatched) > 0,
         "dispatched": dispatched,
         "errors": errors
+    })
+
+@app.route("/api/update-guest-family/<int:contact_id>", methods=["POST"])
+@login_required
+def api_update_guest_family(contact_id):
+    user_id = session.get("user_id")
+    wedding = get_wedding_by_user(user_id)
+    if not wedding:
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    payload = request.get_json() or {}
+    new_headcount = update_guest_family_db(contact_id, payload)
+    return jsonify({
+        "success": True,
+        "message": "Family details updated successfully",
+        "headcount": new_headcount
     })
 
 @app.route("/api/whatsapp-status")

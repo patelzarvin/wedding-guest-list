@@ -342,9 +342,8 @@
             border-radius: 16px;
             padding: 16px 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
+            flex-direction: column;
+            gap: 0;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
             transition: all 0.25s ease;
             animation: cardFadeUp 0.45s ease both;
@@ -353,8 +352,155 @@
         .guest-card:hover {
             border-color: var(--gold-border-hover);
             background: var(--bg-navy-card-hover);
-            transform: translateY(-2px);
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65), 0 0 20px var(--gold-glow);
+        }
+
+        .guest-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .badge-hierarchy-btn {
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid var(--gold-border);
+            color: var(--gold-light);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: inherit;
+        }
+        .badge-hierarchy-btn:hover {
+            background: rgba(212, 175, 55, 0.25);
+            border-color: var(--gold-primary);
+            color: #FFFFFF;
+        }
+
+        .family-hierarchy-drawer {
+            width: 100%;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px dashed rgba(212, 175, 55, 0.2);
+            animation: drawerFadeIn 0.2s ease-out;
+        }
+
+        @keyframes drawerFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hierarchy-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hierarchy-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hierarchy-badge-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gold-light);
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid var(--gold-border);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .hierarchy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .member-chip {
+            background: rgba(5, 13, 26, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.18);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .member-chip:hover {
+            border-color: var(--gold-border);
+            background: rgba(10, 22, 40, 0.85);
+        }
+
+        .member-chip-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .avatar-self {
+            background: rgba(212, 175, 55, 0.18);
+            color: var(--gold-light);
+            border: 1px solid var(--gold-border);
+        }
+
+        .avatar-parent {
+            background: rgba(245, 158, 11, 0.15);
+            color: #FBBF24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
+        .avatar-spouse {
+            background: rgba(236, 72, 153, 0.15);
+            color: #F472B6;
+            border: 1px solid rgba(236, 72, 153, 0.35);
+        }
+
+        .avatar-member {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+
+        .member-chip-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .member-chip-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #FFFFFF;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member-chip-role {
+            font-size: 11px;
+            color: var(--text-muted);
         }
 
         .guest-main-info {
@@ -868,50 +1014,113 @@
                 <div class="guest-cards-list" id="guestsContainer">
                     {% if contacts and contacts|length > 0 %}
                         {% for c in contacts %}
-                        <div class="guest-card" style="--i: {{ loop.index0 }};" data-search="{{ c.name|lower }} {{ c.phone if c.phone else '' }} {{ c.side|lower }} {{ c.category|lower }}">
-                            <div class="guest-main-info">
-                                <div class="guest-avatar">
-                                    {{ c.name[:2]|upper }}
-                                </div>
-                                <div class="guest-details">
-                                    <div class="guest-name">{{ c.name }}</div>
-                                    <div class="guest-phone">
-                                        <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                                        {{ c.phone if c.phone else 'Direct Link' }}
+                        <div class="guest-card" id="guestCard-{{ c.id }}" style="--i: {{ loop.index0 }};" data-search="{{ c.name|lower }} {{ c.phone if c.phone else '' }} {{ c.side|lower }} {{ c.category|lower }}">
+                            <div class="guest-card-header" onclick="toggleHierarchy({{ c.id }})">
+                                <div class="guest-main-info">
+                                    <div class="guest-avatar">
+                                        {{ c.name[:2]|upper }}
+                                    </div>
+                                    <div class="guest-details">
+                                        <div class="guest-name">{{ c.name }}</div>
+                                        <div class="guest-phone">
+                                            <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                            {{ c.phone if c.phone else 'Direct Link' }}
+                                        </div>
                                     </div>
                                 </div>
+
+                                <div class="guest-tags" onclick="event.stopPropagation()">
+                                    <span class="badge-pill">{{ c.category|title if c.category else 'Family' }}</span>
+                                    <span class="badge-pill badge-side">{{ c.side if c.side else 'Family' }}</span>
+                                    <span class="badge-pill" title="Invited by">{{ c.added_by if c.added_by else 'Host' }}</span>
+                                    
+                                    <button type="button" class="badge-hierarchy-btn" onclick="toggleHierarchy({{ c.id }}); event.stopPropagation();" title="Click to view family breakdown">
+                                        <span id="cardBadgeHc-{{ c.id }}">{{ c.total_headcount if c.total_headcount else 1 }} Guests</span>
+                                        <span id="chevron-{{ c.id }}" style="font-size: 10px; transition: transform 0.2s;">▾</span>
+                                    </button>
+                                    
+                                    {% if c.status == 'CONFIRMED' %}
+                                        <span class="tag-status tag-confirmed">
+                                            <span class="status-dot" style="background: #10B981;"></span> Confirmed
+                                        </span>
+                                    {% else %}
+                                        <span class="tag-status tag-waiting">
+                                            <span class="status-dot" style="background: #F59E0B;"></span> Waiting
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="guest-actions" onclick="event.stopPropagation()">
+                                    <button type="button" class="btn-sm-gold send-wa-btn" id="sendGuestBtn-{{ c.token }}" onclick="sendGuestLinkWhatsApp('{{ c.token }}', this)">
+                                        <svg class="icon-svg" style="width:12px;height:12px;stroke:#040906;" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                        WhatsApp
+                                    </button>
+                                    <button type="button" class="btn-sm-outline" onclick="copyGuestLink('{{ c.token }}')">
+                                        <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                        Copy
+                                    </button>
+                                    <a href="/chat/{{ c.token }}" target="_blank" class="btn-sm-outline">
+                                        <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                        RSVP
+                                    </a>
+                                </div>
                             </div>
 
-                            <div class="guest-tags">
-                                <span class="badge-pill">{{ c.category|title if c.category else 'Family' }}</span>
-                                <span class="badge-pill badge-side">{{ c.side if c.side else 'Family' }}</span>
-                                <span class="badge-pill" title="Invited by">{{ c.added_by if c.added_by else 'Host' }}</span>
-                                <span class="badge-pill badge-headcount">{{ c.total_headcount if c.total_headcount else 1 }} Guests</span>
-                                
-                                {% if c.status == 'CONFIRMED' %}
-                                    <span class="tag-status tag-confirmed">
-                                        <span class="status-dot" style="background: #10B981;"></span> Confirmed
-                                    </span>
-                                {% else %}
-                                    <span class="tag-status tag-waiting">
-                                        <span class="status-dot" style="background: #F59E0B;"></span> Waiting
-                                    </span>
-                                {% endif %}
-                            </div>
+                            <!-- Expandable Family Hierarchy Breakdown Drawer -->
+                            <div class="family-hierarchy-drawer" id="hierarchyDrawer-{{ c.id }}" style="display: none;">
+                                <div class="hierarchy-top-row">
+                                    <div class="hierarchy-title-group">
+                                        <span class="hierarchy-badge-tag">Household Breakdown</span>
+                                        <span style="font-size: 12px; color: var(--gold-light);">Total: <strong id="drawerHcText-{{ c.id }}">{{ c.total_headcount if c.total_headcount else 1 }} Members</strong> Attending</span>
+                                    </div>
+                                    <button type="button" class="btn-sm-gold" style="font-size: 11px; padding: 4px 12px;" onclick="openEditFamilyModal({{ c.id }}, '{{ c.name|replace(\"'\", \"\\'\") }}', '{{ (c.parents_names or '')|replace(\"'\", \"\\'\") }}', '{{ (c.spouse_name or '')|replace(\"'\", \"\\'\") }}', '{{ (c.children_names or '')|replace(\"'\", \"\\'\") }}', '{{ (c.other_members or '')|replace(\"'\", \"\\'\") }}', {{ c.total_headcount if c.total_headcount else 1 }}); event.stopPropagation();">
+                                        Edit Members
+                                    </button>
+                                </div>
 
-                            <div class="guest-actions">
-                                <button type="button" class="btn-sm-gold send-wa-btn" id="sendGuestBtn-{{ c.token }}" onclick="sendGuestLinkWhatsApp('{{ c.token }}', this)">
-                                    <svg class="icon-svg" style="width:12px;height:12px;stroke:#040906;" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                                    WhatsApp
-                                </button>
-                                <button type="button" class="btn-sm-outline" onclick="copyGuestLink('{{ c.token }}')">
-                                    <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                    Copy
-                                </button>
-                                <a href="/chat/{{ c.token }}" target="_blank" class="btn-sm-outline">
-                                    <svg class="icon-svg" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                    RSVP
-                                </a>
+                                <div class="hierarchy-grid" id="hierarchyGrid-{{ c.id }}">
+                                    <!-- 1. Self -->
+                                    <div class="member-chip">
+                                        <div class="member-chip-avatar avatar-self">1</div>
+                                        <div class="member-chip-content">
+                                            <div class="member-chip-name">{{ c.name }}</div>
+                                            <div class="member-chip-role">Primary Relative (Self)</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Parents / Elders -->
+                                    <div class="member-chip" id="chipParents-{{ c.id }}" style="{% if not c.parents_names %}opacity: 0.6;{% endif %}">
+                                        <div class="member-chip-avatar avatar-parent">P</div>
+                                        <div class="member-chip-content">
+                                            <div class="member-chip-name" id="chipParentsName-{{ c.id }}">{{ c.parents_names if c.parents_names else 'Not Attending' }}</div>
+                                            <div class="member-chip-role">Parents / વડીલો</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Spouse -->
+                                    <div class="member-chip" id="chipSpouse-{{ c.id }}" style="{% if not c.spouse_name %}opacity: 0.6;{% endif %}">
+                                        <div class="member-chip-avatar avatar-spouse">S</div>
+                                        <div class="member-chip-content">
+                                            <div class="member-chip-name" id="chipSpouseName-{{ c.id }}">{{ c.spouse_name if c.spouse_name else 'Unmarried / None' }}</div>
+                                            <div class="member-chip-role">Spouse / જીવનસાથી</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Children & Other Members -->
+                                    <div class="member-chip" id="chipOthers-{{ c.id }}" style="{% if not c.children_names and not c.other_members %}opacity: 0.6;{% endif %}">
+                                        <div class="member-chip-avatar avatar-member">M</div>
+                                        <div class="member-chip-content">
+                                            <div class="member-chip-name" id="chipOthersName-{{ c.id }}">
+                                                {% if c.children_names or c.other_members %}
+                                                    {{ [c.children_names, c.other_members]|reject('equalto', '')|reject('none')|join(', ') }}
+                                                {% else %}
+                                                    None
+                                                {% endif %}
+                                            </div>
+                                            <div class="member-chip-role">Children &amp; Members / પરિવારજન</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -1150,6 +1359,68 @@
         </div>
     </div>
 
+    <!-- Edit Family & Household Members Modal -->
+    <div id="editFamilyModal" class="modal-overlay" onclick="handleEditFamilyOverlayClick(event)">
+        <div class="modal-card" style="max-width: 520px; text-align: left;">
+            <button class="modal-close" onclick="closeEditFamilyModal()">&times;</button>
+            <div style="font-size: 22px; font-weight: 700; color: #FFFFFF; font-family: 'Cormorant Garamond', serif; margin-bottom: 4px;">
+                Family &amp; Household Breakdown
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 18px;">
+                Update attending family members for <strong id="editGuestName" style="color: var(--gold-light);"></strong>.
+            </div>
+
+            <form id="editFamilyForm" onsubmit="saveGuestFamily(event)">
+                <input type="hidden" id="editContactId" value="" />
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                        Parents / Elders (વડીલો / માતા-પિતા)
+                    </label>
+                    <input type="text" id="editParents" class="luxury-input" placeholder="e.g. Shankarlal, Shantaben (or leave blank)" oninput="calcModalHeadcount()" style="width: 100%; font-size: 13px;" />
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Separate multiple names with commas</div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                        Spouse / Partner (જીવનસાથી)
+                    </label>
+                    <input type="text" id="editSpouse" class="luxury-input" placeholder="e.g. Stuti (or leave blank if unmarried)" oninput="calcModalHeadcount()" style="width: 100%; font-size: 13px;" />
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                        Children (સંતાનો / બાળકો)
+                    </label>
+                    <input type="text" id="editChildren" class="luxury-input" placeholder="e.g. Aarav, Diya (or leave blank)" oninput="calcModalHeadcount()" style="width: 100%; font-size: 13px;" />
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                        Other Household Relatives (અન્ય પરિવારજન - ભાઈ/બહેન)
+                    </label>
+                    <input type="text" id="editOtherMembers" class="luxury-input" placeholder="e.g. Agnya (or leave blank)" oninput="calcModalHeadcount()" style="width: 100%; font-size: 13px;" />
+                </div>
+
+                <div style="background: rgba(5, 13, 26, 0.7); border: 1px solid var(--gold-border); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Total Household Headcount</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Includes Primary Relative (1) + All Listed Members</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="number" id="editHeadcount" min="1" max="25" class="luxury-input" style="width: 65px; text-align: center; font-size: 15px; font-weight: 700; padding: 6px;" />
+                        <span style="font-size: 12px; color: var(--gold-light); font-weight: 600;">Guests</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeEditFamilyModal()" class="btn-luxury-outline">Cancel</button>
+                    <button type="submit" id="saveFamilyBtn" class="btn-luxury-gold">Save Family</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let wasPreviouslyOffline = {% if whatsapp_status != 'connected' %}true{% else %}false{% endif %};
         let isModalOpen = false;
@@ -1165,6 +1436,136 @@
                 } else {
                     card.style.display = 'none';
                 }
+            });
+        }
+
+        function toggleHierarchy(contactId) {
+            const drawer = document.getElementById('hierarchyDrawer-' + contactId);
+            const chevron = document.getElementById('chevron-' + contactId);
+            if (!drawer) return;
+            if (drawer.style.display === 'none' || !drawer.style.display) {
+                drawer.style.display = 'block';
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+            } else {
+                drawer.style.display = 'none';
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function openEditFamilyModal(id, name, parents, spouse, children, others, headcount) {
+            document.getElementById('editContactId').value = id;
+            document.getElementById('editGuestName').textContent = name || 'Relative';
+            document.getElementById('editParents').value = parents || '';
+            document.getElementById('editSpouse').value = spouse || '';
+            document.getElementById('editChildren').value = children || '';
+            document.getElementById('editOtherMembers').value = others || '';
+            document.getElementById('editHeadcount').value = headcount || 1;
+            document.getElementById('editFamilyModal').classList.add('active');
+        }
+
+        function closeEditFamilyModal() {
+            document.getElementById('editFamilyModal').classList.remove('active');
+        }
+
+        function handleEditFamilyOverlayClick(e) {
+            if (e.target.id === 'editFamilyModal') {
+                closeEditFamilyModal();
+            }
+        }
+
+        function calcModalHeadcount() {
+            let hc = 1; // Primary relative
+            const p = document.getElementById('editParents').value.trim();
+            const sp = document.getElementById('editSpouse').value.trim();
+            const ch = document.getElementById('editChildren').value.trim();
+            const om = document.getElementById('editOtherMembers').value.trim();
+            if (p) hc += p.split(',').filter(x => x.trim()).length;
+            if (sp) hc += 1;
+            if (ch) hc += ch.split(',').filter(x => x.trim()).length;
+            if (om) hc += om.split(',').filter(x => x.trim()).length;
+            document.getElementById('editHeadcount').value = hc;
+        }
+
+        function saveGuestFamily(e) {
+            if (e) e.preventDefault();
+            const id = document.getElementById('editContactId').value;
+            if (!id) return;
+            
+            const parents = document.getElementById('editParents').value.trim();
+            const spouse = document.getElementById('editSpouse').value.trim();
+            const children = document.getElementById('editChildren').value.trim();
+            const others = document.getElementById('editOtherMembers').value.trim();
+            const headcount = parseInt(document.getElementById('editHeadcount').value) || 1;
+
+            const saveBtn = document.getElementById('saveFamilyBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            fetch('/api/update-guest-family/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    parents_names: parents,
+                    spouse_name: spouse,
+                    children_names: children,
+                    other_members: others,
+                    total_headcount: headcount
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Family';
+                if (data.success) {
+                    // Update Badges and Text
+                    const cardBadge = document.getElementById('cardBadgeHc-' + id);
+                    if (cardBadge) cardBadge.textContent = data.headcount + ' Guests';
+                    
+                    const drawerHc = document.getElementById('drawerHcText-' + id);
+                    if (drawerHc) drawerHc.textContent = data.headcount + ' Members';
+
+                    // Update drawer chips
+                    const pNameEl = document.getElementById('chipParentsName-' + id);
+                    const pChip = document.getElementById('chipParents-' + id);
+                    if (pNameEl) {
+                        pNameEl.textContent = parents ? parents : 'Not Attending';
+                        if (pChip) pChip.style.opacity = parents ? '1' : '0.6';
+                    }
+
+                    const spNameEl = document.getElementById('chipSpouseName-' + id);
+                    const spChip = document.getElementById('chipSpouse-' + id);
+                    if (spNameEl) {
+                        spNameEl.textContent = spouse ? spouse : 'Unmarried / None';
+                        if (spChip) spChip.style.opacity = spouse ? '1' : '0.6';
+                    }
+
+                    const otNameEl = document.getElementById('chipOthersName-' + id);
+                    const otChip = document.getElementById('chipOthers-' + id);
+                    const combinedOthers = [children, others].filter(Boolean).join(', ');
+                    if (otNameEl) {
+                        otNameEl.textContent = combinedOthers ? combinedOthers : 'None';
+                        if (otChip) otChip.style.opacity = combinedOthers ? '1' : '0.6';
+                    }
+
+                    // Keep drawer open
+                    const drawer = document.getElementById('hierarchyDrawer-' + id);
+                    if (drawer) drawer.style.display = 'block';
+                    const chevron = document.getElementById('chevron-' + id);
+                    if (chevron) chevron.style.transform = 'rotate(180deg)';
+
+                    closeEditFamilyModal();
+                    alert('Family members updated successfully! Total headcount is now ' + data.headcount + '.');
+                    
+                    // Reload to update global stat counters accurately
+                    setTimeout(() => { window.location.reload(); }, 600);
+                } else {
+                    alert('Failed to update family: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Family';
+                alert('Network error: ' + err.message);
             });
         }
 
