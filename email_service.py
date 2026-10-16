@@ -67,6 +67,11 @@ def send_via_http_api(recipient_email, subject, html_content, plain_text):
             resp = requests.post(url, json=payload, headers=headers, timeout=6)
             if resp.status_code in (200, 201):
                 return True, "Email sent successfully via Resend HTTPS API"
+            if "only send testing emails to your own email address" in resp.text:
+                return False, (
+                    f"Resend Sandbox Restriction: Resend Free કી હાલ ફક્ત એકાઉન્ટ ઓનર ({sender_email}) પર ઇમેઇલ મોકલી શકે છે. "
+                    "અન્ય મુલાકાતીઓના ઇમેઇલ પર મોકલવા માટે resend.com/domains પર ડોમેન વેરિફાય કરો અથવા Brevo API વાપરો."
+                )
             return False, f"Resend API error ({resp.status_code}): {resp.text}"
         except Exception as e:
             return False, f"Resend API exception: {str(e)}"
