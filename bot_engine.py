@@ -775,14 +775,15 @@ def process_parent_collector_message(parent_info, user_message):
                 if guest_phone and guest_token:
                     chat_url = f"{base}/chat/{guest_token}"
                     invite_text = (
-                        f"💍 જય શ્રી કૃષ્ણ {rel_name}! 🙏\n\n"
+                        f"જય શ્રી કૃષ્ણ {rel_name}!\n\n"
                         f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગે આપનું અને આપના પરિવારનું હાર્દિક સ્વાગત છે.\n\n"
                         f"લગ્નમાં આપના પરિવારમાંથી કોણ કોણ પધારવાના છો તેની વિગત આપવા માટે નીચે આપેલી લિંક પર ક્લિક કરશો:\n\n"
                         f"{chat_url}\n\n"
                         f"(નોંધ: જો લિંક વાદળી/ક્લિક ન થાય, તો આ નંબર સેવ કરો અથવા આ મેસેજ પર 'હા' લખીને મોકલો, જેથી લિંક ખૂલી જશે.)\n\n"
                         f"આપના સ્નેહીજનો તરફથી"
                     )
-                    send_baileys_message(guest_phone, invite_text)
+                    b_res, b_code = send_baileys_message(guest_phone, invite_text)
+                    print(f"[*] Relative WhatsApp dispatch to {guest_phone}: HTTP {b_code}, result: {b_res}")
 
     session["is_completed"] = is_finished
     quick_replies = ["હજુ બીજા સગા-વહાલા ઉમેરો", "બધા આવી ગયા છે (Done)"] if not is_finished else ["નવા નામ ઉમેરો"]

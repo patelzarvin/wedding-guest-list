@@ -562,7 +562,11 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="/chat/{{ c.token }}" target="_blank" class="btn-sm-outline" style="padding: 5px 12px; font-size: 11px;">View Chat</a>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <button type="button" class="btn-sm-gold send-wa-btn" id="sendGuestBtn-{{ c.token }}" onclick="sendGuestLinkWhatsApp('{{ c.token }}', this)" style="padding: 5px 10px; font-size: 11px;">📲 WhatsApp</button>
+                                <button type="button" class="btn-sm-outline" onclick="copyGuestLink('{{ c.token }}')" style="padding: 5px 10px; font-size: 11px;">📋 Copy</button>
+                                <a href="/chat/{{ c.token }}" target="_blank" class="btn-sm-outline" style="padding: 5px 10px; font-size: 11px;">View Chat</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -724,10 +728,70 @@
                     }
                 } else {
                     if (data.not_connected) {
-                        alert('⚠️ WhatsApp is not linked yet!\n\nPlease scan the QR code to link your WhatsApp so the bot can send messages.');
-                        openWhatsAppModal();
+                        if (data.wa_direct_url && confirm('⚠️ WhatsApp Autopilot Bot is offline or not linked.\n\nWould you like to open WhatsApp directly now to send this invitation link?')) {
+                            window.open(data.wa_direct_url, '_blank');
+                        } else {
+                            openWhatsAppModal();
+                        }
                     } else {
-                        alert('❌ Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
+                        if (data.wa_direct_url && confirm('❌ Bot send error: ' + (data.error || 'Failed') + '\n\nWould you like to open WhatsApp directly to send it?')) {
+                            window.open(data.wa_direct_url, '_blank');
+                        } else {
+                            alert('❌ Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
+                        }
+                    }
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                alert('❌ Network or server error: ' + err.message);
+            });
+        }
+
+        function copyGuestLink(token) {
+            const url = window.location.origin + '/chat/' + token;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('✅ Guest RSVP chat link copied to clipboard!\n\n' + url);
+                }).catch(() => {
+                    prompt('Copy this link:', url);
+                });
+            } else {
+                prompt('Copy this link:', url);
+            }
+        }
+
+        function sendGuestLinkWhatsApp(token, btn) {
+            if (!token) return;
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Sending...';
+
+            fetch('/api/send-guest-link/' + token, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+
+                if (data.success) {
+                    alert('✅ ' + (data.message || 'Invitation sent to relative on WhatsApp!'));
+                } else {
+                    if (data.not_connected) {
+                        if (data.wa_direct_url && confirm('⚠️ WhatsApp Autopilot Bot is offline or not linked.\n\nWould you like to open WhatsApp directly now to send this invitation?')) {
+                            window.open(data.wa_direct_url, '_blank');
+                        } else {
+                            openWhatsAppModal();
+                        }
+                    } else {
+                        if (data.wa_direct_url && confirm('❌ Bot send error: ' + (data.error || 'Failed') + '\n\nWould you like to open WhatsApp directly to send it?')) {
+                            window.open(data.wa_direct_url, '_blank');
+                        } else {
+                            alert('❌ Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
+                        }
                     }
                 }
             })

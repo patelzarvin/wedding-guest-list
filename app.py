@@ -589,19 +589,23 @@ def api_send_parent_link(token):
     bride = parent.get("bride_name", "").strip() or "કન્યા"
     
     collector_msg = (
-        f"💍 જય શ્રી કૃષ્ણ પૂજ્ય {parent['name']} {role_gu}! 🙏\n\n"
+        f"જય શ્રી કૃષ્ણ પૂજ્ય {parent['name']} {role_gu}!\n\n"
         f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગ માટે આપના {side_gu} ના તમામ સંબંધીઓની યાદી તૈયાર કરવા અમારો AI સહાયક તૈયાર છે.\n\n"
         f"આપ ફક્ત નીચે આપેલી લિંક પર ક્લિક કરીને આપના સંબંધીઓ (ભાઈઓ, બહેનો, કાકા, ફોઈ, મામા, માસી, મિત્રો) ના નામ જણાવશો:\n\n"
         f"{collector_url}\n\n"
         f"(નોંધ: જો લિંક વાદળી/ક્લિક ન થાય, તો આ નંબર સેવ કરો અથવા આ મેસેજ પર 'હા' લખીને મોકલો, જેથી લિંક ખૂલી જશે.)\n\n"
-        f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે! 🌸"
+        f"આપ જે નામ આપશો એ આપોઆપ લગ્નના ગેસ્ટ લિસ્ટમાં ગોઠવાઈ જશે!"
     )
+    
+    clean_p = clean_phone_10(parent["phone"])
+    wa_direct_url = f"https://wa.me/91{clean_p}?text={urllib.parse.quote(collector_msg)}"
     
     res, code = send_baileys_message(parent["phone"], collector_msg)
     if code in [200, 201] and res.get("success"):
         return jsonify({
             "success": True,
             "message": f"Link sent to {parent['name']} ({parent['phone']}) on WhatsApp!",
+            "wa_direct_url": wa_direct_url,
             "response": res
         }), 200
     else:
@@ -611,6 +615,51 @@ def api_send_parent_link(token):
             "success": False,
             "error": err_msg,
             "not_connected": not_conn,
+            "wa_direct_url": wa_direct_url,
+            "response": res
+        }), 200
+
+@app.route("/api/send-guest-link/<token>", methods=["POST"])
+@login_required
+def api_send_guest_link(token):
+    contact = get_contact_by_token_db(token)
+    if not contact or not contact.get("phone"):
+        return jsonify({"success": False, "error": "Contact phone number is not available."}), 400
+        
+    base_url = get_base_url()
+    chat_url = f"{base_url}/chat/{contact['token']}"
+    groom = contact.get("groom_name", "").strip() or "વરરાજા"
+    bride = contact.get("bride_name", "").strip() or "કન્યા"
+    guest_name = contact.get("name", "").strip()
+    
+    invite_text = (
+        f"જય શ્રી કૃષ્ણ {guest_name}!\n\n"
+        f"{groom} અને {bride} ના શુભ લગ્ન પ્રસંગે આપનું અને આપના પરિવારનું હાર્દિક સ્વાગત છે.\n\n"
+        f"લગ્નમાં આપના પરિવારમાંથી કોણ કોણ પધારવાના છો તેની વિગત આપવા માટે નીચે આપેલી લિંક પર ક્લિક કરશો:\n\n"
+        f"{chat_url}\n\n"
+        f"(નોંધ: જો લિંક વાદળી/ક્લિક ન થાય, તો આ નંબર સેવ કરો અથવા આ મેસેજ પર 'હા' લખીને મોકલો, જેથી લિંક ખૂલી જશે.)\n\n"
+        f"આપના સ્નેહીજનો તરફથી"
+    )
+    
+    clean_phone = clean_phone_10(contact["phone"])
+    wa_direct_url = f"https://wa.me/91{clean_phone}?text={urllib.parse.quote(invite_text)}"
+    
+    res, code = send_baileys_message(clean_phone, invite_text)
+    if code in [200, 201] and res.get("success"):
+        return jsonify({
+            "success": True,
+            "message": f"Invitation link sent to {guest_name} ({clean_phone}) on WhatsApp!",
+            "wa_direct_url": wa_direct_url,
+            "response": res
+        }), 200
+    else:
+        err_msg = res.get("error", "WhatsApp service unavailable or not linked.")
+        not_conn = res.get("not_connected", code == 503)
+        return jsonify({
+            "success": False,
+            "error": err_msg,
+            "not_connected": not_conn,
+            "wa_direct_url": wa_direct_url,
             "response": res
         }), 200
 
