@@ -401,11 +401,10 @@
 
         <div id="clientErrorBanner" class="alert-error client-banner"></div>
 
-        <!-- Tabs Header -->
-        <div class="tabs-header">
-            <button type="button" class="tab-btn {% if active_tab != 'register' and active_tab != 'reset' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
+        <!-- Tabs Header (Only Sign In & Create Account) -->
+        <div class="tabs-header" id="mainTabsHeader">
+            <button type="button" class="tab-btn {% if active_tab != 'register' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
             <button type="button" class="tab-btn {% if active_tab == 'register' %}active{% endif %}" onclick="switchTab('register')">Create Account</button>
-            <button type="button" class="tab-btn {% if active_tab == 'reset' %}active{% endif %}" id="tabBtnReset" onclick="switchTab('reset')">Reset Password</button>
         </div>
 
         <!-- Sign In Form -->
@@ -566,15 +565,17 @@
             document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
             clearClientError();
             
-            const tabBtnReset = document.getElementById('tabBtnReset');
+            const mainHeader = document.getElementById('mainTabsHeader');
             if (tab === 'signin') {
+                if (mainHeader) mainHeader.style.display = 'flex';
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('signin-section').classList.add('active');
             } else if (tab === 'register') {
+                if (mainHeader) mainHeader.style.display = 'flex';
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('register-section').classList.add('active');
             } else if (tab === 'reset') {
-                if (tabBtnReset) tabBtnReset.classList.add('active');
+                if (mainHeader) mainHeader.style.display = 'none';
                 document.getElementById('reset-section').classList.add('active');
             }
         }
