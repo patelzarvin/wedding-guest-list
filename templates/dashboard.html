@@ -1172,9 +1172,7 @@
             const url = window.location.origin + '/collector/' + token;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(() => {
-                    alert('Collector link copied to clipboard:
-
-' + url);
+                    alert('Collector link copied to clipboard:\n\n' + url);
                 }).catch(() => {
                     prompt('Copy this link:', url);
                 });
@@ -1202,17 +1200,13 @@
                     alert(data.message || 'Bot link sent to WhatsApp!');
                 } else {
                     if (data.not_connected) {
-                        if (data.wa_direct_url && confirm('WhatsApp Autopilot Bot is offline or not linked.
-
-Open WhatsApp directly to send this invitation link?')) {
+                        if (data.wa_direct_url && confirm('WhatsApp Autopilot Bot is offline or not linked.\n\nOpen WhatsApp directly to send this invitation link?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
                             openWhatsAppModal();
                         }
                     } else {
-                        if (data.wa_direct_url && confirm('Bot send error: ' + (data.error || 'Failed') + '
-
-Open WhatsApp directly to send it?')) {
+                        if (data.wa_direct_url && confirm('Bot send error: ' + (data.error || 'Failed') + '\n\nOpen WhatsApp directly to send it?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
                             alert('Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
@@ -1231,9 +1225,7 @@ Open WhatsApp directly to send it?')) {
             const url = window.location.origin + '/chat/' + token;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(() => {
-                    alert('Guest RSVP chat link copied to clipboard:
-
-' + url);
+                    alert('Guest RSVP chat link copied to clipboard:\n\n' + url);
                 }).catch(() => {
                     prompt('Copy this link:', url);
                 });
@@ -1261,17 +1253,13 @@ Open WhatsApp directly to send it?')) {
                     alert(data.message || 'Invitation sent to relative on WhatsApp!');
                 } else {
                     if (data.not_connected) {
-                        if (data.wa_direct_url && confirm('WhatsApp Autopilot Bot is offline or not linked.
-
-Open WhatsApp directly to send this invitation?')) {
+                        if (data.wa_direct_url && confirm('WhatsApp Autopilot Bot is offline or not linked.\n\nOpen WhatsApp directly to send this invitation?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
                             openWhatsAppModal();
                         }
                     } else {
-                        if (data.wa_direct_url && confirm('Bot send error: ' + (data.error || 'Failed') + '
-
-Open WhatsApp directly to send it?')) {
+                        if (data.wa_direct_url && confirm('Bot send error: ' + (data.error || 'Failed') + '\n\nOpen WhatsApp directly to send it?')) {
                             window.open(data.wa_direct_url, '_blank');
                         } else {
                             alert('Could not send WhatsApp message: ' + (data.error || 'Unknown error'));
@@ -1314,6 +1302,7 @@ Open WhatsApp directly to send it?')) {
         }
 
         function regenerateWhatsAppQr(btn) {
+            const origText = btn ? btn.textContent.trim() : 'Refresh QR';
             if (btn) {
                 btn.disabled = true;
                 btn.textContent = 'Generating...';
@@ -1322,11 +1311,17 @@ Open WhatsApp directly to send it?')) {
             const qrPlaceholder = document.getElementById('qrLoadingPlaceholder');
             const qrBadge = document.getElementById('qrBadge');
             
-            qrImg.style.display = 'none';
-            qrImg.src = '';
-            qrPlaceholder.style.display = 'flex';
-            qrBadge.textContent = 'Regenerating fresh QR code...';
-            qrBadge.style.color = 'var(--gold-light)';
+            if (qrImg) { qrImg.style.display = 'none'; qrImg.src = ''; }
+            if (qrPlaceholder) qrPlaceholder.style.display = 'flex';
+            if (qrBadge) {
+                qrBadge.textContent = 'Regenerating fresh QR code...';
+                qrBadge.style.color = 'var(--gold-light)';
+            }
+
+            const sidebarQrImg = document.getElementById('sidebarQrImage');
+            const sidebarQrPlc = document.getElementById('sidebarQrPlaceholder');
+            if (sidebarQrImg) { sidebarQrImg.style.display = 'none'; sidebarQrImg.src = ''; }
+            if (sidebarQrPlc) sidebarQrPlc.style.display = 'flex';
 
             fetch('/api/whatsapp-refresh-qr', { method: 'POST' })
                 .then(r => r.json())
@@ -1335,7 +1330,7 @@ Open WhatsApp directly to send it?')) {
                         checkWhatsAppStatus(false);
                         if (btn) {
                             btn.disabled = false;
-                            btn.textContent = 'Regenerate QR Code';
+                            btn.textContent = origText;
                         }
                     }, 1200);
                 })
@@ -1343,7 +1338,7 @@ Open WhatsApp directly to send it?')) {
                     console.error('Error refreshing QR:', err);
                     if (btn) {
                         btn.disabled = false;
-                        btn.textContent = 'Regenerate QR Code';
+                        btn.textContent = origText;
                     }
                 });
         }
