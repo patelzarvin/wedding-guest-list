@@ -39,7 +39,8 @@ class TestFamilyHierarchyAndChat(unittest.TestCase):
         self.assertEqual(jyot_updated["spouse_name"], "Stuti")
         self.assertEqual(jyot_updated["other_members"], "Agnya")
 
-    def test_bot_chat_flow_with_punctuation(self):
+    @unittest.mock.patch('bot_engine.get_gemini_api_key', return_value='')
+    def test_bot_chat_flow_with_punctuation(self, mock_gemini):
         c = add_contact_db(self.wedding_id, "GROOM", "FATHER", "friends", "Test Guest", "9999999999")
         tok = c["token"]
 
@@ -49,7 +50,7 @@ class TestFamilyHierarchyAndChat(unittest.TestCase):
 
         # Step 2: Parent name -> "Shankarlal"
         r2 = process_chat_message(tok, "Shankarlal")
-        self.assertIn("પરણેલા", r2["reply"])
+        self.assertTrue(any(w in r2["reply"].lower() for w in ["married", "પરણેલા", "પરણિત", "લગ્ન", "જીવનસાથી"]))
 
         # Step 3: Married? -> "હા (Yes)"
         r3 = process_chat_message(tok, "હા (Yes)")

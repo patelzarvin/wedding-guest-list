@@ -83,9 +83,14 @@ async function startWhatsApp() {
             version,
             logger: pino({ level: 'silent' }),
             auth: state,
-            browser: Browsers.ubuntu('Chrome'),
+            browser: Browsers.macOS('Desktop'),
+            syncFullHistory: false,
+            generateHighQualityLinkPreview: false,
+            markOnlineOnConnect: false,
             connectTimeoutMs: 60000,
-            defaultQueryTimeoutMs: 60000
+            defaultQueryTimeoutMs: 60000,
+            keepAliveIntervalMs: 25000,
+            retryRequestDelayMs: 500
         });
 
         sock.ev.on('creds.update', saveCreds);
@@ -110,31 +115,36 @@ async function startWhatsApp() {
             }
 
             if (connection === 'connecting') {
-                if (connectionStatus !== 'qr') {
-                    connectionStatus = 'connecting';
-                }
+                connectionStatus = 'connecting';
+                console.log('[*] WhatsApp connection status: connecting / pairing with phone...');
             } else if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-                console.log(`[!] WhatsApp connection closed (${statusCode || 'Unknown'}). Reconnecting: ${shouldReconnect}`);
+                console.log(`[!] WhatsApp connection closed (Status: ${statusCode || 'Unknown'}).`);
 
-                connectionStatus = 'disconnected';
-                qrDataUrl = null;
-                currentUser = null;
+                if (statusCode === DisconnectReason.restartRequired) {
+                    console.log('[*] WhatsApp requested session restart (Code 515). Reconnecting immediately with saved credentials...');
+                    connectionStatus = 'connecting';
+                    setTimeout(startWhatsApp, 500);
+                    return;
+                }
 
                 if (statusCode === DisconnectReason.loggedOut) {
-                    console.log('[*] Logged out. Clearing credentials...');
+                    console.log('[*] WhatsApp session logged out (Code 401). Resetting credentials...');
+                    connectionStatus = 'disconnected';
+                    qrDataUrl = null;
+                    currentUser = null;
                     try {
                         fs.rmSync(AUTH_DIR, { recursive: true, force: true });
                         fs.mkdirSync(AUTH_DIR, { recursive: true });
                     } catch (err) {}
+                    setTimeout(startWhatsApp, 2000);
+                    return;
                 }
 
-                if (shouldReconnect) {
-                    setTimeout(startWhatsApp, 3000);
-                } else {
-                    setTimeout(startWhatsApp, 2000);
-                }
+                // For transient disconnections (network blip, stream error, timed out)
+                connectionStatus = 'connecting';
+                console.log('[*] Reconnecting WhatsApp socket in 2s...');
+                setTimeout(startWhatsApp, 2000);
             } else if (connection === 'open') {
                 connectionStatus = 'connected';
                 qrDataUrl = null;

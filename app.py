@@ -50,23 +50,42 @@ def add_security_headers(response):
     return response
 
 BAILEYS_SERVICE_URL = os.environ.get("BAILEYS_SERVICE_URL", "http://127.0.0.1:5001")
+_baileys_process = None
+
+def is_port_in_use(host="127.0.0.1", port=5001):
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.5)
+            return s.connect_ex((host, port)) == 0
+    except Exception:
+        return False
 
 def ensure_baileys_running():
-    try:
-        req = urllib.request.Request(f"{BAILEYS_SERVICE_URL}/status")
-        with urllib.request.urlopen(req, timeout=1.5):
-            return True
-    except Exception:
-        server_js = os.path.join(os.path.dirname(__file__), "whatsapp_service", "server.js")
-        service_dir = os.path.join(os.path.dirname(__file__), "whatsapp_service")
-        if os.path.exists(server_js):
-            try:
-                import subprocess
-                # Use platform-safe execution without shell=True on POSIX
-                subprocess.Popen(["node", "server.js"], cwd=service_dir)
-            except Exception as e:
-                print("Notice: could not auto-spawn Baileys service:", e)
+    global _baileys_process
+    # 1. If port 5001 is already actively open and listening, service is already up!
+    if is_port_in_use("127.0.0.1", 5001):
+        return True
+
+    # 2. On Render or Docker, start.sh manages the Baileys supervisor daemon
+    if os.environ.get("RENDER") or os.environ.get("CONTAINER") or os.environ.get("KUBERNETES_SERVICE_HOST"):
         return False
+
+    # 3. For local development: ensure only a single process instance is spawned
+    if _baileys_process is not None and _baileys_process.poll() is None:
+        return True
+
+    server_js = os.path.join(os.path.dirname(__file__), "whatsapp_service", "server.js")
+    service_dir = os.path.join(os.path.dirname(__file__), "whatsapp_service")
+    if os.path.exists(server_js):
+        try:
+            import subprocess
+            _baileys_process = subprocess.Popen(["node", "server.js"], cwd=service_dir)
+            print(f"[+] Started local Baileys service (PID: {_baileys_process.pid})")
+            return True
+        except Exception as e:
+            print("Notice: could not auto-spawn Baileys service:", e)
+    return False
 
 def format_whatsapp_phone(raw_id):
     if not raw_id:

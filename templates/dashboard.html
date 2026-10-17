@@ -1842,9 +1842,35 @@
                         }
                         if (sidebarStatusText) sidebarStatusText.textContent = 'Offline (Scan QR Below to Link)';
                         if (sidebarBtn) sidebarBtn.textContent = 'Enlarge QR';
+                    } else if (data.status === 'connecting') {
+                        // Phone has scanned the QR code and session handshake is in progress
+                        headerPill.className = 'status-pill online';
+                        headerPill.style.background = 'rgba(245, 158, 11, 0.15)';
+                        headerText.textContent = 'Linking Phone... (Please wait)';
+
+                        modalConnected.style.display = 'none';
+                        modalQr.style.display = 'block';
+
+                        qrImg.style.display = 'none';
+                        qrPlaceholder.style.display = 'flex';
+                        qrPlaceholder.innerHTML = '<div style="width:34px;height:34px;border:3px solid rgba(212,175,55,0.25);border-top-color:#10B981;border-radius:50%;margin-bottom:12px;animation:spin 0.8s linear infinite;"></div><div style="font-size:14px;font-weight:700;color:#10B981;">Phone Scanned!</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Finishing secure WhatsApp connection...</div>';
+                        qrBadge.textContent = 'Phone Scanned - Connecting...';
+                        qrBadge.style.color = '#10B981';
+                        qrBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                        qrBadge.style.background = 'rgba(16, 185, 129, 0.12)';
+
+                        if (sidebarQrBox) sidebarQrBox.style.display = 'block';
+                        if (sidebarQrImg) sidebarQrImg.style.display = 'none';
+                        if (sidebarQrPlc) {
+                            sidebarQrPlc.style.display = 'flex';
+                            sidebarQrPlc.innerHTML = '<div style="width:24px;height:24px;border:2px solid rgba(212,175,55,0.25);border-top-color:#10B981;border-radius:50%;margin-bottom:6px;animation:spin 0.8s linear infinite;"></div><div style="font-size:11px;font-weight:600;color:#10B981;">Linking Phone...</div>';
+                        }
+                        if (sidebarStatusText) sidebarStatusText.textContent = 'Connecting with WhatsApp...';
+                        if (sidebarBtn) sidebarBtn.textContent = 'Connecting...';
                     } else {
                         wasPreviouslyOffline = true;
                         headerPill.className = 'status-pill offline';
+                        headerPill.style.background = '';
                         headerText.textContent = 'WhatsApp Offline (Click to Link)';
 
                         modalConnected.style.display = 'none';
@@ -1852,6 +1878,7 @@
 
                         qrImg.style.display = 'none';
                         qrPlaceholder.style.display = 'flex';
+                        qrPlaceholder.innerHTML = '<div style="width:34px;height:34px;border:3px solid rgba(212,175,55,0.25);border-top-color:var(--gold-primary);border-radius:50%;margin-bottom:12px;animation:spin 0.8s linear infinite;"></div><div style="font-size:13px;font-weight:600;color:#FFFFFF;">Generating QR Code...</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Connecting to WhatsApp</div>';
                         qrBadge.textContent = 'Connecting to WhatsApp Engine...';
                         qrBadge.style.color = 'var(--gold-light)';
                         qrBadge.style.borderColor = 'var(--gold-border)';
@@ -1860,14 +1887,12 @@
                         // Update Sidebar to Loading Placeholder
                         if (sidebarQrBox) sidebarQrBox.style.display = 'block';
                         if (sidebarQrImg) sidebarQrImg.style.display = 'none';
-                        if (sidebarQrPlc) sidebarQrPlc.style.display = 'flex';
-                        if (sidebarStatusText) sidebarStatusText.textContent = 'Offline (Connecting to WhatsApp...)';
-                        if (sidebarBtn) sidebarBtn.textContent = 'Enlarge QR';
-
-                        qrRetryCount++;
-                        if (qrRetryCount === 3 || qrRetryCount === 8) {
-                            fetch('/api/whatsapp-refresh-qr', { method: 'POST' }).catch(e => {});
+                        if (sidebarQrPlc) {
+                            sidebarQrPlc.style.display = 'flex';
+                            sidebarQrPlc.innerHTML = '<div style="width:28px;height:28px;border:3px solid rgba(212,175,55,0.25);border-top-color:var(--gold-primary);border-radius:50%;margin-bottom:8px;animation:spin 0.8s linear infinite;"></div><div style="font-size:11px;font-weight:600;color:#FFFFFF;">Generating QR...</div>';
                         }
+                        if (sidebarStatusText) sidebarStatusText.textContent = 'Offline (Generating QR...)';
+                        if (sidebarBtn) sidebarBtn.textContent = 'Enlarge QR';
                     }
                 })
                 .catch(err => {
