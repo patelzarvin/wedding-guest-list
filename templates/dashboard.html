@@ -1073,7 +1073,15 @@
                                         <span class="hierarchy-badge-tag">Household Breakdown</span>
                                         <span style="font-size: 12px; color: var(--gold-light);">Total: <strong id="drawerHcText-{{ c.id }}">{{ c.total_headcount if c.total_headcount else 1 }} Members</strong> Attending</span>
                                     </div>
-                                    <button type="button" class="btn-sm-gold" style="font-size: 11px; padding: 4px 12px;" onclick="openEditFamilyModal({{ c.id }}, '{{ c.name|replace(\"'\", \"\\'\") }}', '{{ (c.parents_names or '')|replace(\"'\", \"\\'\") }}', '{{ (c.spouse_name or '')|replace(\"'\", \"\\'\") }}', '{{ (c.children_names or '')|replace(\"'\", \"\\'\") }}', '{{ (c.other_members or '')|replace(\"'\", \"\\'\") }}', {{ c.total_headcount if c.total_headcount else 1 }}); event.stopPropagation();">
+                                    <button type="button" class="btn-sm-gold" style="font-size: 11px; padding: 4px 12px;"
+                                        data-id="{{ c.id }}"
+                                        data-name="{{ c.name }}"
+                                        data-parents="{{ c.parents_names or '' }}"
+                                        data-spouse="{{ c.spouse_name or '' }}"
+                                        data-children="{{ c.children_names or '' }}"
+                                        data-others="{{ c.other_members or '' }}"
+                                        data-hc="{{ c.total_headcount if c.total_headcount else 1 }}"
+                                        onclick="handleEditFamilyBtn(this); event.stopPropagation();">
                                         Edit Members
                                     </button>
                                 </div>
@@ -1450,6 +1458,17 @@
                 drawer.style.display = 'none';
                 if (chevron) chevron.style.transform = 'rotate(0deg)';
             }
+        }
+
+        function handleEditFamilyBtn(btn) {
+            const id = btn.getAttribute('data-id');
+            const name = btn.getAttribute('data-name');
+            const parents = btn.getAttribute('data-parents');
+            const spouse = btn.getAttribute('data-spouse');
+            const children = btn.getAttribute('data-children');
+            const others = btn.getAttribute('data-others');
+            const hc = btn.getAttribute('data-hc');
+            openEditFamilyModal(id, name, parents, spouse, children, others, hc);
         }
 
         function openEditFamilyModal(id, name, parents, spouse, children, others, headcount) {
