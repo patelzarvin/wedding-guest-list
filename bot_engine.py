@@ -771,7 +771,19 @@ def commit_chat_to_guest_list(contact, state):
         ch_phone = child.get("phone", "")
         ch_name = child.get("name", f"{contact['name']}'s Son/Daughter")
         if ch_phone:
-            # Check if not already added
+            side = contact.get("side", "BRIDE")
+            added_by = contact.get("added_by", "FATHER")
+            cat = contact.get("category", "kaka")
+            notes = f"Branch from {contact['name']} ({cat.title()})"
+
+            wedding_id = contact.get("wedding_id")
+            if wedding_id:
+                try:
+                    add_contact_db(wedding_id=wedding_id, side=side, added_by=added_by, category=cat, name=ch_name, phone=ch_phone, notes=notes)
+                except Exception as e:
+                    print("Error spawning separate branch in SQLite:", e)
+
+            # Check if not already added to JSON fallback
             data = load_data()
             already = False
             for c in data.get("contacts", []):
@@ -779,10 +791,6 @@ def commit_chat_to_guest_list(contact, state):
                     already = True
                     break
             if not already:
-                side = contact.get("side", "BRIDE")
-                added_by = contact.get("added_by", "FATHER")
-                cat = contact.get("category", "kaka")
-                notes = f"Branch from {contact['name']} ({cat.title()})"
                 add_contact(side=side, added_by=added_by, category=cat, name=ch_name, phone=ch_phone, notes=notes)
                 print(f"Spawned new family branch: {ch_name} ({ch_phone}) under {contact['name']}")
 
