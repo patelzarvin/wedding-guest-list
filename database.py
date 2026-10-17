@@ -10,9 +10,90 @@ from security import (
     generate_secure_token, clean_phone_10
 )
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "wedding.db")
+DB_PATH = os.environ.get("WEDDING_DB_PATH", os.path.join(os.path.dirname(__file__), "wedding.db"))
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+def is_postgres():
+    return bool(DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")))
+
+try:
+    import psycopg2
+    import psycopg2.extras
+except ImportError:
+    psycopg2 = None
+
+class PgCursorWrapper:
+    def __init__(self, raw_cur):
+        self._cur = raw_cur
+        self.lastrowid = None
+
+    def execute(self, query, params=None):
+        sql = query.replace("?", "%s")
+        if "PRAGMA table_info" in sql:
+            return self
+
+        upper = sql.strip().upper()
+        if upper.startswith("INSERT INTO") and "RETURNING" not in upper:
+            table_token = upper.split("INSERT INTO")[1].strip().split()[0].split("(")[0].strip()
+            if table_token not in ["APP_SETTINGS", "CHAT_SESSIONS"]:
+                sql_with_returning = sql.rstrip().rstrip(";") + " RETURNING id;"
+                try:
+                    if params is not None:
+                        self._cur.execute(sql_with_returning, params)
+                    else:
+                        self._cur.execute(sql_with_returning)
+                    row = self._cur.fetchone()
+                    if row:
+                        self.lastrowid = row[0]
+                    return self
+                except Exception:
+                    pass
+
+        if params is not None:
+            self._cur.execute(sql, params)
+        else:
+            self._cur.execute(sql)
+        return self
+
+    def fetchone(self):
+        row = self._cur.fetchone()
+        return dict(row) if row is not None else None
+
+    def fetchall(self):
+        rows = self._cur.fetchall()
+        return [dict(r) for r in rows]
+
+    def __iter__(self):
+        return iter(self.fetchall())
+
+    def __getattr__(self, item):
+        return getattr(self._cur, item)
+
+class PgConnectionWrapper:
+    def __init__(self, raw_conn):
+        self._conn = raw_conn
+
+    def cursor(self):
+        return PgCursorWrapper(self._conn.cursor(cursor_factory=psycopg2.extras.DictCursor))
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+    def __getattr__(self, item):
+        return getattr(self._conn, item)
 
 def get_db():
+    if is_postgres() and psycopg2:
+        raw_conn = psycopg2.connect(DATABASE_URL)
+        return PgConnectionWrapper(raw_conn)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
@@ -20,7 +101,129 @@ def get_db():
 def init_db():
     conn = get_db()
     c = conn.cursor()
-    
+
+    if is_postgres():
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(255) UNIQUE NOT NULL,
+            email VARCHAR(255) UNIQUE,
+            password_hash TEXT NOT NULL,
+            phone VARCHAR(50),
+            email_verified INTEGER DEFAULT 0,
+            phone_verified INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS weddings (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            title TEXT,
+            groom_name TEXT,
+            groom_phone TEXT,
+            bride_name TEXT,
+            bride_phone TEXT,
+            groom_father_name TEXT,
+            groom_father_phone TEXT,
+            groom_mother_name TEXT,
+            groom_mother_phone TEXT,
+            bride_father_name TEXT,
+            bride_father_phone TEXT,
+            bride_mother_name TEXT,
+            bride_mother_phone TEXT,
+            wedding_date TEXT,
+            wedding_city TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS parent_sessions (
+            id SERIAL PRIMARY KEY,
+            wedding_id INTEGER NOT NULL,
+            role VARCHAR(50) NOT NULL,
+            side VARCHAR(50) NOT NULL,
+            name TEXT NOT NULL,
+            phone VARCHAR(50),
+            token VARCHAR(100) UNIQUE NOT NULL,
+            is_completed INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS contacts (
+            id SERIAL PRIMARY KEY,
+            wedding_id INTEGER NOT NULL,
+            side VARCHAR(50) NOT NULL,
+            added_by VARCHAR(50) NOT NULL,
+            category VARCHAR(100) NOT NULL,
+            name TEXT NOT NULL,
+            phone VARCHAR(50),
+            token VARCHAR(100) UNIQUE NOT NULL,
+            status VARCHAR(50) DEFAULT 'WAITING',
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS rsvps (
+            id SERIAL PRIMARY KEY,
+            contact_id INTEGER UNIQUE NOT NULL,
+            parents_attending INTEGER,
+            parents_names TEXT,
+            is_married INTEGER,
+            spouse_name TEXT,
+            children_names TEXT,
+            other_members TEXT,
+            total_headcount INTEGER DEFAULT 1,
+            is_confirmed INTEGER DEFAULT 0,
+            confirmed_at TIMESTAMP,
+            FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS chat_logs (
+            id SERIAL PRIMARY KEY,
+            token VARCHAR(100) NOT NULL,
+            sender VARCHAR(50) NOT NULL,
+            text TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS app_settings (
+            key VARCHAR(255) PRIMARY KEY,
+            value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS otps (
+            id SERIAL PRIMARY KEY,
+            phone VARCHAR(255) NOT NULL,
+            otp_code VARCHAR(20) NOT NULL,
+            otp_hash TEXT,
+            purpose VARCHAR(50) DEFAULT 'REGISTER',
+            expires_at TEXT NOT NULL,
+            attempts INTEGER DEFAULT 0,
+            max_attempts INTEGER DEFAULT 5,
+            is_used INTEGER DEFAULT 0,
+            reset_token TEXT,
+            consumed_at TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            token VARCHAR(100) PRIMARY KEY,
+            session_data TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_chat_token ON chat_logs(token);
+        CREATE INDEX IF NOT EXISTS idx_contact_token ON contacts(token);
+        CREATE INDEX IF NOT EXISTS idx_parent_token ON parent_sessions(token);
+        CREATE INDEX IF NOT EXISTS idx_otp_phone_purpose ON otps(phone, purpose, is_used);
+        """)
+        conn.commit()
+        conn.close()
+        return
+
     # 1. Users Table
     c.execute("""
     CREATE TABLE IF NOT EXISTS users (
