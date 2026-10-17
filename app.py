@@ -446,17 +446,6 @@ def auth_send_otp():
                 "message": f"તમારા રજીસ્ટર્ડ ઇમેઇલ ({obf}) પર 6-અંકનો સુરક્ષા કોડ મોકલી દેવાયો છે. કૃપા કરીને ઇનબોક્સ તપાસો."
             })
         else:
-            # Fallback when external cloud delivery is restricted on Render
-            if purpose == "REGISTER":
-                v_ok, _, tok_data = verify_otp_db(target_email, otp_code, purpose=purpose)
-                reg_tok = tok_data.get("reg_token", "") if v_ok else ""
-                return jsonify({
-                    "success": True,
-                    "fallback_verified": True,
-                    "reg_token": reg_tok,
-                    "target_email": target_email,
-                    "message": "ક્લાઉડ નેટવર્ક મર્યાદાને કારણે ઇમેઇલ આપમેળે વેરિફાય થયો છે. કૃપા કરીને Create Wedding Suite પર ક્લિક કરો."
-                })
             return jsonify({
                 "success": False,
                 "error": f"સુરક્ષા કોડ મોકલવામાં ભૂલ થઈ: {mail_msg}"

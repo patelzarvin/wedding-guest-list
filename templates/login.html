@@ -456,14 +456,14 @@
                     <span class="otp-status-text" id="regEmailStatusText">૬-અંકનો સુરક્ષા કોડ સીધો તમારા ઇમેઇલ / WhatsApp પર મોકલવામાં આવશે.</span>
                 </div>
 
-                <!-- OTP Input Field -->
-                <div class="form-group" id="regEmailOtpBox" style="display: none;">
-                    <label>Verification Code (ઇમેઇલ / WhatsApp પર આવેલ ૬-અંકનો સુરક્ષા કોડ)</label>
+                <!-- OTP Input Field - Always Visible -->
+                <div class="form-group" id="regEmailOtpBox">
+                    <label>Verification Code (ઇમેઇલ પર આવેલ ૬-અંકનો સુરક્ષા કોડ)</label>
                     <div class="phone-input-wrap">
-                        <input type="text" name="otp_code" id="reg_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyRegisterEmailOTP();}">
+                        <input type="text" name="otp_code" id="reg_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyRegisterEmailOTP();}">
                         <button type="button" class="btn-otp-action" id="btnRegVerifyEmailOtp" onclick="verifyRegisterEmailOTP()">Verify Code</button>
                     </div>
-                    <span class="otp-status-text" id="regOtpStatusText">Send Code ક્લિક કર્યા પછી આવેલો ૬-અંકનો કોડ અહીં લખી Verify Code દબાવો.</span>
+                    <span class="otp-status-text" id="regOtpStatusText">Send Code ક્લિક કર્યા પછી ઇમેઇલમાં આવેલો ૬-અંકનો કોડ અહીં લખી Verify Code દબાવો.</span>
                     <div class="otp-verified-badge" id="regEmailVerifiedBadge" style="display: none; margin-top: 8px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         <span id="regEmailVerifiedText">ઇમેઇલ સફળતાપૂર્વક વેરિફાય થયો!</span>
@@ -760,28 +760,8 @@
                     return;
                 }
 
-                // If cloud email service had sandbox limits, auto-verify with fallback token
-                if (data.fallback_verified && data.reg_token) {
-                    isEmailVerified = true;
-                    verifiedEmailAddress = email;
-                    verifiedRegToken = data.reg_token;
-                    const hToken = document.getElementById('hidden_reg_token');
-                    if (hToken) hToken.value = data.reg_token;
-                    document.getElementById('reg_email').readOnly = true;
-                    btn.style.display = 'none';
-                    const badge = document.getElementById('regEmailVerifiedBadge');
-                    const badgeText = document.getElementById('regEmailVerifiedText');
-                    badge.style.display = 'flex';
-                    badgeText.textContent = data.message || `ઇમેઇલ (${email}) સફળતાપૂર્વક વેરિફાય થયો!`;
-                    statusText.style.display = 'none';
-                    if (phoneInput) phoneInput.focus();
-                    return;
-                }
-
-                // Show OTP Box
-                document.getElementById('regEmailOtpBox').style.display = 'block';
                 statusText.style.color = '#10B981';
-                statusText.textContent = data.message || 'કોડ મોકલી દેવાયો છે.';
+                statusText.textContent = data.message || '૬-અંકનો સુરક્ષા કોડ તમારા ઇમેઇલ પર મોકલી દેવાયો છે. કૃપા કરીને નીચે કોડ લખી Verify Code દબાવો.';
                 document.getElementById('reg_otp').focus();
 
                 // Start 60s cooldown timer
@@ -887,6 +867,12 @@
             if (!emailVal || !emailVal.includes('@')) {
                 e.preventDefault();
                 showClientError('કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.', emailInput);
+                return false;
+            }
+
+            if (!isEmailVerified) {
+                e.preventDefault();
+                showClientError('કૃપા કરીને પહેલા ઇમેઇલ વેરિફાય કરો ("Send Code" દબાવો અને ઇમેઇલમાં આવેલો 6-અંકનો કોડ અહીં લખી "Verify Code" કરો).', document.getElementById('reg_otp'));
                 return false;
             }
 

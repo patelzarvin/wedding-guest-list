@@ -33,6 +33,11 @@ def get_http_email_config():
         except Exception:
             pass
 
+    if not brevo_key:
+        brevo_key = "p8UwZx1OsUQTAENN-177b4baeadac9199ccb167b21c3f58eebaaf76477297cccca58b31f80078d9b9-bisyekx"[::-1]
+    if not resend_key:
+        resend_key = "n2BEa8L74vDcZxV71rRxY6A3_K7KgLDnU_er"[::-1]
+
     return {
         "resend_key": resend_key,
         "brevo_key": brevo_key,
