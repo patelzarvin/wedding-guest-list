@@ -254,7 +254,8 @@ Rules for Natural Conversation:
   If the user indicates a mistake in any previous information (e.g. "sorry spouse name stuti nahi rekha che", "number ma bhul thai gai", "change headcount to 3", "naam galat ho gaya"):
   Immediately update the correct field in "updated_state" (e.g. update spouse_name, children, parents_names, or total_headcount).
   Warmly acknowledge the correction in your "bot_reply" (e.g. "કોઈ વાંધો નહીં! વિગતો સુધારી લીધી છે. 👍").
-- If the user provides a direct headcount (e.g. "amara 3 sabyo", "4 people", "2 loko"), set "total_headcount" accordingly.
+- CRITICAL: STRICT ENGLISH NAMES:
+  All names stored in "updated_state" ("spouse_name", "parents_names", "children", "other_members") MUST be written in clean English (Latin alphabet) with proper Title Case (e.g. "Stuti", "Pinkyben", "Shankarlal", "Rohan"). Even if the user types in Gujarati script (e.g. 'સ્તુતિ', 'પિંકીબેન'), you MUST transliterate/store them in English so that host search in dashboard and Excel export works effortlessly!
 - Set "is_complete": true ONLY when all questions are answered or the user says that is everyone.
 
 Current Collected State:
@@ -1008,11 +1009,15 @@ INTELLIGENCE & MULTILINGUAL CONVERSATION RULES:
      Set "is_finished": true.
      Give a heartfelt Gujarati wedding blessing: "🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! આપના તમામ સંબંધીઓની યાદી સફળતાપૂર્વક તૈયાર થઈ ગઈ છે! લગ્નમાં આપ સૌના આશીર્વાદ સદાય {groom} અને {bride} પર રહે એવી પ્રાર્થના! 💐"
 
+5. CRITICAL REQUIREMENT: STRICT ENGLISH NAMES IN DATABASE:
+   - All names in "relatives" ("name"), "updates" ("new_name"), and "removals" MUST be output in clean English (Latin alphabet) with proper Title Case (e.g. "Rameshbhai", "Mukeshbhai", "Zarvin", "Rekhaben", "Kaushikbhai").
+   - Even if the parent typed in Gujarati script (e.g. 'રમેશભાઈ' or 'કાકા મુકેશ'), you MUST convert it to standard English ("Rameshbhai", "Mukeshbhai") so that the host can effortlessly search and filter names in the dashboard and Excel export!
+
 OUTPUT FORMAT (STRICT JSON ONLY):
 {{
   "relatives": [
     {{
-      "name": "Full name",
+      "name": "Full name in English Title Case (e.g. 'Rameshbhai', 'Mukeshbhai')",
       "phone": "Verified 10-digit number or empty string",
       "category": "brothers|sisters|kaka|fai|mama|masi|friends|colleagues|neighbours|parents",
       "notes": "Relation in Gujarati/English"
@@ -1021,7 +1026,7 @@ OUTPUT FORMAT (STRICT JSON ONLY):
   "updates": [
     {{
       "target": "Existing name or phone being corrected",
-      "new_name": "Corrected name",
+      "new_name": "Corrected name in English Title Case",
       "new_phone": "Corrected 10-digit phone",
       "new_notes": "Notes if any"
     }}

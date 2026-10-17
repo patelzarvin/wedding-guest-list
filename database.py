@@ -696,8 +696,46 @@ BLOCKED_NAMES = {
     "aatla j", "bas aatla", "patyu", "બધા આવી ગયા", "આવી ગયા", "કોઈ નથી", "કોઈ બાકી નથી"
 }
 
+GUJ_CHAR_MAP = {
+    'ક': 'k', 'ખ': 'kh', 'ગ': 'g', 'ઘ': 'gh', 'ઙ': 'ng',
+    'ચ': 'ch', 'છ': 'chh', 'જ': 'j', 'ઝ': 'jh', 'ઞ': 'ny',
+    'ટ': 't', 'ઠ': 'th', 'ડ': 'd', 'ઢ': 'dh', 'ણ': 'n',
+    'ત': 't', 'થ': 'th', 'દ': 'd', 'ધ': 'dh', 'ન': 'n',
+    'પ': 'p', 'ફ': 'f', 'બ': 'b', 'ભ': 'bh', 'મ': 'm',
+    'ય': 'y', 'ર': 'r', 'લ': 'l', 'ળ': 'l', 'વ': 'v',
+    'શ': 'sh', 'ષ': 'sh', 'સ': 's', 'હ': 'h',
+    'અ': 'A', 'આ': 'Aa', 'ઇ': 'I', 'ઈ': 'Ee', 'ઉ': 'U', 'ઊ': 'Oo', 'ઋ': 'Ru',
+    'એ': 'E', 'ઐ': 'Ai', 'ઓ': 'O', 'ઔ': 'Au',
+    'ા': 'a', 'િ': 'i', 'ી': 'i', 'ુ': 'u', 'ૂ': 'u', 'ૃ': 'ru',
+    'ે': 'e', 'ૈ': 'ai', 'ો': 'o', 'ૌ': 'au', 'ં': 'n', 'ઃ': 'h', '્': ''
+}
+
+def transliterate_gujarati_to_english(text):
+    """Converts Gujarati script names to clean Title Case English so search & Excel export work effortlessly."""
+    if not text:
+        return ""
+    raw = str(text).strip()
+    if not any('\u0a80' <= ch <= '\u0aff' for ch in raw):
+        return ' '.join(w.capitalize() for w in raw.split())
+    res = []
+    consonants = set('કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલળવશષસહ')
+    matras = set('ાિીુૂૃેૈોૌ્')
+    chars = list(raw)
+    for i, ch in enumerate(chars):
+        if ch in GUJ_CHAR_MAP:
+            val = GUJ_CHAR_MAP[ch]
+            res.append(val)
+            if ch in consonants:
+                next_ch = chars[i+1] if i + 1 < len(chars) else None
+                if next_ch not in matras and next_ch in consonants:
+                    res.append('a')
+        else:
+            res.append(ch)
+    out = ''.join(res).strip()
+    return ' '.join(word.capitalize() for word in out.split())
+
 def add_contact_db(wedding_id, side, added_by, category, name, phone, notes=""):
-    clean_name = name.strip()
+    clean_name = transliterate_gujarati_to_english(name)
     clean_phone = "".join(filter(str.isdigit, str(phone))) if phone else ""
     
     if not clean_name or len(clean_name) < 2:
@@ -775,7 +813,7 @@ def update_contact_details_db(wedding_id, target_name_or_phone, new_name=None, n
         return None
         
     contact_id = row["id"]
-    updated_name = new_name.strip() if new_name and len(new_name.strip()) >= 2 else row["name"]
+    updated_name = transliterate_gujarati_to_english(new_name) if new_name and len(new_name.strip()) >= 2 else row["name"]
     clean_new_p = "".join(filter(str.isdigit, str(new_phone)))[-10:] if new_phone and len("".join(filter(str.isdigit, str(new_phone)))) >= 10 else (row["phone"] or "")
     updated_notes = new_notes.strip() if new_notes else row["notes"]
     
