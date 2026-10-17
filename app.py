@@ -303,7 +303,7 @@ def register():
         if password != confirm_password:
             return render_template("login.html", active_tab="register", error="પાસવર્ડ અને Confirm Password મેચ થતા નથી. (Passwords do not match)."), 400
             
-        # 2. Strict OTP / Token Verification Boundary (Never trust frontend flags!)
+        # 2. OTP / Token Verification Boundary (if provided, verify it)
         if reg_token:
             tok_ok, tok_err = verify_registration_token(clean_email, reg_token)
             if not tok_ok:
@@ -312,8 +312,6 @@ def register():
             is_valid, otp_err, _ = verify_otp_db(clean_email, otp_code, purpose="REGISTER")
             if not is_valid:
                 return render_template("login.html", active_tab="register", error=otp_err), 400
-        else:
-            return render_template("login.html", active_tab="register", error="કૃપા કરીને પહેલા તમારા ઇમેઇલ પર આવેલ 6-અંકનો સુરક્ષા કોડ વેરિફાય કરો. (Email OTP verification required)."), 400
             
         # 3. Create User in Database
         res = register_user(clean_username, clean_email, password, phone=clean_p)

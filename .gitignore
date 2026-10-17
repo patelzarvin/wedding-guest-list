@@ -23,6 +23,7 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 !wedding.db
+*.bak
 *.xlsx
 *.csv
 
