@@ -143,7 +143,7 @@ def set_groq_api_key(api_key):
 
 def call_groq_llm(system_prompt, user_content):
     """
-    Calls Groq cloud inference for open-source Llama 3.3 70B / Llama 3.1 8B.
+    Calls Groq cloud inference for open-source LLMs (120B / Qwen 27B / Llama).
     Ultra-fast (under 1 second), 100% free open-source backup when Gemini is busy.
     """
     api_key = get_groq_api_key()
@@ -156,7 +156,7 @@ def call_groq_llm(system_prompt, user_content):
         "Content-Type": "application/json"
     }
     
-    models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-2.5-32b"]
+    models = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
     last_err = None
     
     for m in models:
