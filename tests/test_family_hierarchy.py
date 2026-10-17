@@ -1,15 +1,30 @@
+import tempfile
+import os
 import unittest
-from database import clean_all_data, add_contact_db, update_guest_family_db, get_contacts_by_wedding, save_or_update_wedding
+import database
+from database import add_contact_db, update_guest_family_db, get_contacts_by_wedding, save_or_update_wedding
 from bot_engine import process_chat_message, save_conversations
 
 class TestFamilyHierarchyAndChat(unittest.TestCase):
     def setUp(self):
-        clean_all_data()
+        self.test_db_fd, self.test_db_path = tempfile.mkstemp(suffix="_test_family.db")
+        self.orig_db_path = database.DB_PATH
+        database.DB_PATH = self.test_db_path
+        database.init_db()
         save_conversations({})
         self.wedding_id = save_or_update_wedding(1, {
             "groom_name": "Kunj",
             "bride_name": "Kruti"
         })
+
+    def tearDown(self):
+        database.DB_PATH = self.orig_db_path
+        try:
+            os.close(self.test_db_fd)
+            if os.path.exists(self.test_db_path):
+                os.remove(self.test_db_path)
+        except Exception:
+            pass
 
     def test_update_family_and_headcount(self):
         c = add_contact_db(self.wedding_id, "GROOM", "FATHER", "friends", "Jyot Patel", "7984285496")
