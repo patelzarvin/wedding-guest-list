@@ -184,17 +184,42 @@ def get_or_create_chat_session(contact):
     save_conversations(convs)
     return session
 
+ACTIVE_GEMINI_MODELS = [
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash"
+]
+
+def derive_step_from_state(state):
+    if not state:
+        return "ASK_PARENTS"
+    if state.get("is_complete"):
+        return "COMPLETED"
+    if state.get("parents_attending") is None and not state.get("parents_names"):
+        return "ASK_PARENTS"
+    if state.get("parents_attending") and not state.get("parents_names"):
+        return "GET_PARENTS_NAME"
+    if state.get("is_married") is None:
+        return "ASK_MARRIED"
+    if state.get("is_married") and not state.get("spouse_name"):
+        return "GET_SPOUSE_NAME"
+    if not state.get("children"):
+        return "ASK_CHILDREN"
+    return "ASK_FINAL"
+
 def call_gemini_llm(api_key, contact, conversation_history, user_message, current_state):
     """
-    Calls Google Gemini Flash to parse natural Gujlish/Hindi/English input
+    Calls Google Gemini to parse natural Gujlish/Hindi/English input
     and return structured updates + warm conversational response.
-    Supports auto model fallback (gemini-2.5-flash -> gemini-2.0-flash).
+    Supports auto model fallback across active high-speed Gemini models.
     """
-    candidate_models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
+    candidate_models = ACTIVE_GEMINI_MODELS
     
     system_prompt = f"""
 You are an intelligent, polite, and warm Gujarati Wedding Hospitality Concierge Chatbot assisting {contact['name']} (Relation: {contact.get('added_by', '')} side {contact.get('category', '')}).
-Your mission is to accurately understand who and how many people from their family are attending the wedding.
+Your mission is to understand naturally and conversationally who and how many people from their family are attending the wedding.
 
 We need to collect:
 1. Parents (Maa-Baap / elders) attending with them (names if yes).
@@ -204,12 +229,26 @@ We need to collect:
    CRITICAL: DO NOT treat "mara chokra tirth nu parivar" as a single person's name!
    Instead, ask who is in that family (wife/kids names) or ask for their mobile number so a separate invitation can be sent!
 5. Any other family member living with them?
+6. RE-OPENING / ADDING MEMBERS AFTER SUMMARY:
+   If the conversation was already completed, or the user says "I want to add person", "haji ek vyakti che", "bhai nu naam baki che", "edit", or wants to add someone:
+   CRITICAL: NEVER repeat the completion message!
+   Re-open the conversation warmly: "ચોક્કસ! આપ કોનું નામ ઉમેરવા માંગો છો? કૃપા કરીને તેમનું નામ અને આપની સાથેનો સંબંધ જણાવશો."
+   Set "is_complete": false so they can add the member.
+   Once they give the name and relation, add to other_members or children, update total_headcount, and then show the updated summary!
 
 Rules for Natural Conversation:
-- Understand natural informal Gujlish (e.g., "ha mara 2 chokrao che", "mara bapa nathi aavta", "haa", "na", "wife rekha", "chokra nu parivar").
-- If the user says "haa" to separate invite but hasn't given the number yet, ask for their mobile number politely!
+- Understand natural informal Gujlish (e.g., "ha mara 2 chokrao che", "mara bapa nathi aavta", "haa", "na", "wife rekha", "chokra nu parivar", "Stuti", "Mata pinky ben pita shankarlal", "I want to add person").
+- If the user provides parent names directly (e.g. "Mata pinky ben pita shankarlal"):
+  Save parents_attending: true, parents_names: ["Pinky ben", "Shankarlal"].
+  Warmly welcome them, and move to the NEXT question (asking if they are married):
+  "ખૂબ સરસ! પિંકીબેન અને શંકરલાલનું પણ અમારા લગ્નમાં સ્વાગત છે! 🙏 શું આપ પરણેલા છો?"
+- If the user gives a spouse name directly in response to marriage question (e.g. "Stuti", "Stuti ben", "Rekha"):
+  Save is_married: true, spouse_name: "Stuti".
+  DO NOT ask "Are you married?" or ask for spouse name again!
+  Warmly acknowledge and move to the NEXT question (asking about children):
+  "આભાર! જીવનસાથી સ્તુતિબેનનું નામ નોંધી લીધું છે. 👍 શું આપને બાળકો છે (Do you have children)?"
 - Keep your bot replies warm, friendly, celebratory in simple Gujarati / Gujlish.
-- Set "is_complete": true ONLY when all questions are answered and individual names are collected.
+- Set "is_complete": true ONLY when all questions are answered or the user says that is everyone.
 
 Current Collected State:
 {json.dumps(current_state, ensure_ascii=False, indent=2)}
@@ -247,26 +286,26 @@ You MUST respond ONLY with valid JSON in this exact structure:
     for model_name in candidate_models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
         try:
-            resp = requests.post(url, json=payload, timeout=20)
+            resp = requests.post(url, json=payload, timeout=12)
             if resp.status_code == 200:
                 result_json = resp.json()
                 raw_text = result_json["candidates"][0]["content"]["parts"][0]["text"]
                 return json.loads(raw_text)
             else:
-                last_error = f"{model_name} HTTP {resp.status_code}: {resp.text}"
+                last_error = f"{model_name} HTTP {resp.status_code}: {resp.text[:150]}"
         except Exception as e:
-            last_error = str(e)
+            last_error = f"{model_name}: {str(e)}"
             
     raise Exception(f"All Gemini models failed. Last error: {last_error}")
 
 def fallback_rule_based_parser(contact, session, user_text):
     """
-    Intelligent Gujlish rule-based state machine used when Gemini API key is not yet configured.
+    Intelligent Gujlish rule-based state machine used when Gemini API key is not yet configured or offline.
     Handles 'ha', 'na', 'che', 'nathi', spouse names, children, and adult son numbers.
     """
     text = user_text.strip().lower()
-    step = session.get("step", "ASK_PARENTS")
     state = session.get("state", {})
+    step = session.get("step") or derive_step_from_state(state)
     
     bot_reply = ""
     quick_replies = []
@@ -275,18 +314,52 @@ def fallback_rule_based_parser(contact, session, user_text):
     is_yes = any(w in text for w in ["ha", "haa", "yes", "che", "h", "aavshe", "avse", "avsu", "avisu", "sure", "હા", "હાજી", "આવશે", "છે", "ચોક્કસ"])
     is_no = any(w in text for w in ["na", "naa", "no", "nathi", "nahi", "none", "no one", "single", "ના", "નાજી", "નથી", "નહિ", "નહીં"])
 
-    # Direct headcount pattern (e.g. '4 લોકો', '3 જણા', '4 members', '2 person')
+    # 1. Re-opening check if completed or user wants to add/edit a person
+    is_add_req = any(w in text for w in ["add", "person", "member", "naam", "sadasya", "vyakti", "baki", "haju", "haji", "edit", "change", "ઉમેર", "વ્યક્તિ", "સભ્ય", "બાકી", "હજુ", "હજી", "નામ"])
+    if step == "COMPLETED" or state.get("is_complete") or is_add_req:
+        if is_add_req:
+            state["is_complete"] = False
+            bot_reply = "ચોક્કસ! આપ કોનું નામ ઉમેરવા માંગો છો? કૃપા કરીને તેમનું નામ અને આપની સાથેનો સંબંધ જણાવશો:"
+            next_step = "GET_OTHER_NAME"
+            session["step"] = next_step
+            session["state"] = state
+            return {
+                "bot_reply": bot_reply,
+                "quick_replies": [],
+                "updated_state": state
+            }
+        elif step == "COMPLETED":
+            return finalize_chat_summary(contact, session, state)
+
+    # 2. Direct headcount pattern (e.g. '4 લોકો', '3 જણા', '4 members', '2 person')
     headcount_match = re.search(r'(\d+)\s*(?:people|members|person|જના|જણા|લોકો|સભ્યો|વ્યક્તિ|jna|loko|sabyo)', text, re.IGNORECASE)
     if headcount_match:
         count = int(headcount_match.group(1))
         state["total_headcount"] = max(count, 1)
         return finalize_chat_summary(contact, session, state)
 
+    # 3. State-aware step routing
+    if state.get("spouse_name") and (step == "ASK_PARENTS" or step == "ASK_MARRIED" or step == "GET_SPOUSE_NAME"):
+        step = "ASK_CHILDREN"
+
     if step == "ASK_PARENTS":
+        has_parent_words = any(w in text for w in ["mata", "pita", "mummy", "papa", "bapa", "ba", "pinky", "shankar", "માતા", "પિતા", "મમ્મી", "પપ્પા", "બાપા", "બા"])
         if is_yes:
             state["parents_attending"] = True
             bot_reply = "ખૂબ સરસ! આપના માતા-પિતા / વડીલોનું નામ જણાવશો? (Please share parents' names):"
             next_step = "GET_PARENTS_NAME"
+        elif has_parent_words or (len(user_text.strip()) > 3 and not is_no):
+            # User directly supplied names like 'Mata pinky ben pita shankarlal'
+            raw_names = re.split(r'[,&]|\bane\b|\band\b', user_text, flags=re.IGNORECASE)
+            names = [re.sub(r'^(mata|pita|mummy|papa|bapa|ba)\s*', '', n.strip(), flags=re.IGNORECASE).strip('. ') for n in raw_names if n.strip()]
+            state["parents_attending"] = True
+            for n in names:
+                if n and n not in state["parents_names"]:
+                    state["parents_names"].append(n)
+                    state["total_headcount"] += 1
+            bot_reply = f"ખૂબ સરસ! {', '.join(names)} નું પણ અમારા લગ્નમાં સ્વાગત છે! 🙏\n\n👉 શું આપ પરણેલા છો (Are you married)?"
+            quick_replies = ["હા (Yes)", "ના (No)"]
+            next_step = "ASK_MARRIED"
         else:
             state["parents_attending"] = False
             bot_reply = "બરાબર છે. હવે જણાવશો, શું આપ પરણેલા છો (Are you married)?"
@@ -294,10 +367,12 @@ def fallback_rule_based_parser(contact, session, user_text):
             next_step = "ASK_MARRIED"
 
     elif step == "GET_PARENTS_NAME":
-        names = [n.strip() for n in user_text.replace("and", ",").replace("ane", ",").replace("&", ",").split(",") if n.strip()]
+        raw_names = re.split(r'[,&]|\bane\b|\band\b', user_text, flags=re.IGNORECASE)
+        names = [re.sub(r'^(mata|pita|mummy|papa|bapa|ba)\s*', '', n.strip(), flags=re.IGNORECASE).strip('. ') for n in raw_names if n.strip()]
         for n in names:
-            state["parents_names"].append(n)
-            state["total_headcount"] += 1
+            if n and n not in state["parents_names"]:
+                state["parents_names"].append(n)
+                state["total_headcount"] += 1
         bot_reply = f"સરસ, {', '.join(names)} ની નોંધણી થઈ ગઈ છે.\n\nહવે જણાવશો, શું આપ પરણેલા છો (Are you married)?"
         quick_replies = ["હા (Yes)", "ના (No)"]
         next_step = "ASK_MARRIED"
@@ -421,7 +496,8 @@ def fallback_rule_based_parser(contact, session, user_text):
     return {
         "bot_reply": bot_reply,
         "quick_replies": quick_replies,
-        "updated_state": state
+        "updated_state": state,
+        "next_step": next_step
     }
 
 def finalize_chat_summary(contact, session, state):
@@ -454,7 +530,8 @@ def finalize_chat_summary(contact, session, state):
     return {
         "bot_reply": bot_reply,
         "quick_replies": [],
-        "updated_state": state
+        "updated_state": state,
+        "next_step": "COMPLETED"
     }
 
 def process_chat_message(token, user_message):
@@ -521,8 +598,12 @@ def process_chat_message(token, user_message):
         session["state"] = bot_result["updated_state"]
     final_state = session["state"]
     if final_state.get("is_complete"):
-        # Auto-commit to guest list
+        session["step"] = "COMPLETED"
         commit_chat_to_guest_list(contact, final_state)
+    elif "next_step" in bot_result:
+        session["step"] = bot_result["next_step"]
+    elif not session.get("step"):
+        session["step"] = derive_step_from_state(final_state)
 
     convs[token] = session
     save_conversations(convs)
@@ -853,7 +934,7 @@ def is_completion_phrase(text):
 
 def call_gemini_for_parent_collector(parent_info, user_message, conversation_history):
     api_key = get_gemini_api_key()
-    candidate_models = ["gemini-2.5-flash", "gemini-1.5-flash"]
+    candidate_models = ACTIVE_GEMINI_MODELS
 
     role_label = "પિતાશ્રી (પપ્પા)" if parent_info.get("role") == "FATHER" else "માતાશ્રી (મમ્મી)"
     side_label = "પિતા પક્ષ" if parent_info.get("role") == "FATHER" else "માતા પક્ષ"
