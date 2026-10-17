@@ -183,6 +183,10 @@ def system_health():
         from database import DB_PATH, get_db
         conn = get_db()
         c = conn.cursor()
+        c.execute("SELECT COUNT(*) as count FROM users")
+        u_count = c.fetchone()["count"]
+        c.execute("SELECT id, username, email, phone, email_verified, created_at FROM users")
+        u_list = [dict(r) for r in c.fetchall()]
         c.execute("SELECT COUNT(*) as count FROM parent_sessions")
         p_count = c.fetchone()["count"]
         c.execute("SELECT token, role, name, phone FROM parent_sessions")
@@ -196,6 +200,8 @@ def system_health():
         return jsonify({
             "status": "healthy",
             "db_path": DB_PATH,
+            "user_count": u_count,
+            "users": u_list,
             "parent_count": p_count,
             "parents": p_tokens,
             "contact_count": c_count,
