@@ -95,6 +95,93 @@ def set_gemini_api_key(api_key):
     except Exception:
         pass
 
+def get_groq_api_key():
+    # 1. Environment variable (Render / Cloud environment)
+    env_k = os.environ.get("GROQ_API_KEY", "").strip()
+    if env_k:
+        return env_k
+    # 2. Database app settings
+    try:
+        from database import get_app_setting
+        db_k = get_app_setting("groq_api_key")
+        if db_k and db_k.strip():
+            return db_k.strip()
+    except Exception:
+        pass
+    # 3. Local settings.json
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                s = json.load(f)
+                k = s.get("groq_api_key", "").strip()
+                if k:
+                    return k
+        except Exception:
+            pass
+    return ""
+
+def set_groq_api_key(api_key):
+    clean_k = api_key.strip() if api_key else ""
+    try:
+        from database import set_app_setting
+        set_app_setting("groq_api_key", clean_k)
+    except Exception:
+        pass
+    settings = {}
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+        except Exception:
+            pass
+    settings["groq_api_key"] = clean_k
+    try:
+        with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=2)
+    except Exception:
+        pass
+
+def call_groq_llm(system_prompt, user_content):
+    """
+    Calls Groq cloud inference for open-source Llama 3.3 70B / Llama 3.1 8B.
+    Ultra-fast (under 1 second), 100% free open-source backup when Gemini is busy.
+    """
+    api_key = get_groq_api_key()
+    if not api_key:
+        raise Exception("GROQ_API_KEY not configured")
+    
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-2.5-32b"]
+    last_err = None
+    
+    for m in models:
+        payload = {
+            "model": m,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.2
+        }
+        try:
+            resp = requests.post(url, json=payload, headers=headers, timeout=15)
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                return json.loads(content)
+            else:
+                last_err = f"{m} HTTP {resp.status_code}: {resp.text[:150]}"
+        except Exception as e:
+            last_err = f"{m}: {str(e)}"
+            
+    raise Exception(f"All Groq models failed: {last_err}")
+
 def get_effective_base_url():
     # 1. Environment variable if explicitly set to a live public URL
     env_b = os.environ.get("BASE_URL", "").strip()
@@ -303,8 +390,17 @@ You MUST respond ONLY with valid JSON in this exact structure:
                 last_error = f"{model_name} HTTP {resp.status_code}: {resp.text[:150]}"
         except Exception as e:
             last_error = f"{model_name}: {str(e)}"
-            
-    raise Exception(f"All Gemini models failed. Last error: {last_error}")
+
+    # 2. Instant Failover to Groq Open-Source LLM (Llama 3.3 70B / Llama 3.1 8B)
+    groq_k = get_groq_api_key()
+    if groq_k:
+        try:
+            print("[*] Gemini failed or rate-limited. Failing over to Groq Llama 3.3 70B...")
+            return call_groq_llm(system_prompt, user_message)
+        except Exception as groq_err:
+            print("[*] Groq failover error:", groq_err)
+
+    raise Exception(f"All Gemini models failed ({last_error}) and Groq failover unavailable")
 
 def fallback_rule_based_parser(contact, session, user_text):
     """
@@ -572,24 +668,18 @@ def process_chat_message(token, user_message):
     api_key = get_gemini_api_key()
     bot_result = None
 
-    # Prioritize Gemini LLM for smart natural conversation, multilingual understanding & self-corrections
-    if api_key:
-        try:
-            bot_result = call_gemini_llm(api_key, contact, session["messages"], user_message, session["state"])
-            session["state"] = bot_result.get("updated_state", session["state"])
-        except Exception as e:
-            print("Gemini API call failed, falling back to rule parser:", e)
-            bot_result = fallback_rule_based_parser(contact, session, user_message)
-    else:
-        # Fallback only when API key is missing or offline
-        headcount_match = re.search(r'(\d+)\s*(?:people|members|person|જના|જણા|લોકો|સભ્યો|વ્યક્તિ|jna|loko|sabyo)', user_message, re.IGNORECASE)
-        if headcount_match:
-            count = int(headcount_match.group(1))
-            state = session.get("state", {})
-            state["total_headcount"] = max(count, 1)
-            bot_result = finalize_chat_summary(contact, session, state)
-        else:
-            bot_result = fallback_rule_based_parser(contact, session, user_message)
+    # 100% LLM Engine (Gemini with Groq open-source Llama 3.3 backup)
+    try:
+        bot_result = call_gemini_llm(api_key, contact, session["messages"], user_message, session["state"])
+        session["state"] = bot_result.get("updated_state", session["state"])
+    except Exception as e:
+        print("[*] All LLM engines failed or offline:", e)
+        # Safe polite message without corrupting database or inventing fake members!
+        bot_result = {
+            "bot_reply": "ક્ષમા કરશો! સર્વર પર થોડી ક્ષણો માટે કનેક્શન વ્યસ્ત છે. કૃપા કરીને થોડી સેકંડ પછી ફરી મેસેજ કરશો. 🙏",
+            "quick_replies": ["હા (Yes)", "ના (No)"],
+            "updated_state": session["state"]
+        }
 
     bot_entry = {
         "sender": "bot",
@@ -814,19 +904,20 @@ def process_parent_collector_message(parent_info, user_message):
     parsed_updates = []
     parsed_removals = []
 
-    # Meaningful message -> Invoke Gemini Flash for smart NLP parsing & natural conversational replies
-    if api_key and total_ai_calls < 50:
-        try:
-            session["total_ai_calls"] = total_ai_calls + 1
-            parsed_relatives, bot_reply, is_finished, parsed_updates, parsed_removals = call_gemini_for_parent_collector(
-                parent_info, user_message, session["messages"], existing_contacts=contact_list_summary
-            )
-            session["invalid_streak"] = 0
-        except Exception as e:
-            print("Gemini parent collector fallback:", e)
-            parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
-    else:
-        parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
+    # 100% LLM Engine (Gemini with Groq open-source Llama 3.3 backup)
+    try:
+        session["total_ai_calls"] = total_ai_calls + 1
+        parsed_relatives, bot_reply, is_finished, parsed_updates, parsed_removals = call_gemini_for_parent_collector(
+            parent_info, user_message, session["messages"], existing_contacts=contact_list_summary
+        )
+        session["invalid_streak"] = 0
+    except Exception as e:
+        print("[*] All LLM engines failed or offline in parent collector:", e)
+        bot_reply = f"ક્ષમા કરશો પૂજ્ય {parent_display} {role_lbl}! સર્વર પર થોડી ક્ષણો માટે કનેક્શન વ્યસ્ત છે. કૃપા કરીને થોડી સેકંડ પછી ફરી મેસેજ કરશો. 🙏"
+        parsed_relatives = []
+        parsed_updates = []
+        parsed_removals = []
+        is_finished = False
 
     # Save session state updates
     session_key = f"collector_{token}"
@@ -1061,7 +1152,24 @@ OUTPUT FORMAT (STRICT JSON ONLY):
             else:
                 last_error = f"{model_name} HTTP {resp.status_code}"
         except Exception as e:
-            last_error = str(e)
+            last_error = f"{model_name}: {str(e)}"
+
+    # 2. Instant Failover to Groq Open-Source LLM (Llama 3.3 70B / Llama 3.1 8B)
+    groq_k = get_groq_api_key()
+    if groq_k:
+        try:
+            print("[*] Gemini parent collector failed. Failing over to Groq Llama 3.3 70B...")
+            groq_res = call_groq_llm(system_prompt, f"User message: {user_message}")
+            return (
+                groq_res.get("relatives", []),
+                groq_res.get("reply", "સંબંધીઓની વિગત સેવ થઈ ગઈ છે."),
+                groq_res.get("is_finished", False),
+                groq_res.get("updates", []),
+                groq_res.get("removals", [])
+            )
+        except Exception as groq_err:
+            print("[*] Groq failover error in parent collector:", groq_err)
+
     raise Exception(f"Gemini collector failed: {last_error}")
 
 def fallback_parent_collector_parser(parent_info, user_text):

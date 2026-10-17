@@ -25,7 +25,8 @@ from excel_export import export_guest_list_excel
 from email_service import send_verification_email
 from bot_engine import (
     process_chat_message, process_parent_collector_message,
-    get_gemini_api_key, set_gemini_api_key, send_baileys_message
+    get_gemini_api_key, set_gemini_api_key,
+    get_groq_api_key, set_groq_api_key, send_baileys_message
 )
 
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -997,10 +998,14 @@ def api_whatsapp_refresh_qr():
 @app.route("/api/ai-status")
 @login_required
 def api_ai_status():
-    key = get_gemini_api_key()
+    gemini_k = get_gemini_api_key()
+    groq_k = get_groq_api_key()
     return jsonify({
-        "configured": bool(key),
-        "masked_key": f"{key[:5]}...{key[-4:]}" if len(key) > 9 else ("Active" if key else "")
+        "configured": bool(gemini_k or groq_k),
+        "gemini_configured": bool(gemini_k),
+        "groq_configured": bool(groq_k),
+        "masked_gemini": f"{gemini_k[:5]}...{gemini_k[-4:]}" if len(gemini_k) > 9 else ("Active" if gemini_k else ""),
+        "masked_groq": f"{groq_k[:5]}...{groq_k[-4:]}" if len(groq_k) > 9 else ("Active" if groq_k else "")
     })
 
 @app.route("/api/save-gemini-key", methods=["POST"])
@@ -1010,6 +1015,15 @@ def api_save_gemini_key():
     key = data.get("key", "").strip()
     set_gemini_api_key(key)
     has_k = bool(get_gemini_api_key())
+    return jsonify({"success": True, "has_key": has_k})
+
+@app.route("/api/save-groq-key", methods=["POST"])
+@login_required
+def api_save_groq_key():
+    data = request.get_json() or {}
+    key = data.get("key", "").strip()
+    set_groq_api_key(key)
+    has_k = bool(get_groq_api_key())
     return jsonify({"success": True, "has_key": has_k})
 
 @app.route("/api/export")
