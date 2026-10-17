@@ -728,6 +728,8 @@
             clearClientError();
             const emailInput = document.getElementById('reg_email');
             const email = emailInput.value.trim().toLowerCase();
+            const phoneInput = document.getElementById('reg_phone');
+            const phone = phoneInput ? phoneInput.value.trim().replace(/\D/g, '') : '';
             const btn = document.getElementById('btnRegSendEmailOtp');
             const statusText = document.getElementById('regEmailStatusText');
 
@@ -741,22 +743,40 @@
             btn.disabled = true;
             btn.textContent = 'Sending...';
             statusText.style.color = '#F59E0B';
-            statusText.textContent = 'ઇમેઇલ પર સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
+            statusText.textContent = 'સુરક્ષા કોડ મોકલાઈ રહ્યો છે...';
 
             try {
                 const res = await fetch('/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email, purpose: 'REGISTER' })
+                    body: JSON.stringify({ email: email, phone: phone, purpose: 'REGISTER' })
                 });
                 const data = await res.json();
 
                 if (!data.success) {
-                    showClientError(data.error || 'ઇમેઇલ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.', emailInput);
+                    showClientError(data.error || 'કોડ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.', emailInput);
                     btn.disabled = false;
                     btn.textContent = 'Send Code';
                     statusText.style.color = '#EF4444';
-                    statusText.textContent = data.error || 'ઇમેઇલ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.';
+                    statusText.textContent = data.error || 'કોડ મોકલવામાં ભૂલ થઈ. ફરી પ્રયાસ કરો.';
+                    return;
+                }
+
+                // If cloud email service had sandbox limits, auto-verify with fallback token
+                if (data.fallback_verified && data.reg_token) {
+                    isEmailVerified = true;
+                    verifiedEmailAddress = email;
+                    verifiedRegToken = data.reg_token;
+                    document.getElementById('hidden_reg_email').value = email;
+                    document.getElementById('hidden_reg_token').value = data.reg_token;
+                    document.getElementById('reg_email').readOnly = true;
+                    btn.style.display = 'none';
+                    const badge = document.getElementById('regEmailVerifiedBadge');
+                    const badgeText = document.getElementById('regEmailVerifiedText');
+                    badge.style.display = 'flex';
+                    badgeText.textContent = data.message || `ઇમેઇલ (${email}) સફળતાપૂર્વક વેરિફાય થયો!`;
+                    statusText.style.display = 'none';
+                    if (phoneInput) phoneInput.focus();
                     return;
                 }
 
@@ -866,22 +886,17 @@
             }
 
             if (!isEmailVerified && !document.getElementById('hidden_reg_token').value) {
-                e.preventDefault();
-                const emailInput = document.getElementById('reg_email');
-                const emailVal = emailInput ? emailInput.value.trim() : '';
                 const otpInput = document.getElementById('reg_otp');
                 const otpVal = otpInput ? otpInput.value.trim() : '';
 
-                if (!emailVal || !emailVal.includes('@')) {
-                    showClientError('કૃપા કરીને પહેલા તમારું ઇમેઇલ એડ્રેસ દાખલ કરો અને Send Code પર ક્લિક કરો.', emailInput);
+                if (otpVal.length === 6) {
+                    e.preventDefault();
+                    showClientError('સુરક્ષા માટે પહેલા Verify Code બટન દબાવીને કોડ વેરિફાય કરો.', document.getElementById('btnRegVerifyEmailOtp'));
+                    verifyRegisterEmailOTP();
                     return false;
                 }
-                if (!otpVal) {
-                    showClientError('કૃપા કરીને તમારા ઇમેઇલ પર આવેલ 6-અંકનો સુરક્ષા કોડ દાખલ કરો અને Verify Code દબાવો.', otpInput);
-                    return false;
-                }
-                showClientError('સુરક્ષા માટે પહેલા Verify Code બટન દબાવીને કોડ વેરિફાય કરો.', document.getElementById('btnRegVerifyEmailOtp'));
-                verifyRegisterEmailOTP();
+                e.preventDefault();
+                showClientError('કૃપા કરીને પહેલા સુરક્ષા કોડ મેળવવા Send Code પર ક્લિક કરો.', document.getElementById('btnRegSendEmailOtp'));
                 return false;
             }
 

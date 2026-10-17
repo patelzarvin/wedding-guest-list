@@ -42,36 +42,18 @@ def get_http_email_config():
 def send_via_http_api(recipient_email, subject, html_content, plain_text):
     """
     Sends email over HTTPS (Port 443) using Resend, Brevo, or SendGrid REST API.
+    Cascades gracefully through available providers until one succeeds.
     Unrestricted on cloud hosts like Render Free tier where raw SMTP ports are blocked.
     """
     import requests
     config = get_http_email_config()
     sender_email, _ = get_smtp_credentials()
+    errors = []
+    has_provider = False
 
-    # 1. Brevo API (Universal delivery to ANY recipient worldwide without sandbox limits)
-    if config["brevo_key"]:
-        try:
-            url = "https://api.brevo.com/v3/smtp/email"
-            headers = {
-                "api-key": config["brevo_key"],
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "sender": {"name": "WedVite Luxury Suite", "email": sender_email or "zarvin.114@gmail.com"},
-                "to": [{"email": recipient_email}],
-                "subject": subject,
-                "htmlContent": html_content,
-                "textContent": plain_text
-            }
-            resp = requests.post(url, json=payload, headers=headers, timeout=6)
-            if resp.status_code in (200, 201):
-                return True, "Email sent successfully via Brevo HTTPS API"
-            return False, f"Brevo API error ({resp.status_code}): {resp.text}"
-        except Exception as e:
-            return False, f"Brevo API exception: {str(e)}"
-
-    # 2. Resend API
+    # 1. Resend API (Preferred for verified account owner / domains)
     if config["resend_key"]:
+        has_provider = True
         try:
             url = "https://api.resend.com/emails"
             headers = {
@@ -89,17 +71,36 @@ def send_via_http_api(recipient_email, subject, html_content, plain_text):
             resp = requests.post(url, json=payload, headers=headers, timeout=6)
             if resp.status_code in (200, 201):
                 return True, "Email sent successfully via Resend HTTPS API"
-            if "only send testing emails to your own email address" in resp.text:
-                return False, (
-                    f"Resend Sandbox Restriction: Resend Free કી હાલ ફક્ત એકાઉન્ટ ઓનર ({sender_email}) પર ઇમેઇલ મોકલી શકે છે. "
-                    "અન્ય મુલાકાતીઓના ઇમેઇલ પર મોકલવા માટે resend.com/domains પર ડોમેન વેરિફાય કરો અથવા Brevo API વાપરો."
-                )
-            return False, f"Resend API error ({resp.status_code}): {resp.text}"
+            errors.append(f"Resend ({resp.status_code}): {resp.text[:120]}")
         except Exception as e:
-            return False, f"Resend API exception: {str(e)}"
+            errors.append(f"Resend exception: {str(e)[:100]}")
+
+    # 2. Brevo API (Universal delivery to ANY recipient worldwide)
+    if config["brevo_key"]:
+        has_provider = True
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "api-key": config["brevo_key"],
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "sender": {"name": "WedVite Luxury Suite", "email": sender_email or "zarvin.114@gmail.com"},
+                "to": [{"email": recipient_email}],
+                "subject": subject,
+                "htmlContent": html_content,
+                "textContent": plain_text
+            }
+            resp = requests.post(url, json=payload, headers=headers, timeout=6)
+            if resp.status_code in (200, 201):
+                return True, "Email sent successfully via Brevo HTTPS API"
+            errors.append(f"Brevo ({resp.status_code}): {resp.text[:120]}")
+        except Exception as e:
+            errors.append(f"Brevo exception: {str(e)[:100]}")
 
     # 3. SendGrid API
     if config["sendgrid_key"]:
+        has_provider = True
         try:
             url = "https://api.sendgrid.com/v3/mail/send"
             headers = {
@@ -118,11 +119,14 @@ def send_via_http_api(recipient_email, subject, html_content, plain_text):
             resp = requests.post(url, json=payload, headers=headers, timeout=6)
             if resp.status_code in (200, 202):
                 return True, "Email sent successfully via SendGrid HTTPS API"
-            return False, f"SendGrid API error ({resp.status_code}): {resp.text}"
+            errors.append(f"SendGrid ({resp.status_code}): {resp.text[:120]}")
         except Exception as e:
-            return False, f"SendGrid API exception: {str(e)}"
+            errors.append(f"SendGrid exception: {str(e)[:100]}")
 
-    return None, "No HTTP email API configured"
+    if not has_provider:
+        return None, "No HTTP email API configured"
+
+    return False, "HTTP Email APIs failed: " + " | ".join(errors)
 
 def get_smtp_credentials():
     """Retrieve SMTP sender email and app password from env, database, settings.json, or verified fallback"""
@@ -293,8 +297,10 @@ def send_verification_email(recipient_email, otp_code, purpose="REGISTER"):
     http_ok, http_msg = send_via_http_api(recipient_email, subject, html_content, plain_text)
     if http_ok is True:
         return True, http_msg
-    elif http_ok is False and "API error" in http_msg:
-        return False, http_msg
+
+    # If sender_email or clean_pwd is missing, cannot attempt SMTP, return HTTP failure
+    if not sender_email or not clean_pwd:
+        return False, http_msg or "No email service configured."
 
     # 2. Direct SMTP transport with IPv4 resolution
     import ssl

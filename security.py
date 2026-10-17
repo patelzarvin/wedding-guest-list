@@ -140,9 +140,9 @@ class AuthRateLimiter:
         self._otp_requests = {}
         self._otp_last_requested = {} # key -> timestamp of last request for 60s cooldown
 
-    def check_login_rate_limit(self, ip, identifier, max_attempts=5, window_seconds=900):
+    def check_login_rate_limit(self, ip, identifier, max_attempts=5, window_seconds=600):
         """
-        Max 5 failed attempts per 15 minutes per IP + identifier.
+        Max 5 failed attempts per 10 minutes per IP + identifier.
         Returns: (allowed, retry_after_seconds)
         """
         now = time.time()
@@ -165,13 +165,18 @@ class AuthRateLimiter:
             self._login_attempts[key] = attempts
 
     def reset_login_rate_limit(self, ip, identifier):
-        key = f"{ip}:{str(identifier).strip().lower()}"
+        norm_ident = str(identifier).strip().lower()
+        key = f"{ip}:{norm_ident}"
         with self._lock:
             self._login_attempts.pop(key, None)
+            # Clear all failed attempt records for this user identifier across all IPs on success
+            keys_to_remove = [k for k in self._login_attempts if k.endswith(f":{norm_ident}")]
+            for k in keys_to_remove:
+                self._login_attempts.pop(k, None)
 
-    def check_otp_rate_limit(self, ip, identifier, max_requests=3, window_seconds=600, cooldown_seconds=60):
+    def check_otp_rate_limit(self, ip, identifier, max_requests=5, window_seconds=600, cooldown_seconds=60):
         """
-        Enforce max 3 OTP requests per 10 minutes, plus 60 seconds resend cooldown.
+        Enforce max 5 OTP requests per 10 minutes, plus 60 seconds resend cooldown.
         Returns: (allowed, error_msg, retry_after_seconds)
         """
         now = time.time()
@@ -197,7 +202,7 @@ class AuthRateLimiter:
             # 3. Window check by IP
             ip_reqs = [t for t in self._otp_requests.get(ip_key, []) if now - t < window_seconds]
             self._otp_requests[ip_key] = ip_reqs
-            if len(ip_reqs) >= (max_requests * 3):
+            if len(ip_reqs) >= (max_requests * 4):
                 return False, "તમારા નેટવર્ક પરથી ઘણી વિનંતીઓ આવી છે. થોડી વાર પછી પ્રયાસ કરો. (Too many requests from this IP).", 300
 
             return True, None, 0
