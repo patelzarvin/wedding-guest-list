@@ -11,7 +11,8 @@ _ENC_KEY = b'QVEuQWI4Uk42SmREVjVoeER3TFQxOExNb3JqVVdfS3IxNmFYUEtZWVBhUE00Snl3OUQ
 from guest_manager import load_data, save_data, submit_relative_details, add_contact, get_parent_info_by_token
 from database import (
     add_contact_db, get_contact_by_token_db, get_parent_by_token,
-    update_rsvp_db, log_chat_message_db, get_chat_history_db
+    update_rsvp_db, log_chat_message_db, get_chat_history_db,
+    update_contact_details_db, delete_contact_db, get_contacts_by_wedding
 )
 
 BAILEYS_SERVICE_URL = os.environ.get("BAILEYS_SERVICE_URL", "http://127.0.0.1:5001")
@@ -248,6 +249,12 @@ Rules for Natural Conversation:
   Warmly acknowledge and move to the NEXT question (asking about children):
   "આભાર! જીવનસાથી સ્તુતિબેનનું નામ નોંધી લીધું છે. 👍 શું આપને બાળકો છે (Do you have children)?"
 - Keep your bot replies warm, friendly, celebratory in simple Gujarati / Gujlish.
+- Understand natural informal Gujlish, Gujarati, Hinglish, and English seamlessly.
+- SELF-CORRECTIONS & EDITS:
+  If the user indicates a mistake in any previous information (e.g. "sorry spouse name stuti nahi rekha che", "number ma bhul thai gai", "change headcount to 3", "naam galat ho gaya"):
+  Immediately update the correct field in "updated_state" (e.g. update spouse_name, children, parents_names, or total_headcount).
+  Warmly acknowledge the correction in your "bot_reply" (e.g. "કોઈ વાંધો નહીં! વિગતો સુધારી લીધી છે. 👍").
+- If the user provides a direct headcount (e.g. "amara 3 sabyo", "4 people", "2 loko"), set "total_headcount" accordingly.
 - Set "is_complete": true ONLY when all questions are answered or the user says that is everyone.
 
 Current Collected State:
@@ -564,14 +571,8 @@ def process_chat_message(token, user_message):
     api_key = get_gemini_api_key()
     bot_result = None
 
-    # Check for direct one-shot headcount confirmation first (e.g. '4 લોકો', '3 જણા')
-    headcount_match = re.search(r'(\d+)\s*(?:people|members|person|જના|જણા|લોકો|સભ્યો|વ્યક્તિ|jna|loko|sabyo)', user_message, re.IGNORECASE)
-    if headcount_match:
-        count = int(headcount_match.group(1))
-        state = session.get("state", {})
-        state["total_headcount"] = max(count, 1)
-        bot_result = finalize_chat_summary(contact, session, state)
-    elif api_key:
+    # Prioritize Gemini LLM for smart natural conversation, multilingual understanding & self-corrections
+    if api_key:
         try:
             bot_result = call_gemini_llm(api_key, contact, session["messages"], user_message, session["state"])
             session["state"] = bot_result.get("updated_state", session["state"])
@@ -579,7 +580,15 @@ def process_chat_message(token, user_message):
             print("Gemini API call failed, falling back to rule parser:", e)
             bot_result = fallback_rule_based_parser(contact, session, user_message)
     else:
-        bot_result = fallback_rule_based_parser(contact, session, user_message)
+        # Fallback only when API key is missing or offline
+        headcount_match = re.search(r'(\d+)\s*(?:people|members|person|જના|જણા|લોકો|સભ્યો|વ્યક્તિ|jna|loko|sabyo)', user_message, re.IGNORECASE)
+        if headcount_match:
+            count = int(headcount_match.group(1))
+            state = session.get("state", {})
+            state["total_headcount"] = max(count, 1)
+            bot_result = finalize_chat_summary(contact, session, state)
+        else:
+            bot_result = fallback_rule_based_parser(contact, session, user_message)
 
     bot_entry = {
         "sender": "bot",
@@ -796,51 +805,52 @@ def process_parent_collector_message(parent_info, user_message):
     role_lbl = "પિતાશ્રી" if parent_info.get("role") == "FATHER" else "માતાશ્રી"
     parent_display = parent_info.get("name", "Parent")
 
-    if is_done or is_greeting or is_cat_pill:
-        # Answer instantly with rule-based engine (0 Gemini tokens burned!)
-        parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
-        session["invalid_streak"] = 0
-    elif len(clean_msg) < 3 or not re.search(r'[a-zA-Z\u0A80-\u0AFF0-9]', clean_msg):
-        # Gibberish / symbols / blank input: Do NOT call AI (0 tokens burned!)
-        bot_reply = f"ક્ષમા કરશો પૂજ્ય {parent_display} {role_lbl}! કૃપા કરીને સંબંધીનું નામ અને મોબાઈલ નંબર લખશો.\n👉 દા.ત.: 'મામા રમેશભાઈ 9825012345' 😊"
-        session["invalid_streak"] = invalid_streak + 1
-    elif invalid_streak >= 3:
-        # Circuit Breaker: 3 consecutive unrecognized messages
-        # Stop calling Gemini to protect user tokens, provide static guidance
-        bot_reply = (
-            f"પૂજ્ય {parent_display} {role_lbl}! 🙏\n"
-            f"સંબંધીઓની વિગતો સરળતાથી નોંધવા માટે નીચે આપેલા બટનોમાંથી પસંદ કરો અથવા આ મુજબ લખો:\n\n"
-            f"👉 [સંબંધ] [નામ] [મોબાઈલ નંબર]\n"
-            f"દા.ત.: 'ભાઈ તીર્થ 9825012345'\n\n"
-            f"(જ્યારે બધા નામ લખાઈ જાય ત્યારે નીચે આપેલ '✅ બધા આવી ગયા છે' બટન દબાવો.)"
-        )
-    elif total_ai_calls >= 40:
-        # Safety turn cap per session to prevent infinite loop abuse
-        parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
-    else:
-        # Meaningful message -> Invoke Gemini Flash for smart NLP parsing
-        if api_key:
-            try:
-                session["total_ai_calls"] = total_ai_calls + 1
-                parsed_relatives, bot_reply, is_finished = call_gemini_for_parent_collector(parent_info, user_message, session["messages"])
-                if parsed_relatives:
-                    session["invalid_streak"] = 0
-                else:
-                    session["invalid_streak"] = invalid_streak + 1
-            except Exception as e:
-                print("Gemini parent collector fallback:", e)
-                parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
-        else:
+    # Fetch existing contacts for this wedding so Gemini knows who is already on the list
+    wedding_id = parent_info.get("wedding_id", 1)
+    existing_contacts = get_contacts_by_wedding(wedding_id)
+    contact_list_summary = [{"name": c["name"], "phone": c["phone"] or "", "category": c.get("category", "")} for c in existing_contacts]
+
+    parsed_updates = []
+    parsed_removals = []
+
+    # Meaningful message -> Invoke Gemini Flash for smart NLP parsing & natural conversational replies
+    if api_key and total_ai_calls < 50:
+        try:
+            session["total_ai_calls"] = total_ai_calls + 1
+            parsed_relatives, bot_reply, is_finished, parsed_updates, parsed_removals = call_gemini_for_parent_collector(
+                parent_info, user_message, session["messages"], existing_contacts=contact_list_summary
+            )
+            session["invalid_streak"] = 0
+        except Exception as e:
+            print("Gemini parent collector fallback:", e)
             parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
+    else:
+        parsed_relatives, bot_reply, is_finished = fallback_parent_collector_parser(parent_info, user_message)
 
     # Save session state updates
     session_key = f"collector_{token}"
     convs[session_key] = session
     save_conversations(convs)
 
-    # Add each extracted relative to contacts in SQLite database
+    # 1. Process Updates & Corrections (e.g., "Rameshbhai no number 9825099887 che")
+    for upd in parsed_updates:
+        target = upd.get("target") or upd.get("target_name_or_phone")
+        if target:
+            update_contact_details_db(
+                wedding_id=wedding_id,
+                target_name_or_phone=target,
+                new_name=upd.get("new_name"),
+                new_phone=upd.get("new_phone"),
+                new_notes=upd.get("new_notes")
+            )
+
+    # 2. Process Removals (e.g., "Rameshbhai nahi aavshe emne kadhi nakho")
+    for rem in parsed_removals:
+        if rem:
+            delete_contact_db(wedding_id, rem)
+
+    # 3. Add each newly extracted relative to contacts in SQLite database
     added_now = []
-    wedding_id = parent_info.get("wedding_id", 1)
     groom = parent_info.get("groom_name", "Groom")
     bride = parent_info.get("bride_name", "Bride")
     base = get_effective_base_url()
@@ -932,7 +942,7 @@ def is_completion_phrase(text):
     low = text.strip().lower()
     return any(p in low for p in COMPLETION_KEYWORDS)
 
-def call_gemini_for_parent_collector(parent_info, user_message, conversation_history):
+def call_gemini_for_parent_collector(parent_info, user_message, conversation_history, existing_contacts=None):
     api_key = get_gemini_api_key()
     candidate_models = ACTIVE_GEMINI_MODELS
 
@@ -942,62 +952,83 @@ def call_gemini_for_parent_collector(parent_info, user_message, conversation_his
     groom = parent_info.get("groom_name", "").strip() or "વરરાજા"
     bride = parent_info.get("bride_name", "").strip() or "કન્યા"
 
-    # Pre-check completion
-    if is_completion_phrase(user_message):
-        reply = (
-            f"🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! 🙏\n\n"
-            f"આપના તમામ પરિવારજનો અને સંબંધીઓની યાદી સંપૂર્ણ થઈ ગઈ છે. લગ્નના શુભ પ્રસંગે આપ સૌના આશીર્વાદ સદાય {groom} અને {bride} પર રહે એવી પ્રાર્થના! 💐✨\n\n"
-            f"(જો ભવિષ્યમાં કોઈ અન્ય નામ યાદ આવે તો આપ ગમે ત્યારે અહીં મેસેજ કરી શકો છો.)"
-        )
-        return [], reply, True
+    contacts_summary = []
+    if existing_contacts:
+        for c in existing_contacts[-25:]:
+            c_name = c.get("name", "")
+            c_phone = c.get("phone", "")
+            c_cat = c.get("category", "")
+            contacts_summary.append(f"- {c_name} ({c_cat}): {c_phone or 'No number'}")
+    existing_contacts_str = "\n".join(contacts_summary) if contacts_summary else "None added yet."
 
     system_prompt = f"""
-You are an intelligent, polite, and warm Gujarati Wedding Concierge AI Chatbot for {groom} & {bride}'s royal wedding.
-You are talking in a real-time conversational chat on WhatsApp with {parent_name} ({role_label}) on the {side_label} side.
+You are an intelligent, polite, highly respectful Gujarati Wedding Concierge AI Chatbot for {groom} & {bride}'s royal wedding.
+You are conversing in real-time with {parent_name} ({role_label}) on the {side_label} side.
 
-YOUR PRIMARY GOAL:
-Collect and organize their invited relatives, friends, and family members comfortably in natural conversation. The user may write in Gujarati, English, or Gujlish (casual Gujarati in English letters, e.g. 'maro chokro zarvin 9265834826').
+YOUR MISSION:
+Manage their guest and relative list completely naturally through conversation.
+The user may write in Gujarati, English, Gujlish (casual Gujarati in English alphabets like "mara kaka rameshbhai no number 9825012345"), or Hinglish ("kaka ka number galat hai").
 
-User's Latest Message:
+ALREADY RECORDED RELATIVES ON THIS LIST:
+{existing_contacts_str}
+
+USER'S LATEST MESSAGE:
 "{user_message}"
 
-Conversation History:
+CONVERSATION HISTORY:
 {json.dumps([{'sender': m['sender'], 'text': m['text']} for m in conversation_history[-8:]], ensure_ascii=False)}
 
-INTELLIGENCE & CHATBOT GUIDELINES:
-1. EXTRACT ANY FAMILY MEMBER OR RELATIVE:
-   - Son / Daughter / Children: 'chokro', 'dikro', 'son', 'putra', 'chokri', 'dikri', 'daughter', 'putri' ➔ Extract name & phone, category: 'brothers' (or 'sisters' for daughter), notes: 'પુત્ર (Son)' or 'પુત્રી (Daughter)'
-   - Immediate & Extended Family: 'wife', 'patni', 'bhai', 'brother', 'ben', 'sister', 'kaka', 'kaki', 'fai', 'foi', 'fua', 'mama', 'mami', 'masi', 'masa', 'bhatrijo', 'bhanej', 'jamai', 'vahu', 'dada', 'dadi', 'nana', 'nani', 'mitra', 'friend', 'dost', 'padosi', 'colleague'
-   - If the user writes casually like "chokro zarvin 9265834826", "maro chokro zarvin 9265834826", "kaushik kaka 9825...", "zarvin 9265834826":
-     Accurately identify the person's real name (e.g. "Zarvin"), their 10-digit phone number if provided ("9265834826"), and their relationship.
+INTELLIGENCE & MULTILINGUAL CONVERSATION RULES:
+1. ADDING NEW PEOPLE ("relatives" list):
+   - When user provides new relatives/friends (e.g., "chokro zarvin 9265834826", "maro chokro tirth", "kaka rameshbhai 9825012345"):
+     Extract their clean name (e.g. "Zarvin"), 10-digit mobile number, category ('brothers'|'sisters'|'kaka'|'fai'|'mama'|'masi'|'friends'|'colleagues'|'neighbours'|'parents'), and notes (e.g. "પુત્ર / દીકરો").
+   - If user provides an incomplete phone number (e.g. 8 digits like "Rameshbhai 98250123" or 12 digits):
+     DO NOT save the incomplete number! Put phone as "". In your reply, politely and respectfully ask for the complete 10-digit mobile number.
 
-2. TALK LIKE A REAL, RESPECTFUL GUJARATI WEDDING CHATBOT:
-   - Always address them with high respect: "પૂજ્ય {parent_name} {role_label}! 🙏"
-   - CATEGORY SELECTION: If the user clicked or selected a category (e.g. 'મામાશ્રી', 'માસી', 'મારા ભાઈઓ', 'મારા કાકા', 'સંતાનો', 'દીકરો / દીકરી', 'સખીઓ', 'મિત્રો', 'સહકર્મચારી', 'કાકી / મામી', 'ફોઈ / ફુવા') without mentioning names yet:
-     Respond with warm encouragement asking for their names and phone numbers.
-     Example reply: "સરસ પૂજ્ય {parent_name}! આપના {user_message} ના નામ અને મોબાઈલ નંબર જણાવશો. દા.ત.: 'રમેશભાઈ 9825012345' અથવા એક સાથે બધાના નામ લખી શકો છો. 😊"
-     Set "relatives": [], "is_finished": false.
-   - IF RELATIVES WERE ADDED:
-     Acknowledge enthusiastically: e.g. "વાહ પૂજ્ય {parent_name}! આપના સગા/સંબંધી નું નામ યાદીમાં નોંધી લીધું છે! 😊"
-     Then ask warmly: "હવે આપના તરફથી બીજા કોઈ ભાઈઓ, બહેનો, કાકા, મામા, ફોઈ, માસી કે મિત્રો બાકી છે જેમના નામ નોંધવાના હોય? (બધા આવી જાય ત્યારે 'બધા આવી ગયા' બટન દબાવશો.)"
-   - GREETINGS & CASUAL TALK ("kem cho", "namaste", "hu mummy chu"):
-     Answer warmly, respectfully and conversationally in Gujarati.
-   - COMPLETION: If user indicates finished ("done", "badha aavi gaya", "patyu", "koi baki nathi", "બધા આવી ગયા"):
-     Set "is_finished": true, "relatives": []
-     Give a heartfelt Gujarati wedding blessing: "🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! આપના તમામ સંબંધીઓની યાદી સફળ થઈ ગઈ છે! લગ્નમાં આપ સૌનું સ્વાગત છે! 💐"
+2. SELF-CORRECTIONS & UPDATES ("updates" list):
+   - Users often make mistakes or typos and follow up with a correction:
+     * e.g., "sorry number ma bhul thai gai, rameshbhai no number 9825099887 che"
+     * e.g., "arre number galat dal diya rameshbhai ka 9825099887 likho"
+     * e.g., "correction: please update his number to 9825099887"
+     * e.g., "naam ma bhul che, ramesh nahi mukesh che"
+   - Match the target person from the existing list or conversation history.
+   - Return in "updates": [{{"target": "Rameshbhai", "new_name": "Rameshbhai", "new_phone": "9825099887", "new_notes": "કાકા"}}]
+   - Confirm the correction warmly in your reply: "કોઈ વાંધો નહીં પૂજ્ય {parent_name}! રમેશભાઈનો નંબર સુધારીને 9825099887 કરી દીધો છે. 👍"
 
-3. OUTPUT FORMAT (STRICT JSON ONLY):
+3. REMOVING PEOPLE ("removals" list):
+   - If user says someone cannot come or should be removed (e.g. "rameshbhai nahi aavshe emne kadhi nakho / remove", "delete"):
+     Return in "removals": ["Rameshbhai"]
+     Confirm warmly in reply.
+
+4. POLITE, RESPECTFUL GUJARATI TONE:
+   - Always address parent as "પૂજ્ય {parent_name} {role_label}! 🙏".
+   - If user selects a category button without names (e.g. 'મારા કાકા', 'સંતાનો'):
+     Warmly invite them to share names and numbers.
+   - When everything is complete ("done", "badha aavi gaya", "patyu", "koi baki nathi", "all done", "બધા આવી ગયા"):
+     Set "is_finished": true.
+     Give a heartfelt Gujarati wedding blessing: "🌸 ખૂબ ખૂબ આભાર પૂજ્ય {parent_name} {role_label}! આપના તમામ સંબંધીઓની યાદી સફળતાપૂર્વક તૈયાર થઈ ગઈ છે! લગ્નમાં આપ સૌના આશીર્વાદ સદાય {groom} અને {bride} પર રહે એવી પ્રાર્થના! 💐"
+
+OUTPUT FORMAT (STRICT JSON ONLY):
 {{
   "relatives": [
     {{
-      "name": "Full name (e.g. Zarvin)",
-      "phone": "10-digit number if found, else empty string",
+      "name": "Full name",
+      "phone": "Verified 10-digit number or empty string",
       "category": "brothers|sisters|kaka|fai|mama|masi|friends|colleagues|neighbours|parents",
-      "notes": "Relation in Gujarati/English (e.g. પુત્ર / દીકરો)"
+      "notes": "Relation in Gujarati/English"
     }}
   ],
+  "updates": [
+    {{
+      "target": "Existing name or phone being corrected",
+      "new_name": "Corrected name",
+      "new_phone": "Corrected 10-digit phone",
+      "new_notes": "Notes if any"
+    }}
+  ],
+  "removals": ["Name of person to remove"],
   "is_finished": false,
-  "reply": "Warm, conversational, respectful Gujarati reply"
+  "reply": "Warm, respectful, conversational Gujarati reply written by you"
 }}
 """
 
@@ -1015,7 +1046,13 @@ INTELLIGENCE & CHATBOT GUIDELINES:
                 result_json = resp.json()
                 raw_text = result_json["candidates"][0]["content"]["parts"][0]["text"]
                 data = json.loads(raw_text)
-                return data.get("relatives", []), data.get("reply", "સંબંધીઓની વિગત સેવ થઈ ગઈ છે."), data.get("is_finished", False)
+                return (
+                    data.get("relatives", []),
+                    data.get("reply", "સંબંધીઓની વિગત સેવ થઈ ગઈ છે."),
+                    data.get("is_finished", False),
+                    data.get("updates", []),
+                    data.get("removals", [])
+                )
             else:
                 last_error = f"{model_name} HTTP {resp.status_code}"
         except Exception as e:

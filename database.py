@@ -751,6 +751,72 @@ def add_contact_db(wedding_id, side, added_by, category, name, phone, notes=""):
     conn.close()
     return new_c
 
+def update_contact_details_db(wedding_id, target_name_or_phone, new_name=None, new_phone=None, new_notes=None):
+    """
+    Intelligently updates an existing relative/contact when a user corrects their name, phone, or details.
+    """
+    if not target_name_or_phone or not wedding_id:
+        return None
+    target_clean = str(target_name_or_phone).strip()
+    target_digits = "".join(filter(str.isdigit, target_clean))
+    
+    conn = get_db()
+    c = conn.cursor()
+    row = None
+    if len(target_digits) >= 10:
+        c.execute("SELECT * FROM contacts WHERE wedding_id = ? AND phone LIKE ?", (wedding_id, f"%{target_digits[-10:]}%"))
+        row = c.fetchone()
+    if not row:
+        c.execute("SELECT * FROM contacts WHERE wedding_id = ? AND LOWER(name) LIKE ?", (wedding_id, f"%{target_clean.lower()}%"))
+        row = c.fetchone()
+        
+    if not row:
+        conn.close()
+        return None
+        
+    contact_id = row["id"]
+    updated_name = new_name.strip() if new_name and len(new_name.strip()) >= 2 else row["name"]
+    clean_new_p = "".join(filter(str.isdigit, str(new_phone)))[-10:] if new_phone and len("".join(filter(str.isdigit, str(new_phone)))) >= 10 else (row["phone"] or "")
+    updated_notes = new_notes.strip() if new_notes else row["notes"]
+    
+    c.execute("""
+        UPDATE contacts SET name = ?, phone = ?, notes = ? WHERE id = ?
+    """, (updated_name, clean_new_p, updated_notes, contact_id))
+    conn.commit()
+    c.execute("SELECT * FROM contacts WHERE id = ?", (contact_id,))
+    updated_row = dict(c.fetchone())
+    conn.close()
+    return updated_row
+
+def delete_contact_db(wedding_id, target_name_or_phone):
+    """
+    Removes a contact if user cancels or asks to remove someone.
+    """
+    if not target_name_or_phone or not wedding_id:
+        return False
+    target_clean = str(target_name_or_phone).strip()
+    target_digits = "".join(filter(str.isdigit, target_clean))
+    
+    conn = get_db()
+    c = conn.cursor()
+    row = None
+    if len(target_digits) >= 10:
+        c.execute("SELECT id FROM contacts WHERE wedding_id = ? AND phone LIKE ?", (wedding_id, f"%{target_digits[-10:]}%"))
+        row = c.fetchone()
+    if not row:
+        c.execute("SELECT id FROM contacts WHERE wedding_id = ? AND LOWER(name) LIKE ?", (wedding_id, f"%{target_clean.lower()}%"))
+        row = c.fetchone()
+        
+    if not row:
+        conn.close()
+        return False
+        
+    contact_id = row["id"]
+    c.execute("DELETE FROM contacts WHERE id = ?", (contact_id,))
+    conn.commit()
+    conn.close()
+    return True
+
 def get_contacts_by_wedding(wedding_id):
     conn = get_db()
     c = conn.cursor()
