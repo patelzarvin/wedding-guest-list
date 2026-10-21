@@ -518,10 +518,10 @@ def verify_otp_db(target, otp_code, purpose='REGISTER'):
     else:
         return True, None, {"reg_token": token_val}
 
-def verify_registration_token(email, reg_token):
+def verify_registration_token(email, reg_token, consume=True):
     """
     Verify that an email was successfully verified via OTP within the last 15 minutes.
-    Single-use: Consumes registration token.
+    Single-use: Consumes registration token when consume=True.
     """
     if not email or not reg_token:
         return False, "ઇમેઇલ વેરિફિકેશન ટોકન મળ્યું નથી."
@@ -551,9 +551,10 @@ def verify_registration_token(email, reg_token):
         except Exception:
             pass
             
-    # Consume registration token to prevent reuse
-    c.execute("UPDATE otps SET reset_token = NULL WHERE id = ?", (row["id"],))
-    conn.commit()
+    # Consume registration token to prevent reuse only if requested
+    if consume:
+        c.execute("UPDATE otps SET reset_token = NULL WHERE id = ?", (row["id"],))
+        conn.commit()
     conn.close()
     return True, None
 
@@ -649,9 +650,9 @@ def register_user(username, email, password, phone=None, reg_token=None):
     if not pwd_ok:
         return {"success": False, "error": pwd_err}
         
-    # Verify Email Verification Proof if reg_token supplied
+    # Verify Email Verification Proof if reg_token supplied (do not consume yet)
     if reg_token:
-        tok_ok, tok_err = verify_registration_token(clean_email, reg_token)
+        tok_ok, tok_err = verify_registration_token(clean_email, reg_token, consume=False)
         if not tok_ok:
             return {"success": False, "error": tok_err}
 
@@ -683,6 +684,9 @@ def register_user(username, email, password, phone=None, reg_token=None):
         conn.commit()
         user_id = c.lastrowid
         conn.close()
+        # Registration succeeded! Now consume registration token
+        if reg_token:
+            verify_registration_token(clean_email, reg_token, consume=True)
         return {"success": True, "user_id": user_id}
     except sqlite3.IntegrityError as e:
         conn.close()

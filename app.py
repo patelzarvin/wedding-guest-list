@@ -276,46 +276,54 @@ def login():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        phone = request.form.get("phone", "").strip()
-        reg_token = request.form.get("reg_token", "").strip()
-        otp_code = request.form.get("otp_code", "").strip()
-        password = request.form.get("password", "")
-        confirm_password = request.form.get("confirm_password", "")
+        is_ajax = request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        data = request.get_json(silent=True) or request.form
         
+        username = data.get("username", "").strip()
+        email = data.get("email", "").strip().lower()
+        phone = data.get("phone", "").strip()
+        reg_token = data.get("reg_token", "").strip()
+        otp_code = data.get("otp_code", "").strip()
+        password = data.get("password", "")
+        confirm_password = data.get("confirm_password", "")
+        
+        def fail(err_msg, status=400):
+            if is_ajax:
+                return jsonify({"success": False, "error": err_msg}), status
+            return render_template("login.html", active_tab="register", error=err_msg, form=data), status
+
         # 1. Authoritative Server-Side Validations
         u_ok, u_err, clean_username = validate_username(username)
         if not u_ok:
-            return render_template("login.html", active_tab="register", error=u_err), 400
+            return fail(u_err, 400)
             
         e_ok, e_err, clean_email = validate_email(email)
         if not e_ok:
-            return render_template("login.html", active_tab="register", error=e_err), 400
+            return fail(e_err, 400)
             
         p_ok, p_err, clean_p, _ = validate_indian_phone(phone)
         if not p_ok:
-            return render_template("login.html", active_tab="register", error=p_err), 400
+            return fail(p_err, 400)
             
         pwd_ok, pwd_err = validate_password_strength(password)
         if not pwd_ok:
-            return render_template("login.html", active_tab="register", error=pwd_err), 400
+            return fail(pwd_err, 400)
             
         if password != confirm_password:
-            return render_template("login.html", active_tab="register", error="પાસવર્ડ અને Confirm Password મેચ થતા નથી. (Passwords do not match)."), 400
+            return fail("પાસવર્ડ અને Confirm Password મેચ થતા નથી. (Passwords do not match).", 400)
             
         # 2. OTP / Token Verification Boundary (if provided, verify it)
         if reg_token:
-            tok_ok, tok_err = verify_registration_token(clean_email, reg_token)
+            tok_ok, tok_err = verify_registration_token(clean_email, reg_token, consume=False)
             if not tok_ok:
-                return render_template("login.html", active_tab="register", error=tok_err), 400
+                return fail(tok_err, 400)
         elif otp_code:
             is_valid, otp_err, _ = verify_otp_db(clean_email, otp_code, purpose="REGISTER")
             if not is_valid:
-                return render_template("login.html", active_tab="register", error=otp_err), 400
+                return fail(otp_err, 400)
             
         # 3. Create User in Database
-        res = register_user(clean_username, clean_email, password, phone=clean_p)
+        res = register_user(clean_username, clean_email, password, phone=clean_p, reg_token=reg_token)
         if res.get("success"):
             # Session Fixation Protection
             session.clear()
@@ -323,9 +331,11 @@ def register():
             session["username"] = clean_username
             session["user_role"] = "MASTER"
             session["logged_in"] = True
+            if is_ajax:
+                return jsonify({"success": True, "redirect": url_for("setup_wizard")}), 200
             return redirect(url_for("setup_wizard"))
         else:
-            return render_template("login.html", active_tab="register", error=res.get("error", "નોંધણી નિષ્ફળ રહી.")), 400
+            return fail(res.get("error", "નોંધણી નિષ્ફળ રહી."), 400)
             
     return render_template("login.html", active_tab="register", error=None)
 

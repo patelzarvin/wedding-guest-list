@@ -433,24 +433,23 @@
                 </div>
                 <button type="submit" class="btn-submit" id="signinSubmitBtn">Sign In to Dashboard &rarr;</button>
             </form>
-        </div>
-
-        <!-- Create Account Form (With Email OTP Verification + 10-Digit Mobile) -->
+        </div>        <!-- Create Account Form (With Email OTP Verification + 10-Digit Mobile) -->
         <div id="register-section" class="form-section {% if active_tab == 'register' %}active{% endif %}">
             <form action="/register" method="POST" id="registerForm" onsubmit="return validateRegisterForm(event)">
                 <input type="hidden" name="action" value="register">
-                <input type="hidden" name="reg_token" id="hidden_reg_token">
+                <input type="hidden" name="reg_token" id="hidden_reg_token" value="{{ form.get('reg_token', '') if form else '' }}">
 
                 <div class="form-group">
                     <label>Choose Username (ઓછામાં ઓછા 3 અક્ષર)</label>
-                    <input type="text" name="username" id="reg_username" class="input-box" placeholder="e.g. bhavya_host" required minlength="3">
+                    <input type="text" name="username" id="reg_username" class="input-box" placeholder="e.g. bhavya_host" required minlength="3" maxlength="30" pattern="[a-zA-Z0-9_.-]{3,30}" value="{{ form.get('username', '') if form else '' }}" oninput="validateUsernameLive(this)">
+                    <span class="pwd-hint-text" id="regUsernameHint" style="font-size: 0.8rem; color: #94A3B8; margin-top: 4px; display: block;">માત્ર અક્ષરો, અંકો, અને _, -, . માન્ય છે (Allowed: letters, numbers, _, -, .).</span>
                 </div>
 
                 <!-- Email Address + Verification Section -->
                 <div class="form-group">
                     <label>Email Address (ઇમેઇલ એડ્રેસ)</label>
                     <div class="phone-input-wrap">
-                        <input type="email" name="email" id="reg_email" class="input-box" placeholder="e.g. zarvin.114@gmail.com" required onkeydown="if(event.key==='Enter'){event.preventDefault();sendRegisterEmailOTP();}">
+                        <input type="email" name="email" id="reg_email" class="input-box" placeholder="e.g. zarvin.114@gmail.com" required value="{{ form.get('email', '') if form else '' }}" onkeydown="if(event.key==='Enter'){event.preventDefault();sendRegisterEmailOTP();}">
                         <button type="button" class="btn-otp-action" id="btnRegSendEmailOtp" onclick="sendRegisterEmailOTP()">Send Code</button>
                     </div>
                     <span class="otp-status-text" id="regEmailStatusText">૬-અંકનો સુરક્ષા કોડ સીધો તમારા ઇમેઇલ / WhatsApp પર મોકલવામાં આવશે.</span>
@@ -460,7 +459,7 @@
                 <div class="form-group" id="regEmailOtpBox">
                     <label>Verification Code (ઇમેઇલ પર આવેલ ૬-અંકનો સુરક્ષા કોડ)</label>
                     <div class="phone-input-wrap">
-                        <input type="text" name="otp_code" id="reg_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyRegisterEmailOTP();}">
+                        <input type="text" name="otp_code" id="reg_otp" class="input-box" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" value="{{ form.get('otp_code', '') if form else '' }}" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyRegisterEmailOTP();}">
                         <button type="button" class="btn-otp-action" id="btnRegVerifyEmailOtp" onclick="verifyRegisterEmailOTP()">Verify Code</button>
                     </div>
                     <span class="otp-status-text" id="regOtpStatusText">Send Code ક્લિક કર્યા પછી ઇમેઇલમાં આવેલો ૬-અંકનો કોડ અહીં લખી Verify Code દબાવો.</span>
@@ -475,7 +474,7 @@
                     <label>Mobile Number (મોબાઇલ નંબર - 10 અંક)</label>
                     <div class="phone-input-wrap">
                         <div class="phone-prefix">+91</div>
-                        <input type="tel" name="phone" id="reg_phone" class="input-box" placeholder="e.g. 9876543210" maxlength="10" pattern="[0-9]{10}" required autocomplete="tel">
+                        <input type="tel" name="phone" id="reg_phone" class="input-box" placeholder="e.g. 9876543210" maxlength="10" pattern="[0-9]{10}" required autocomplete="tel" value="{{ form.get('phone', '') if form else '' }}">
                     </div>
                     <span class="otp-status-text">આ મોબાઇલ નંબરથી પણ તમે સીધા સાઇન-ઇન કરી શકશો.</span>
                 </div>
@@ -483,7 +482,7 @@
                 <div class="form-group">
                     <label>Create Password (નવો પાસવર્ડ - Min 8 Characters)</label>
                     <div class="password-wrap">
-                        <input type="password" name="password" id="reg_password" class="input-box" placeholder="Create strong password" required minlength="8" oninput="handlePasswordStrength(this)">
+                        <input type="password" name="password" id="reg_password" class="input-box" placeholder="Create strong password" required minlength="8" value="{{ form.get('password', '') if form else '' }}" oninput="handlePasswordStrength(this)">
                         <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
@@ -503,7 +502,7 @@
                 <div class="form-group">
                     <label>Confirm Password (પાસવર્ડ ફરીથી લખો)</label>
                     <div class="password-wrap">
-                        <input type="password" name="confirm_password" id="reg_confirm_password" class="input-box" placeholder="Re-enter password to confirm" required minlength="8" oninput="handlePasswordMatch()">
+                        <input type="password" name="confirm_password" id="reg_confirm_password" class="input-box" placeholder="Re-enter password to confirm" required minlength="8" value="{{ form.get('confirm_password', '') if form else '' }}" oninput="handlePasswordMatch()">
                         <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg_confirm_password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
@@ -846,58 +845,167 @@
             }
         }
 
-        function validateRegisterForm(e) {
+        function validateUsernameLive(input) {
+            const val = input.value.trim();
+            const hint = document.getElementById('regUsernameHint');
+            const USERNAME_REGEX = /^[a-zA-Z0-9_.-]{3,30}$/;
+
+            if (!val) {
+                if (hint) {
+                    hint.style.color = '#94A3B8';
+                    hint.textContent = 'માત્ર અક્ષરો, અંકો, અને _, -, . માન્ય છે (Allowed: letters, numbers, _, -, .)';
+                }
+                input.style.borderColor = '';
+                return;
+            }
+
+            if (val.length < 3) {
+                if (hint) {
+                    hint.style.color = '#F59E0B';
+                    hint.textContent = 'ઓછામાં ઓછા 3 અક્ષર જરૂરી છે (હાલ: ' + val.length + ').';
+                }
+                input.style.borderColor = '#F59E0B';
+            } else if (val.length > 30) {
+                if (hint) {
+                    hint.style.color = '#EF4444';
+                    hint.textContent = 'મહત્તમ 30 અક્ષર માન્ય છે.';
+                }
+                input.style.borderColor = '#EF4444';
+            } else if (!USERNAME_REGEX.test(val)) {
+                if (hint) {
+                    hint.style.color = '#EF4444';
+                    hint.textContent = 'યુઝરનેમમાં માત્ર અક્ષરો, અંકો, અને _, -, . માન્ય છે. (Allowed: letters, numbers, _, -, .)';
+                }
+                input.style.borderColor = '#EF4444';
+            } else {
+                if (hint) {
+                    hint.style.color = '#10B981';
+                    hint.textContent = '✓ યુઝરનેમ માન્ય છે! (Valid username)';
+                }
+                input.style.borderColor = '#10B981';
+            }
+        }
+
+        async function validateRegisterForm(e) {
+            if (e) e.preventDefault();
             clearClientError();
-            const username = document.getElementById('reg_username').value.trim();
+            const usernameInput = document.getElementById('reg_username');
+            const username = usernameInput ? usernameInput.value.trim() : '';
             const emailInput = document.getElementById('reg_email');
             const emailVal = emailInput ? emailInput.value.trim().toLowerCase() : '';
             const phoneInput = document.getElementById('reg_phone');
             const phoneVal = phoneInput ? phoneInput.value.trim().replace(/\D/g, '') : '';
             const pwdInput = document.getElementById('reg_password');
             const confInput = document.getElementById('reg_confirm_password');
-            const pwd = pwdInput.value;
-            const conf = confInput.value;
+            const pwd = pwdInput ? pwdInput.value : '';
+            const conf = confInput ? confInput.value : '';
 
+            // 1. Username Validation
+            if (!username) {
+                showClientError('યુઝરનેમ જરૂરી છે. (Username is required).', usernameInput);
+                return false;
+            }
             if (username.length < 3) {
-                e.preventDefault();
-                showClientError('યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જોઈએ. (Username must be at least 3 chars)', document.getElementById('reg_username'));
+                showClientError('યુઝરનેમ ઓછામાં ઓછા 3 અક્ષરનું હોવું જોઈએ. (Username must be at least 3 chars)', usernameInput);
+                return false;
+            }
+            if (username.length > 30) {
+                showClientError('યુઝરનેમ 30 અક્ષરથી વધુ ન હોવું જોઈએ. (Username must not exceed 30 characters).', usernameInput);
+                return false;
+            }
+            const USERNAME_REGEX = /^[a-zA-Z0-9_.-]{3,30}$/;
+            if (!USERNAME_REGEX.test(username)) {
+                showClientError('યુઝરનેમમાં માત્ર અક્ષરો, અંકો, અને _, -, . માન્ય છે. (Allowed: letters, numbers, _, -, .)', usernameInput);
                 return false;
             }
 
+            // 2. Email Validation
             if (!emailVal || !emailVal.includes('@')) {
-                e.preventDefault();
                 showClientError('કૃપા કરીને માન્ય ઇમેઇલ એડ્રેસ દાખલ કરો.', emailInput);
                 return false;
             }
 
-            if (!isEmailVerified) {
-                e.preventDefault();
+            // 3. Email OTP Verification Status Check
+            const hToken = document.getElementById('hidden_reg_token');
+            const tokenVal = (hToken && hToken.value) ? hToken.value : verifiedRegToken;
+            if (!isEmailVerified && !tokenVal) {
                 showClientError('કૃપા કરીને પહેલા ઇમેઇલ વેરિફાય કરો ("Send Code" દબાવો અને ઇમેઇલમાં આવેલો 6-અંકનો કોડ અહીં લખી "Verify Code" કરો).', document.getElementById('reg_otp'));
                 return false;
             }
 
+            // 4. Mobile Number Validation
             if (phoneVal.length !== 10 || !['6','7','8','9'].includes(phoneVal[0])) {
-                e.preventDefault();
                 showClientError('કૃપા કરીને માન્ય 10-અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો (6-9 થી શરૂ થતો).', phoneInput);
                 return false;
             }
 
+            // 5. Password Validations
             if (pwd.length < 8) {
-                e.preventDefault();
                 showClientError('પાસવર્ડ ઓછામાં ઓછા 8 અક્ષરનો હોવો જોઈએ! (Password must be at least 8 characters)', pwdInput);
                 return false;
             }
 
+            if (!/[a-zA-Z]/.test(pwd) || !/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) {
+                showClientError('પાસવર્ડમાં ઓછામાં ઓછો એક અક્ષર અને એક નંબર/સ્પેશિયલ કેરેક્ટર હોવો જરૂરી છે.', pwdInput);
+                return false;
+            }
+
             if (pwd !== conf) {
-                e.preventDefault();
-                showClientError('પાસવર્ડ અને Confirm Password મેચ થતા નથી! કૃપા કરીને ચકાસો.', confInput);
+                showClientError('પાસવર્ડ અને Confirm Password મેચ થતા નથી! કૃપા કરીને ચકાસો. (Passwords do not match).', confInput);
                 return false;
             }
 
             const btn = document.getElementById('regSubmitBtn');
+            const origBtnText = btn.textContent;
             btn.disabled = true;
             btn.textContent = 'સુરક્ષિત એકાઉન્ટ બની રહ્યું છે...';
-            return true;
+
+            // Submit asynchronously via AJAX so NO page reload happens and ALL fields/verification remain intact!
+            const formElem = document.getElementById('registerForm');
+            const formData = new FormData(formElem);
+            if (tokenVal && !formData.get('reg_token')) {
+                formData.append('reg_token', tokenVal);
+            }
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                });
+
+                let data = {};
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await res.json();
+                } else {
+                    if (res.ok) {
+                        window.location.href = '/setup';
+                        return false;
+                    } else {
+                        data = { success: false, error: 'નોંધણી નિષ્ફળ રહી.' };
+                    }
+                }
+
+                if (res.ok && data.success) {
+                    btn.textContent = 'સ્વાગત છે! એકાઉન્ટ બની ગયું...';
+                    window.location.href = data.redirect || '/setup';
+                    return false;
+                } else {
+                    // Display error cleanly without resetting DOM or verified status!
+                    showClientError(data.error || 'નોંધણી નિષ્ફળ રહી. કૃપા કરીને માહિતી તપાસો.');
+                    btn.disabled = false;
+                    btn.textContent = origBtnText;
+                    return false;
+                }
+            } catch (err) {
+                showClientError('સર્વર સાથે સંપર્ક કરવામાં ભૂલ: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = origBtnText;
+                return false;
+            }
         }
 
         // ==========================================
@@ -1108,7 +1216,7 @@
             return true;
         }
 
-        // Prevent browser auto-filling password dots before user types username
+        // Prevent browser auto-filling password dots before user types username & restore verified token UI
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const u = document.getElementById('signin_username');
@@ -1117,6 +1225,28 @@
                     p.value = '';
                 }
             }, 60);
+
+            // If page was loaded with a pre-verified registration token (SSR preservation), restore verified UI
+            const hToken = document.getElementById('hidden_reg_token');
+            const regEmail = document.getElementById('reg_email');
+            if (hToken && hToken.value && regEmail && regEmail.value) {
+                isEmailVerified = true;
+                verifiedEmailAddress = regEmail.value;
+                verifiedRegToken = hToken.value;
+                regEmail.readOnly = true;
+                const regOtp = document.getElementById('reg_otp');
+                if (regOtp) regOtp.readOnly = true;
+                const sBtn = document.getElementById('btnRegSendEmailOtp');
+                if (sBtn) sBtn.style.display = 'none';
+                const vBtn = document.getElementById('btnRegVerifyEmailOtp');
+                if (vBtn) vBtn.style.display = 'none';
+                const badge = document.getElementById('regEmailVerifiedBadge');
+                if (badge) badge.style.display = 'flex';
+                const badgeText = document.getElementById('regEmailVerifiedText');
+                if (badgeText) badgeText.textContent = `ઇમેઇલ (${regEmail.value}) સફળતાપૂર્વક વેરિફાય થયો!`;
+                const otpStatus = document.getElementById('regOtpStatusText');
+                if (otpStatus) otpStatus.style.display = 'none';
+            }
         });
     </script>
 </body>

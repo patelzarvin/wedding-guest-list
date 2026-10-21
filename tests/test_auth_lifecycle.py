@@ -95,6 +95,51 @@ class TestWedViteAuthLifecycle(unittest.TestCase):
         })
         self.assertEqual(res.status_code, 400)
 
+    def test_02b_registration_validation_and_token_preservation(self):
+        """Test that AJAX registration returns JSON error and does NOT consume reg_token on error."""
+        email = "ajax_user@example.com"
+        # 1. Generate and verify OTP
+        code, _ = database.generate_and_save_otp(email, purpose="REGISTER")
+        is_valid, _, tok_data = database.verify_otp_db(email, code, purpose="REGISTER")
+        self.assertTrue(is_valid)
+        reg_token = tok_data["reg_token"]
+
+        # 2. Attempt AJAX registration with INVALID username (spaces / special symbols)
+        res = self.client.post("/register", headers={"X-Requested-With": "XMLHttpRequest"}, data={
+            "username": "invalid username with spaces",
+            "email": email,
+            "phone": "9876543210",
+            "password": "Password@123",
+            "confirm_password": "Password@123",
+            "reg_token": reg_token
+        })
+        self.assertEqual(res.status_code, 400)
+        data = res.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("યુઝરનેમ", data["error"])
+
+        # 3. Verify that reg_token was NOT consumed by the failure!
+        tok_valid, _ = database.verify_registration_token(email, reg_token, consume=False)
+        self.assertTrue(tok_valid, "reg_token should remain valid after input error so user doesn't re-verify")
+
+        # 4. Now fix the username and submit valid AJAX registration
+        res2 = self.client.post("/register", headers={"X-Requested-With": "XMLHttpRequest"}, data={
+            "username": "valid_ajax_user",
+            "email": email,
+            "phone": "9876543210",
+            "password": "Password@123",
+            "confirm_password": "Password@123",
+            "reg_token": reg_token
+        })
+        self.assertEqual(res2.status_code, 200)
+        data2 = res2.get_json()
+        self.assertTrue(data2["success"])
+        self.assertIn("redirect", data2)
+
+        # 5. After successful registration, token is now consumed
+        tok_valid_after, _ = database.verify_registration_token(email, reg_token, consume=False)
+        self.assertFalse(tok_valid_after, "reg_token should be consumed after successful registration")
+
     def test_03_invalid_or_expired_otp(self):
         """Test that expired OTPs are rejected."""
         email = "expire_test@example.com"
